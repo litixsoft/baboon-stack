@@ -29,6 +29,7 @@ case $1 in
     # Remove Redis Daemon
     service redisd stop
     update-rc.d -f redisd remove
+    rm /etc/init.d/redisd
 
     # Remove symbolic links
     rm /bin/redis-cli

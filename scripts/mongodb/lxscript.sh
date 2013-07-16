@@ -29,6 +29,7 @@ case $1 in
     # Remove MongoDB Daemon
     service mongod stop
     update-rc.d -f mongod remove
+    rm /etc/init.d/mongod
 
     # Remove symbolic links
     rm /bin/mongo
