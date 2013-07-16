@@ -1,7 +1,7 @@
 #!/bin/bash
 # BaboonStack Install Script
 # Package: mongodb
-LXCURDIR=`pwd`
+LXCURDIR=$(dirname $(readlink -f $0))
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
@@ -13,7 +13,7 @@ case $1 in
     # Link
     ln -s "$LXCURDIR/bin/mongo" "/bin/mongo"
     ln -s "$LXCURDIR/bin/mongod" "/bin/mongod"
- 
+
     # Register Services
     echo "Register MongoDB Daemon 'mongod'..."
     ln -s "$LXCURDIR/mongod" "/etc/init.d/mongod"
@@ -26,10 +26,11 @@ case $1 in
   
   ;;
   "remove" )
-    # Remove MongoDB
+    # Remove MongoDB Daemon
     service mongod stop
     update-rc.d -f mongod remove
 
+    # Remove symbolic links
     rm /bin/mongo
     rm /bin/mongod
     

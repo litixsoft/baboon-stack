@@ -15,7 +15,8 @@ function request {
 }
 
 # Some variables
-bshome=/opt/litixsoft/baboonstack
+bshome=$(dirname $(readlink -f $0))
+bsmode=""
 
 # Make sure only root can run our script
 if [[ $EUID -ne 0 ]]; then
@@ -24,29 +25,29 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+if ( request "Remove BaboonStack Directory, include Databases?" ) then
+  bsmode="all"
+fi
+
+# Execute every lxscript.sh
+files=`find "$bshome" -maxdepth 2 -type f -name "lxscript.sh"`
+for scriptfile in $files; do
+  if [ -x "$scriptfile" ]; then
+    sh "$scriptfile" remove $bsmode
+  fi
+done
+
 # Remove Node.JS
-if [ -d "$bshome/node/0.10.12" ]; then
+if [ -d "$bshome/node" ]; then
   # Remove Symlink
+  echo "Remove Node.JS"
   rm /bin/node
   rm /bin/npm
   rm -r "$bshome/node"
 fi
 
-# Remove MongoDB
-service mongod stop
-update-rc.d -f mongod remove
-
-rm /bin/mongo
-rm /bin/mongod
-
-# Remove RedisIO
-service redisd stop
-update-rc.d -f redisd remove
-
-rm /bin/redis-cli
-rm /bin/redis-server
-
-if ( request "Remove BaboonStack Directory, include Databases?" ) then
+if ( bsmode="all" ) then
+  bsmode="all"
   echo "Remove $bshome"
   rm -r "$bshome"
 fi

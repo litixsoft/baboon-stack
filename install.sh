@@ -47,7 +47,7 @@ fi
 
 # Extract Files
 echo "Extract Files..."
-tar -zxvf "$bspacket" -C "$bshome"
+tar -zxf "$bspacket" -C "$bshome"
 
 # Link Binarys
 
@@ -82,4 +82,5 @@ echo "Start RedisIO Daemon..."
 service redisd start
 
 echo "Done! Bye..."
+echo "BaboonStack installed to $bshome"
 echo

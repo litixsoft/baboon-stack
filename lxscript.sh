@@ -1,7 +1,7 @@
 #!/bin/bash
 # BaboonStack Install Script
 # Package: 
-LXCURDIR=`pwd`
+LXCURDIR=$(dirname $(readlink -f $0))
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
