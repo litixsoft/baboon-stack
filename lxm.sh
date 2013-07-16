@@ -23,9 +23,8 @@ esac
 LXVERSION="1.0.0"
 LXSERVER="http://192.168.20.132"
 LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
-LXPATH=/home/administrator/baboonstack
+LXPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
-
 
 lxmHeader() {
   echo
@@ -34,22 +33,38 @@ lxmHeader() {
 }
 
 lxmVersion() {
-  echo "Jawohl"
+  echo "$LXVERSION"
 }
 
 lxmHelp() {
   echo "Usage:"
-  echo "    lxm version                          Displays the version number"
-#  echo "    lxm install <packetname> [[version]] Installs a Packet locally"
-  echo "    lxm update                           Search and Installs BaboonStack Updates"
-#  echo "    lxm remove <packetname> [[version]]  Removes a Packet"
-#  echo "    lxm search <keyword>                 Search Online Repository"
-#  echo "    lxm list                             Lists local installed Packets"
+  echo "    lxm version                       Displays the version number"
+  echo "    lxm update                        Search and Installs BaboonStack Updates"
   echo
-#  echo "    lxm service <command>                Service Module Controls"
-  echo "    lxm node <command>                   Node Module Controls"
+  echo "    lxm service                       Service Module Controls"
+  echo "    lxm node                          Node Module Controls"
   echo
 }
+
+## Begin Service
+
+serviceHelp() {
+  echo "Usage:"
+  echo "    lxm service install [name] [args] Install a specific version number"
+  echo "    lxm service remove [name]         Switch to Version"
+  echo "    lxm service start [name]          Run <version> with <args> as arguments"
+  echo "    lxm service stop [name]           Run <version> with <args> as arguments"
+  echo "    lxm service list                  View locally available version"
+  echo
+  echo "Example:"
+#  echo "    lxm node install 0.10.12         Install a specific version"
+#  echo "    lxm node switch 0.10             Use the latest available 0.10.x release"
+#  echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
+  echo
+}
+
+
+## End Service
 
 ## Begin NVM
 
@@ -181,6 +196,7 @@ lxm_update_available() {
   echo $VERSION
 }
 
+# Update BaboonStack
 lxmUpdate() {
   local VERSION=`lxm_update_available`
   
@@ -254,7 +270,7 @@ nodeHelp() {
   echo "Example:"
   echo "    lxm node install 0.10.12         Install a specific version"
   echo "    lxm node switch 0.10             Use the latest available 0.10.x release"
-  echo "    lxm node remove 0.10.12          Removes a specific version"
+  echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
   echo
 }
 
@@ -397,11 +413,12 @@ nodeSwitch() {
   
   echo "Switch to $1..."
   
-  # Remove symbolic link
+  # Remove symbolic link for node
   if [ -h "/bin/node" ] ; then
     rm "/bin/node"
   fi
 
+  # Remove symbolic link for npm
   if [ -h "/bin/npm" ] ; then
     rm "/bin/npm"
   fi
@@ -449,42 +466,31 @@ nodeList() {
   done
 }
 
-lxm() {
-  # Show Header
-  lxmHeader 
+# Show Header
+lxmHeader 
 
-  if [ $# -lt 1 ]; then
-    lxmHelp
-    return
-  fi
+# No Arguments? Show Help.
+if [ $# -lt 1 ]; then
+  lxmHelp
+  exit 1
+fi
 
-  case $1 in
-    "help" ) 
-      lxmHelp
-    ;;
-    "install" )
+case $1 in
+  "help" ) lxmHelp ;;
+  "service" ) ;;
+  "update" ) lxmUpdate ;;
+  "node" )
+    case $2 in
+      "install" ) nodeInstall $3 ;;
+      "remove" ) nodeRemove $3 ;;
+      "switch" ) nodeSwitch $3 ;;
+      "run" ) nodeRun ${@:3} ;;
+      "list" ) nodeList $3 ;;
+      *) nodeHelp ;;
+    esac
+  ;;
+  "version" ) lxmVersion ;;
+  * ) lxmHelp ;;
+esac
 
-    ;;
-    "update" ) lxmUpdate ;;
-    "node" )
-      case $2 in
-        "install" ) nodeInstall $3 ;;
-        "remove" ) nodeRemove $3 ;;
-        "switch" ) nodeSwitch $3 ;;
-        "run" ) nodeRun ${@:3} ;;
-        "list" ) nodeList $3 ;;
-        *) nodeHelp ;;
-      esac
-    ;;
-    "version" )
-        print_versions "`lxm_version $2`"
-    ;;
-    * )
-      lxmHelp
-    ;;
-  esac
-  
-  echo
-}
-
-lxm $@
+echo
