@@ -70,12 +70,18 @@ serviceInstall() {
   # $3 == Node Application
   # $4 == Application Arguments optional
 
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi  
+  
   if [ $# -lt 3 ]; then
     serviceHelp
     return
   fi
-
-
+  
   # If Daemon exists?
   if [ -e "/etc/init.d/$1" ]; then
     echo "Ups! Daemon $1 already exists"
@@ -94,25 +100,69 @@ serviceInstall() {
     return
   fi
 
+  # Collect current User
+  LXCURRENTUSER=`id -n -u`
+  LXCURRENTGROUP=`id -n -g`
+  
   # Some variables, for better handlin
   local LXDAEMON="$1"
   local LXNODEVERSION="$2"
   local LXAPP="$3"
   local LXPARAM="$4"
   local LXHOME="$LXPATH"
+  local LXNODEUSER="$LXCURRENTUSER:$LXCURRENTGROUP"
 
   # Uff
-  local LXSOURCE="$LXPATH/lxm/lxnodejs"
+  local LXSOURCE="$LXPATH/lxm/lxnoded"
   local LXTARGET="/etc/init.d/$LXDAEMON"
-
+  
+  echo Register Daemon...
   # Replaces the Text Marks in Daemon template
-  #sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODE$VERSION#g" "$LXSOURCE" > "$LXTARGET"
-
+  sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"  
+  
   # Make Script executable
-  #chmod +x "$LXTARGET"
+  chmod +x "$LXTARGET"
 
   # Register Service
-  #update-rc.d $LXDAEMON defaults
+  update-rc.d $LXDAEMON defaults
+  echo Done...
+}
+
+serviceRemove() {
+  # $1 == Daemonname
+
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi  
+  
+  if [ $# -lt 1 ]; then
+    serviceHelp
+    return
+  fi
+
+  local LXDAEMON=$1
+  
+  # If Daemon exists?
+  if [ ! -e "/etc/init.d/$LXDAEMON" ]; then
+    echo "Ups! Daemon $LXDAEMON not exists"
+    return
+  fi
+
+  # If Daemon runnig?
+  LXEXITCODE=`/etc/init.d/$LXDAEMON status &> /dev/null ; echo $?`
+  if [ ! $LXEXITCODE=="0" ] ; then
+  echo Stop Daemon...
+  "/etc/init.d/$LXDAEMON" stop
+  fi
+  
+  echo "Remove..."
+  update-rc.d $LXDAEMON remove
+  rm -f /etc/init.d/$LXDAEMON
+  
+  echo "Done..."
 }
 
 ## End Service
@@ -460,7 +510,7 @@ nodeSwitch() {
     echo "This operation must be run as root" 1>&2
     echo
     exit 1
-  fi      
+  fi
   
   echo "Switch to $1..."
   
