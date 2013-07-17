@@ -8,10 +8,10 @@ LXARCH="$(uname -m)"
 LXOS=
 
 case "$LXUNNAME" in
-  Linux\ *) os=linux ;;
-  Darwin\ *) os=darwin ;;
-  SunOS\ *) os=sunos ;;
-  FreeBSD\ *) os=freebsd ;;
+  Linux\ *) LXOS=linux ;;
+  Darwin\ *) LXOS=darwin ;;
+  SunOS\ *) LXOS=sunos ;;
+  FreeBSD\ *) LXOS=freebsd ;;
 esac
 
 case "$LXUNNAME" in
@@ -23,7 +23,6 @@ esac
 LXVERSION="1.0.0"
 LXSERVER="http://192.168.20.132"
 LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
-#LXPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
 
@@ -51,14 +50,14 @@ lxmHelp() {
 
 serviceHelp() {
   echo "Usage:"
-  echo "    lxm service install [name] [args] Install a Node.JS Daemon"
-  echo "    lxm service remove [name]         Removes a Daemon"
-  echo "    lxm service start [name]          Run <version> with <args> as arguments"
-  echo "    lxm service stop [name]           Run <version> with <args> as arguments"
+  echo "    lxm service install [name] [version] [app] Install a Node.JS Daemon"
+  echo "    lxm service remove [name]                  Removes a Node.JS Daemon"
+#  echo "    lxm service start [name]          Run <version> with <args> as arguments"
+#  echo "    lxm service stop [name]           Run <version> with <args> as arguments"
   echo
   echo "Example:"
-  echo "    lxm service install 0.10.12         Install a specific version"
-#  echo "    lxm node switch 0.10             Use the latest available 0.10.x release"
+  echo "    lxm service install lxappd 0.10.12 /home/user/myapp/app.js"
+  echo "    lxm service remove lxappd"
 #  echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
   echo
 }
@@ -153,13 +152,14 @@ serviceRemove() {
 
   # If Daemon runnig?
   LXEXITCODE=`/etc/init.d/$LXDAEMON status &> /dev/null ; echo $?`
-  if [ ! $LXEXITCODE=="0" ] ; then
+  
+  if [ $LXEXITCODE == 0 ] ; then
   echo Stop Daemon...
   "/etc/init.d/$LXDAEMON" stop
   fi
   
   echo "Remove..."
-  update-rc.d $LXDAEMON remove
+  update-rc.d -f $LXDAEMON remove
   rm -f /etc/init.d/$LXDAEMON
   
   echo "Done..."
@@ -422,7 +422,7 @@ nodeInstall() {
     echo "$VERSION is already installed." 
     return
   fi
-  
+
   # shortcut - try the binary if possible.
   if [ -n "$LXOS" ]; then
     binavail=
@@ -435,14 +435,14 @@ nodeInstall() {
     esac
     
     if [ $binavail -eq 1 ]; then
-      t="$VERSION-$LXOS-LXARCH"
+      t="$VERSION-$LXOS-$LXARCH"
       url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
       sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
       
       local tmpdir="$LXNODEPATH/${VERSION:1}"
       local tmptarball="$tmpdir/node-${t}.tar.gz"
       
-      echo Download Binary...
+      echo "Download $VERSION Binary..."
       # Create Directory & Download Node Binary & Test Checksum & Extract Files & Remove Archive
       if (
         mkdir -p "$tmpdir" && \
@@ -583,6 +583,7 @@ case $1 in
   "service" ) 
     case $2 in
       "install" ) serviceInstall ${@:3} ;;
+      "remove" ) serviceRemove $3 ;;
       *) serviceHelp ;;
     esac  
   ;;
