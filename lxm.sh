@@ -165,6 +165,23 @@ serviceRemove() {
   echo "Done..."
 }
 
+serviceControl() {
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi  
+  
+  if [ $# -lt 2 ]; then
+    serviceHelp
+    return
+  fi
+
+  # Simple
+  /etc/init.d/$1 $2
+}
+
 ## End Service
 
 ## Begin NVM
@@ -584,6 +601,8 @@ case $1 in
     case $2 in
       "install" ) serviceInstall ${@:3} ;;
       "remove" ) serviceRemove $3 ;;
+      "start" ) serviceControl $3 start ;;
+      "stop" ) serviceControl $3 stop ;;
       *) serviceHelp ;;
     esac  
   ;;

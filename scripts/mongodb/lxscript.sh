@@ -20,14 +20,14 @@ case $1 in
     update-rc.d mongod defaults
     
     echo Start Service
-    service mongod start
+    /etc/init.d/mongod start
   ;;
   "update" )
   
   ;;
   "remove" )
     # Remove MongoDB Daemon
-    service mongod stop
+    /etc/init.d/mongod stop
     update-rc.d -f mongod remove
     rm /etc/init.d/mongod
 

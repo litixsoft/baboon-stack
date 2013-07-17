@@ -76,10 +76,10 @@ update-rc.d redisd defaults
 
 # Starts Daemon...
 echo "Start MongoDB Daemon..."
-service mongod start
+/etc/init.d/mongod start
 
 echo "Start RedisIO Daemon..."
-service redisd start
+/etc/init.d/redisd start
 
 echo "Done! Bye..."
 echo "BaboonStack installed to $bshome"

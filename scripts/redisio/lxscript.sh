@@ -20,14 +20,14 @@ case $1 in
     update-rc.d redisd defaults
 
     echo Start Service
-    service redisd start
+    /etc/init.d/redisd start
   ;;
   "update" )
   
   ;;
   "remove" )
     # Remove Redis Daemon
-    service redisd stop
+    /etc/init.d/redisd stop
     update-rc.d -f redisd remove
     rm /etc/init.d/redisd
 
