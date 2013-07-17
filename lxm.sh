@@ -23,7 +23,8 @@ esac
 LXVERSION="1.0.0"
 LXSERVER="http://192.168.20.132"
 LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
-LXPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+#LXPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
 
 lxmHeader() {
@@ -33,7 +34,7 @@ lxmHeader() {
 }
 
 lxmVersion() {
-  echo "$LXVERSION"
+  echo "$LXVERSION $LXARCH"
 }
 
 lxmHelp() {
@@ -41,7 +42,7 @@ lxmHelp() {
   echo "    lxm version                       Displays the version number"
   echo "    lxm update                        Search and Installs BaboonStack Updates"
   echo
-  echo "    lxm service                       Service Module Controls"
+  echo "    lxm service                       Service Module Controls for Node.JS"
   echo "    lxm node                          Node Module Controls"
   echo
 }
@@ -50,19 +51,69 @@ lxmHelp() {
 
 serviceHelp() {
   echo "Usage:"
-  echo "    lxm service install [name] [args] Install a specific version number"
-  echo "    lxm service remove [name]         Switch to Version"
+  echo "    lxm service install [name] [args] Install a Node.JS Daemon"
+  echo "    lxm service remove [name]         Removes a Daemon"
   echo "    lxm service start [name]          Run <version> with <args> as arguments"
   echo "    lxm service stop [name]           Run <version> with <args> as arguments"
-  echo "    lxm service list                  View locally available version"
   echo
   echo "Example:"
-#  echo "    lxm node install 0.10.12         Install a specific version"
+  echo "    lxm service install 0.10.12         Install a specific version"
 #  echo "    lxm node switch 0.10             Use the latest available 0.10.x release"
 #  echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
   echo
 }
 
+# 
+serviceInstall() {
+  # $1 == Daemonname
+  # $2 == Node Version Number
+  # $3 == Node Application
+  # $4 == Application Arguments optional
+
+  if [ $# -lt 3 ]; then
+    serviceHelp
+    return
+  fi
+
+
+  # If Daemon exists?
+  if [ -e "/etc/init.d/$1" ]; then
+    echo "Ups! Daemon $1 already exists"
+    return
+  fi
+
+  # If Node.JS locally available
+  if [ `nvm_ls $2` == "N/A" ]; then
+    echo "Node.JS Version $2 not found. Please use 'lxm node install $2' to install first."
+    return
+  fi
+
+  # If Node Application exits
+  if [ ! -e "$3" ]; then
+    echo "Node.JS Application not found: $3"
+    return
+  fi
+
+  # Some variables, for better handlin
+  local LXDAEMON="$1"
+  local LXNODEVERSION="$2"
+  local LXAPP="$3"
+  local LXPARAM="$4"
+  local LXHOME="$LXPATH"
+
+  # Uff
+  local LXSOURCE="$LXPATH/lxm/lxnodejs"
+  local LXTARGET="/etc/init.d/$LXDAEMON"
+
+  # Replaces the Text Marks in Daemon template
+  #sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODE$VERSION#g" "$LXSOURCE" > "$LXTARGET"
+
+  # Make Script executable
+  #chmod +x "$LXTARGET"
+
+  # Register Service
+  #update-rc.d $LXDAEMON defaults
+}
 
 ## End Service
 
@@ -475,9 +526,16 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
+# lxManager Main
 case $1 in
   "help" ) lxmHelp ;;
-  "service" ) ;;
+  "version" ) lxmVersion ;;
+  "service" ) 
+    case $2 in
+      "install" ) serviceInstall ${@:3} ;;
+      *) serviceHelp ;;
+    esac  
+  ;;
   "update" ) lxmUpdate ;;
   "node" )
     case $2 in
@@ -489,7 +547,6 @@ case $1 in
       *) nodeHelp ;;
     esac
   ;;
-  "version" ) lxmVersion ;;
   * ) lxmHelp ;;
 esac
 
