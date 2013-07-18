@@ -36,10 +36,10 @@ case $1 in
     rm /bin/mongod
     
     # Delete Binarys
-    rm -rf "$LXCURDIR/bin/"
+    rm -rf "$LXCURDIR/bin"
     
     # Remove all
-    if [ $2 = "all" ]; then
+    if [ "$2" ] && [ "$2" = "all" ]; then
       rm -rf "$LXCURDIR/"
     fi
   ;;

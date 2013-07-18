@@ -25,7 +25,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-if ( request "Remove BaboonStack Directory, include Databases?" ) then
+if ( request "Remove Databases, Configuration files, etc?" ) then
   bsmode="all"
 fi
 
@@ -46,8 +46,15 @@ if [ -d "$bshome/node" ]; then
   rm -r "$bshome/node"
 fi
 
-if ( bsmode="all" ) then
-  bsmode="all"
+# Remove lxManager
+if [ -d "$bshome/lxm" ]; then
+  # Remove Symlink
+  echo "Remove lxManager"
+  rm /bin/lxm
+  rm -r "$bshome/lxm"
+fi
+
+if [ bsmode = "all" ]; then
   echo "Remove $bshome"
   rm -r "$bshome"
 fi

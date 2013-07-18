@@ -21,7 +21,7 @@ case "$LXUNNAME" in
 esac
 
 LXVERSION="1.0.0"
-LXSERVER="http://192.168.20.132"
+LXSERVER="http://packages.litixsoft.de"
 LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
 LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
@@ -41,9 +41,10 @@ lxmHelp() {
   echo "    lxm version                       Displays the version number"
   echo "    lxm update                        Search and Installs BaboonStack Updates"
   echo
-  echo "    lxm service                       Service Module Controls for Node.JS"
   echo "    lxm node                          Node Module Controls"
+  echo "    lxm service                       Service Module Controls for Node.JS"
   echo
+  echo "    Some operations required root access."
 }
 
 ## Begin Service
@@ -52,17 +53,16 @@ serviceHelp() {
   echo "Usage:"
   echo "    lxm service install [name] [version] [app] Install a Node.JS Daemon"
   echo "    lxm service remove [name]                  Removes a Node.JS Daemon"
-#  echo "    lxm service start [name]          Run <version> with <args> as arguments"
-#  echo "    lxm service stop [name]           Run <version> with <args> as arguments"
+  echo "    lxm service start [name]                   Start Daemon"
+  echo "    lxm service stop [name]                    Stop Daemon"
   echo
   echo "Example:"
   echo "    lxm service install lxappd 0.10.12 /home/user/myapp/app.js"
   echo "    lxm service remove lxappd"
-#  echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
   echo
 }
 
-# 
+#
 serviceInstall() {
   # $1 == Daemonname
   # $2 == Node Version Number
@@ -74,13 +74,13 @@ serviceInstall() {
     echo "This operation must be run as root" 1>&2
     echo
     exit 1
-  fi  
-  
+  fi
+
   if [ $# -lt 3 ]; then
     serviceHelp
     return
   fi
-  
+
   # If Daemon exists?
   if [ -e "/etc/init.d/$1" ]; then
     echo "Ups! Daemon $1 already exists"
@@ -102,7 +102,7 @@ serviceInstall() {
   # Collect current User
   LXCURRENTUSER=`id -n -u`
   LXCURRENTGROUP=`id -n -g`
-  
+
   # Some variables, for better handlin
   local LXDAEMON="$1"
   local LXNODEVERSION="$2"
@@ -114,17 +114,19 @@ serviceInstall() {
   # Uff
   local LXSOURCE="$LXPATH/lxm/lxnoded"
   local LXTARGET="/etc/init.d/$LXDAEMON"
-  
-  echo Register Daemon...
+
+  echo "Register Daemon..."
   # Replaces the Text Marks in Daemon template
-  sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"  
-  
+  sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"
+
   # Make Script executable
   chmod +x "$LXTARGET"
 
   # Register Service
   update-rc.d $LXDAEMON defaults
-  echo Done...
+  echo "Done..."
+  echo
+  echo "Enter 'lxm service start $LXDAEMON' to start application..."
 }
 
 serviceRemove() {
@@ -135,15 +137,15 @@ serviceRemove() {
     echo "This operation must be run as root" 1>&2
     echo
     exit 1
-  fi  
-  
+  fi
+
   if [ $# -lt 1 ]; then
     serviceHelp
     return
   fi
 
   local LXDAEMON=$1
-  
+
   # If Daemon exists?
   if [ ! -e "/etc/init.d/$LXDAEMON" ]; then
     echo "Ups! Daemon $LXDAEMON not exists"
@@ -152,16 +154,16 @@ serviceRemove() {
 
   # If Daemon runnig?
   LXEXITCODE=`/etc/init.d/$LXDAEMON status &> /dev/null ; echo $?`
-  
+
   if [ $LXEXITCODE == 0 ] ; then
-  echo Stop Daemon...
+  echo "Stop Daemon..."
   "/etc/init.d/$LXDAEMON" stop
   fi
-  
+
   echo "Remove..."
   update-rc.d -f $LXDAEMON remove
   rm -f /etc/init.d/$LXDAEMON
-  
+
   echo "Done..."
 }
 
@@ -171,14 +173,15 @@ serviceControl() {
     echo "This operation must be run as root" 1>&2
     echo
     exit 1
-  fi  
-  
+  fi
+
   if [ $# -lt 2 ]; then
     serviceHelp
     return
   fi
 
   # Simple
+  echo "Execute /etc/init.d/$1 $2..."
   /etc/init.d/$1 $2
 }
 
@@ -215,7 +218,7 @@ nvm_remote_version() {
 nvm_ls() {
     local PATTERN=$1
     local VERSIONS=''
-    
+
     if [ "$PATTERN" = 'current' ]; then
         result=`node -v 2>/dev/null`
         echo ${result:1}
@@ -229,7 +232,7 @@ nvm_ls() {
         VERSIONS=`find "$LXNODEPATH/" -maxdepth 1 -type d -name "$PATTERN*" -exec basename '{}' ';' \
                     | sort -t. -u -k 1.2,1n -k 2,2n -k 3,3n`
     fi
-    
+
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
         return
@@ -289,7 +292,7 @@ lxm_ls_remote() {
         PATTERN="baboonstack-v.*-linux-$LXARCH.tar.gz"
     fi
 
-    VERSIONS=`curl -s http://192.168.20.132/ | sed -n 's/.*">\(.*\)<\/a>.*/\1/p' | grep -w "${PATTERN}"`
+    VERSIONS=`curl -s "$LXSERVER/" | sed -n 's/.*">\(.*\)<\/a>.*/\1/p' | grep -w "${PATTERN}"`
 
     if [ ! "$VERSIONS" ]; then
         echo "N/A"
@@ -307,6 +310,10 @@ lxm_update_available() {
   local TEST="$VERSION\n$LXPACKET"
   TEST=`echo "${TEST}" | sort | tail -n1`
 
+  if [ $VERSION = 'N/A' ]; then
+    return
+  fi
+
   if [ $VERSION = $LXPACKET ]; then
     return
   fi
@@ -317,17 +324,25 @@ lxm_update_available() {
 # Update BaboonStack
 lxmUpdate() {
   local VERSION=`lxm_update_available`
-  
+
+  # Update available?
   if [ ! $VERSION ]; then
     echo "No Baboonstack Update available..."
     return
   fi
-  
+
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi
+
   local tmpdir="$LXPATH/.update"
   local tmptar="$tmpdir/$VERSION"
-  
+
   echo "Update $LXPACKET => $VERSION..."
-  
+
   # Create Update Directory, Download, Extract and Remove Packet
   if (
     mkdir -p "$tmpdir" && \
@@ -344,34 +359,36 @@ lxmUpdate() {
       if [ "$dir" = ".update" ]; then
         continue
       fi
-    
+
       # If Directory AND lxscript.sh exists
       if [ -x "$LXPATH/$dir/lxscript.sh" ]; then
         # Execute Script
         sh "$LXPATH/$dir/lxscript.sh" remove
       fi
-      
+
       # Copy Content
       echo "Copy Content from $dir..."
       cp -f -R "$tmpdir/$dir/" "$LXPATH"
-      
+
       # If Directory AND lxscript.sh exists
       if [ -x "$LXPATH/$dir/lxscript.sh" ]; then
         # Execute Script
         sh "$LXPATH/$dir/lxscript.sh" install
-      fi    
-    done    
-        
+      fi
+    done
+
     echo "YEAH, done..."
   else
     echo "Uhh, there is error..."
   fi
-  
+
   # Remove Update Directory
   if [ -d "$LXPATH/.update" ]; then
     echo "Cleaning up..."
     rm -rf "$LXPATH/.update"
   fi
+  
+  exit 2
 }
 
 ## End LXM
@@ -404,14 +421,14 @@ nodeInstall() {
     echo 'LXM needs curl to proceed.' >&2;
     return
   fi
-  
+
   # Make sure only root can run our script
   if [[ $EUID -ne 0 ]]; then
     echo "This operation must be run as root" 1>&2
     echo
     exit 1
-  fi  
-  
+  fi
+
   # initialize local variables
   local binavail
   local t
@@ -419,24 +436,28 @@ nodeInstall() {
   local sum
   local tarball
   local shasum='shasum'
-  local nobinary   
-    
+  local nobinary
+
   if [ -z "`which shasum`" ]; then
     shasum='sha1sum'
-  fi 
-  
+  fi
+
   # Returns the Version on Server
   VERSION=`nvm_remote_version v$1`
-  
+
+  # Returns the locally Versions
+  LOCALVERSION=`nvm_ls $1`
+
+
   # Check if Version available on server
   if [ "$VERSION" = 'N/A' ]; then
-    echo "Node v$1 not found on server..."    
+    echo "Node v$1 not found on server..."
     return
   fi
 
   # Check if Directory exists
-  if [ -d "$LXNODEPATH/$VERSION" ] ; then 
-    echo "$VERSION is already installed." 
+  if [ -d "$LXNODEPATH/${VERSION:1}" ] ; then
+    echo "$VERSION is already installed."
     return
   fi
 
@@ -450,15 +471,15 @@ nodeInstall() {
       v0.[1234567].*) binavail=0 ;;
       *) binavail=1 ;;
     esac
-    
+
     if [ $binavail -eq 1 ]; then
       t="$VERSION-$LXOS-$LXARCH"
       url="http://nodejs.org/dist/$VERSION/node-${t}.tar.gz"
       sum=`curl -s http://nodejs.org/dist/$VERSION/SHASUMS.txt | \grep node-${t}.tar.gz | awk '{print $1}'`
-      
+
       local tmpdir="$LXNODEPATH/${VERSION:1}"
       local tmptarball="$tmpdir/node-${t}.tar.gz"
-      
+
       echo "Download $VERSION Binary..."
       # Create Directory & Download Node Binary & Test Checksum & Extract Files & Remove Archive
       if (
@@ -468,16 +489,15 @@ nodeInstall() {
         tar -xzf "$tmptarball" -C "$tmpdir" --strip-components 1 && \
         rm -f "$tmptarball"
         )
-      then        
+      then
         nodeSwitch $1
         return;
       else
-        echo "Binary download failed, sorry." >&2
-        rm -rf "$tmptarball" "$tmpdir"
+        echo "No binary download available, sorry." >&2
       fi
     fi
   fi
-  
+
   echo
 }
 
@@ -495,42 +515,49 @@ nodeRemove() {
     echo
     exit 1
   fi
-  
+
   local VERSION=`nvm_version $1`
-  
+
   if [ ! -d "$LXNODEPATH/$VERSION" ]; then
-    echo "$1 version is not installed yet, abort."    
+    echo "$1 version is not installed yet, abort."
     return;
-  fi 
-  
-  # Current selected Version can't be removed   
+  fi
+
+  # Current selected Version can't be removed
   if [[ $VERSION == `nvm_ls current` ]]; then
     echo "Cannot uninstall currently-active node version, v$VERSION."
     return 1
   fi
-  
+
   echo "Removing Node $VERSION..."
   rm -rf "$LXNODEPATH/$VERSION"
 }
 
 # Switch to specified Node.JS Version globally
 nodeSwitch() {
-  local nodedir="$LXNODEPATH/$1"
+  local nodever=`nvm_ls $1 | sort | tail -n1`
   
-  if [ ! -d "$nodedir" ] ; then
+  if [ "$nodever" = 'N/A' ]; then
     echo "Node v$1 not found."
     return
   fi
   
+  local nodedir="$LXNODEPATH/$nodever"
+
+  if [ ! -d "$nodedir/bin" ] ; then
+    echo "Node binary directory (bin/) not found."
+    return
+  fi
+
   # Make sure only root can run our script
   if [[ $EUID -ne 0 ]]; then
     echo "This operation must be run as root" 1>&2
     echo
     exit 1
   fi
-  
-  echo "Switch to $1..."
-  
+
+  echo "Switch to $nodever..."
+
   # Remove symbolic link for node
   if [ -h "/bin/node" ] ; then
     rm "/bin/node"
@@ -543,7 +570,7 @@ nodeSwitch() {
   
   # Create link
   ln -s "$nodedir/bin/node" "/bin/node"
-  ln -s "$nodedir/bin/npm" "/bin/npm"  
+  ln -s "$nodedir/bin/npm" "/bin/npm"
 }
 
 # Run specified Node.js Version
@@ -553,34 +580,34 @@ nodeRun() {
     nodeHelp
     return
   fi
-    
+
   local VERSION=`nvm_version v$1`
-  
+
   if [ ! -d $LXNODEPATH/${VERSION:1} ]; then
     echo "$1 version is not installed yet"
     return;
   fi
-  
+
   echo "Running node $VERSION"
   $LXNODEPATH/${VERSION:1}/bin/node "${@:2}"
 }
 
 nodeList() {
   local CURRENT=`nvm_ls current`
-  
+
   echo "local available version:"
   echo
-  
-  for VERSION in `nvm_ls $1`; do
+
+  for VERSION in `nvm_ls`; do
     if [ -d "$LXNODEPATH/$VERSION" ]; then
       PADDED_VERSION=`printf '%10s' $VERSION`
-      
+
       if [ $CURRENT = $VERSION ] ; then
         echo "* $PADDED_VERSION"
       else
         echo "  $PADDED_VERSION"
-      fi      
-    fi    
+      fi
+    fi
   done
 }
 
@@ -597,7 +624,7 @@ fi
 case $1 in
   "help" ) lxmHelp ;;
   "version" ) lxmVersion ;;
-  "service" ) 
+  "service" )
     case $2 in
       "install" ) serviceInstall ${@:3} ;;
       "remove" ) serviceRemove $3 ;;

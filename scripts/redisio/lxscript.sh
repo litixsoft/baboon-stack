@@ -11,12 +11,12 @@ fi
 case $1 in
   "install" )
     # RedisIO Binarys
-    ln -s "$bshome/redisio/bin/redis-cli" "/bin/redis-cli"
-    ln -s "$bshome/redisio/bin/redis-server" "/bin/redis-server"
+    ln -s "$LXCURDIR/bin/redis-cli" "/bin/redis-cli"
+    ln -s "$LXCURDIR/bin/redis-server" "/bin/redis-server"
 
     # RedisIO
     echo "Register RedisIO Daemon..."
-    ln -s "$bshome/redisio/redisd" "/etc/init.d/redisd"
+    ln -s "$LXCURDIR/redisd" "/etc/init.d/redisd"
     update-rc.d redisd defaults
 
     echo Start Service
@@ -36,10 +36,10 @@ case $1 in
     rm /bin/redis-server
 
     # Delete Binarys
-    rm -rf "$LXCURDIR/bin/"
+    rm -rf "$LXCURDIR/bin"
     
     # Remove all
-    if [ $2 = "all" ]; then
+    if [ "$2" ] && [ "$2" = "all" ]; then
       rm -rf "$LXCURDIR/"
     fi  
   ;;

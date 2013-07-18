@@ -21,7 +21,7 @@ NODEUSER="{{LXNODEUSER}}"
 
 DAEMON_ARGS="$LXAPP"
 DESC="node.js http server"
-LOCAL_VAR_RUN=/usr/local/var/run
+LOCAL_VAR_RUN=/var/run
 NAME=node
 DAEMON="$LXHOME/node/$LXNODEVERSION/bin/$NAME"
 
@@ -36,6 +36,7 @@ INIT_SCRIPT_NAME=`basename $THIS_ARG`
 INIT_SCRIPT_NAME_NOEXT=${INIT_SCRIPT_NAME%.*}
 PIDFILE="$LOCAL_VAR_RUN/$INIT_SCRIPT_NAME_NOEXT.pid"
 SCRIPTNAME=/etc/init.d/$INIT_SCRIPT_NAME
+LOGFILE="/var/log/$INIT_SCRIPT_NAME"
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] ||  { echo "can't find Node.js ($DAEMON)"  >&2; exit 0; }

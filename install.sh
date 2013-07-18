@@ -1,5 +1,6 @@
 #!/bin/bash
 # Install Script for BaboonStack
+echo
 echo "BaboonStack Installer"
 echo
 FILE="/tmp/out.$$"
@@ -49,38 +50,26 @@ fi
 echo "Extract Files..."
 tar -zxf "$bspacket" -C "$bshome"
 
-# Link Binarys
-
-# Node.JS Binarys
+# Link Node.JS Binarys
 ln -s "$bshome/node/0.10.12/bin/node" "/bin/node"
 ln -s "$bshome/node/0.10.12/bin/npm" "/bin/npm"
 
-# MongoDB Binarys
-ln -s "$bshome/mongo/bin/mongo" "/bin/mongo"
-ln -s "$bshome/mongo/bin/mongod" "/bin/mongod"
+# Link lxManager Script
+ln -s "$bshome/lxm/lxm.sh" "/bin/lxm"
 
-# RedisIO Binarys
-ln -s "$bshome/redisio/bin/redis-cli" "/bin/redis-cli"
-ln -s "$bshome/redisio/bin/redis-server" "/bin/redis-server"
+# Okay execute every lxscript.sh for completed the installation
+dirs=`find "$bshome" -maxdepth 1 -type d -exec basename '{}' ';'`
+for dir in $dirs; do
+  # If Directory AND lxscript.sh exists
+  if [ -x "$bshome/$dir/lxscript.sh" ]; then
+    # Execute Script
+    echo "Execute Installscript $dir/lxscript.sh..."
+    sh "$bshome/$dir/lxscript.sh" install
+  fi    
+done    
 
-# Register Services
-# MongoDB
-echo "Register MongoDB Daemon..."
-ln -s "$bshome/mongo/mongod" "/etc/init.d/mongod"
-update-rc.d mongod defaults
-
-# RedisIO
-echo "Register RedisIO Daemon..."
-ln -s "$bshome/redisio/redisd" "/etc/init.d/redisd"
-update-rc.d redisd defaults
-
-# Starts Daemon...
-echo "Start MongoDB Daemon..."
-/etc/init.d/mongod start
-
-echo "Start RedisIO Daemon..."
-/etc/init.d/redisd start
-
-echo "Done! Bye..."
 echo "BaboonStack installed to $bshome"
+echo "Done! Bye..."
+echo
+echo "Enter 'lxm' for more informations" 
 echo
