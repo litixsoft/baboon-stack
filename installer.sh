@@ -28,7 +28,7 @@ bshome=/opt/litixsoft/baboonstack
 
 # Reads remote Server Packets
 lxm_ls_remote() {
-  VERSIONS=`curl -s "$LXSERVER/" | sed -n 's/.*">\(.*\)<\/a>.*/\1/p' | grep -w "baboonstack-v.*-linux-$LXARCH.tar.gz"`
+  VERSIONS=`curl -s "$LXSERVER/" | sed -n 's/.*">\(.*\)<\/a>.*/\1/p' | grep -w "baboonstack-v.*-$LXOS-$LXARCH.tar.gz"`
 
   if [ ! "$VERSIONS" ]; then
     echo "N/A"
@@ -39,7 +39,7 @@ lxm_ls_remote() {
   return
 }
 
-echo "BaboonStack Online Installer for Linux"
+echo "BaboonStack Online Installer"
 echo
 
 # Make sure only root can run our script
