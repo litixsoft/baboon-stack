@@ -2,6 +2,7 @@
 # BaboonStack Install Script
 # Package: mongodb
 LXCURDIR=$(dirname $(readlink -f $0))
+LXSERVICEENABLED=`which update-rc.d ; echo $?`
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
@@ -17,7 +18,10 @@ case $1 in
     # Register Services
     echo "Register MongoDB Daemon 'mongod'..."
     ln -s "$LXCURDIR/mongod" "/etc/init.d/mongod"
-    update-rc.d mongod defaults
+
+    if [ $LXSERVICEENABLED = 0 ]; then
+      update-rc.d mongod defaults
+    fi
     
     echo Start Service
     /etc/init.d/mongod start
@@ -28,7 +32,11 @@ case $1 in
   "remove" )
     # Remove MongoDB Daemon
     /etc/init.d/mongod stop
-    update-rc.d -f mongod remove
+
+    if [ $LXSERVICEENABLED = 0 ]; then
+      update-rc.d -f mongod remove
+    fi
+
     rm /etc/init.d/mongod
 
     # Remove symbolic links

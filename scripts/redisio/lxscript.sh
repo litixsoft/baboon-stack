@@ -2,6 +2,7 @@
 # BaboonStack Install Script
 # Package: RedisIO
 LXCURDIR=$(dirname $(readlink -f $0))
+LXSERVICEENABLED=`which update-rc.d ; echo $?`
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
@@ -17,8 +18,13 @@ case $1 in
     # RedisIO
     echo "Register RedisIO Daemon..."
     ln -s "$LXCURDIR/redisd" "/etc/init.d/redisd"
-    update-rc.d redisd defaults
-
+    
+    if [ $LXSERVICEENABLED = 0 ]; then
+      update-rc.d redisd defaults
+    else
+    
+    fi
+    
     echo Start Service
     /etc/init.d/redisd start
   ;;
@@ -28,7 +34,12 @@ case $1 in
   "remove" )
     # Remove Redis Daemon
     /etc/init.d/redisd stop
-    update-rc.d -f redisd remove
+    if [ $LXSERVICEENABLED = 0 ]; then
+      update-rc.d -f redisd remove
+    else
+    
+    fi
+      
     rm /etc/init.d/redisd
 
     # Remove symbolic links

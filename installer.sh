@@ -79,6 +79,7 @@ fi
 # Extract Files
 echo "Extract Files..."
 tar -zxf "$REMOTEPACKET" -C "$bshome"
+rm $REMOTEPACKET
 
 # Link Node.JS Binarys
 echo "Register Node.JS..."

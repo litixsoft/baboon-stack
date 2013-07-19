@@ -26,6 +26,8 @@ LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
 LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
 
+LXSERVICEENABLED=`which update-rc.d ; echo $?`
+
 lxmHeader() {
   echo
   echo "lxManager by Litixsoft GmbH 2013"
@@ -42,7 +44,9 @@ lxmHelp() {
   echo "    lxm update                        Search and Installs BaboonStack Updates"
   echo
   echo "    lxm node                          Node Module Controls"
-  echo "    lxm service                       Service Module Controls for Node.JS"
+  if [ $LXSERVICEENABLED = 0 ]; then
+    echo "    lxm service                       Service Module Controls for Node.JS"
+  fi
   echo
   echo "    Some operations required root access."
 }
@@ -640,13 +644,17 @@ case $1 in
   "help" ) lxmHelp ;;
   "version" ) lxmVersion ;;
   "service" )
-    case $2 in
-      "install" ) serviceInstall ${@:3} ;;
-      "remove" ) serviceRemove $3 ;;
-      "start" ) serviceControl $3 start ;;
-      "stop" ) serviceControl $3 stop ;;
-      *) serviceHelp ;;
-    esac  
+    if [ $LXSERVICEENABLED = 0 ]; then
+      case $2 in
+        "install" ) serviceInstall ${@:3} ;;
+        "remove" ) serviceRemove $3 ;;
+        "start" ) serviceControl $3 start ;;
+        "stop" ) serviceControl $3 stop ;;
+        *) serviceHelp ;;
+      esac
+    else
+      lxmHelp
+    fi
   ;;
   "update" ) lxmUpdate ;;
   "node" )
