@@ -400,12 +400,15 @@ nodeHelp() {
   echo "    lxm node install [version]       Install a specific version number"
   echo "    lxm node switch [version]        Switch to Version"
   echo "    lxm node run <version> [<args>]  Run <version> with <args> as arguments"
-  echo "    lxm node list                    View locally available version"
+  echo "    lxm node ls                      View locally available version"
+  echo "    lxm node remotels                View remote available version"
   echo
   echo "Example:"
   echo "    lxm node install 0.10.12         Install a specific version"
   echo "    lxm node switch 0.10             Use the latest available 0.10.x release"
   echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
+  echo "    lxm node ls 0.10                 Lists all locally available 0.10.x releases"
+  echo "    lxm node remotels 0.10           Lists all remote available 0.10.x releases"
   echo
 }
 
@@ -598,15 +601,27 @@ nodeList() {
   echo "local available version:"
   echo
 
-  for VERSION in `nvm_ls`; do
+  for VERSION in `nvm_ls $1`; do
     if [ -d "$LXNODEPATH/$VERSION" ]; then
       PADDED_VERSION=`printf '%10s' $VERSION`
 
-      if [ $CURRENT = $VERSION ] ; then
+      if [ "$CURRENT" ] && [ "$CURRENT" = "$VERSION" ] ; then
         echo "* $PADDED_VERSION"
       else
         echo "  $PADDED_VERSION"
       fi
+    fi
+  done
+}
+
+nodeListRemote() {
+  echo "remote available version:"
+  echo
+
+  for VERSION in `nvm_ls_remote $1`; do
+    if [[ "$VERSION" == v?*.?*.?* ]]; then
+      PADDED_VERSION=`printf '%10s' $VERSION`
+      echo "  $PADDED_VERSION"
     fi
   done
 }
@@ -641,6 +656,8 @@ case $1 in
       "switch" ) nodeSwitch $3 ;;
       "run" ) nodeRun ${@:3} ;;
       "list" ) nodeList $3 ;;
+      "ls" ) nodeList $3 ;;
+      "remotels" ) nodeListRemote $3 ;;
       *) nodeHelp ;;
     esac
   ;;
