@@ -2,7 +2,50 @@
 # BaboonStack Install Script
 # Package: mongodb
 LXCURDIR=$(dirname $(readlink -f $0))
-LXSERVICEENABLED=`which update-rc.d ; echo $?`
+
+installDaemon() {
+  local srcbinary="$LXCURDIR/$1"
+  local desbinary="/etc/init.d/$1"
+
+  # If Debian system?
+  if [ `which update-rc.d ; echo $?` ]; then
+    ln -s "$srcbinary.debian" "$desbinary"
+    update-rc.d $1 defaults
+    return 1
+  fi
+
+  # If Fedora system?
+  if [ `which chkconfig ; echo $?` ]; then
+    ln -s "$srcbinary.fedora" "$desbinary"
+    chkconfig --add $1
+    chkconfig $1 on
+    systemctl --system daemon-reload
+    return 1
+  fi
+  
+  return 0
+}
+
+removeDaemon() {
+  local srcbinary="$LXCURDIR/$1"
+  local desbinary="/etc/init.d/$1"
+
+  # If Debian system?
+  if [ `which update-rc.d ; echo $?` ]; then   
+    update-rc.d -f $1 remove    
+    return 1
+  fi
+
+  # If Fedora system?
+  if [ `which chkconfig ; echo $?` ]; then
+    chkconfig $1 off
+    chkconfig --del $1    
+    systemctl --system daemon-reload    
+    return 1
+  fi
+  
+  return 0
+}
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
@@ -17,27 +60,23 @@ case $1 in
 
     # Register Services
     echo "Register MongoDB Daemon 'mongod'..."
-    ln -s "$LXCURDIR/mongod" "/etc/init.d/mongod"
-
-    if [ $LXSERVICEENABLED = 0 ]; then
-      update-rc.d mongod defaults
+    if [ `installDaemon mongod` ]; then
+      echo "Start Service..."
+      /etc/init.d/mongod start
     fi
-    
-    echo Start Service
-    /etc/init.d/mongod start
   ;;
   "update" )
   
   ;;
   "remove" )
-    # Remove MongoDB Daemon
+  # Remove MongoDB Daemon
+    echo "Remove MongoDB Daemon..."
     /etc/init.d/mongod stop
-
-    if [ $LXSERVICEENABLED = 0 ]; then
-      update-rc.d -f mongod remove
+    
+    if [ `removeDaemon mongod`  ]; then
+      # Remove Link
+      rm /etc/init.d/mongod   
     fi
-
-    rm /etc/init.d/mongod
 
     # Remove symbolic links
     rm /bin/mongo

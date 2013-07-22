@@ -2,7 +2,50 @@
 # BaboonStack Install Script
 # Package: RedisIO
 LXCURDIR=$(dirname $(readlink -f $0))
-LXSERVICEENABLED=`which update-rc.d ; echo $?`
+
+installDaemon() {
+  local srcbinary="$LXCURDIR/$1"
+  local desbinary="/etc/init.d/$1"
+
+  # If Debian system?
+  if [ `which update-rc.d ; echo $?` ]; then
+    ln -s "$srcbinary.debian" "$desbinary"
+    update-rc.d $1 defaults
+    return 1
+  fi
+
+  # If Fedora system?
+  if [ `which chkconfig ; echo $?` ]; then
+    ln -s "$srcbinary.fedora" "$desbinary"
+    chkconfig --add $1
+    chkconfig $1 on
+    systemctl --system daemon-reload
+    return 1
+  fi
+  
+  return 0
+}
+
+removeDaemon() {
+  local srcbinary="$LXCURDIR/$1"
+  local desbinary="/etc/init.d/$1"
+
+  # If Debian system?
+  if [ `which update-rc.d ; echo $?` ]; then   
+    update-rc.d -f $1 remove    
+    return 1
+  fi
+
+  # If Fedora system?
+  if [ `which chkconfig ; echo $?` ]; then
+    chkconfig $1 off
+    chkconfig --del $1    
+    systemctl --system daemon-reload    
+    return 1
+  fi
+  
+  return 0
+}
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
@@ -15,32 +58,25 @@ case $1 in
     ln -s "$LXCURDIR/bin/redis-cli" "/bin/redis-cli"
     ln -s "$LXCURDIR/bin/redis-server" "/bin/redis-server"
 
-    # RedisIO
+    # RedisIO Daemon
     echo "Register RedisIO Daemon..."
-    ln -s "$LXCURDIR/redisd" "/etc/init.d/redisd"
-    
-    if [ $LXSERVICEENABLED = 0 ]; then
-      update-rc.d redisd defaults
-    else
-    
+    if [ `installDaemon redisd` ]; then
+      echo "Start Service..."
+      /etc/init.d/redisd start
     fi
-    
-    echo Start Service
-    /etc/init.d/redisd start
   ;;
   "update" )
   
   ;;
   "remove" )
     # Remove Redis Daemon
+    echo "Remove RedisIO Daemon..."
     /etc/init.d/redisd stop
-    if [ $LXSERVICEENABLED = 0 ]; then
-      update-rc.d -f redisd remove
-    else
     
+    if [ `removeDaemon redisd`  ]; then
+      # Remove Link
+      rm /etc/init.d/redisd   
     fi
-      
-    rm /etc/init.d/redisd
 
     # Remove symbolic links
     rm /bin/redis-cli
