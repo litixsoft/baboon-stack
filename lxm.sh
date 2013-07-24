@@ -26,8 +26,6 @@ LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
 LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
 
-LXSERVICEENABLED=`which update-rc.d ; echo $?`
-
 lxmHeader() {
   echo
   echo "lxManager by Litixsoft GmbH 2013"
@@ -44,9 +42,12 @@ lxmHelp() {
   echo "    lxm update                        Search and Installs BaboonStack Updates"
   echo
   echo "    lxm node                          Node Module Controls"
-  if [ $LXSERVICEENABLED = 0 ]; then
+  
+  # If Debian system?
+  if [ `which update-rc.d 2>/dev/null` ]; then
     echo "    lxm service                       Service Module Controls for Node.JS"
   fi
+  
   echo
   echo "    Some operations required root access."
 }
@@ -84,7 +85,7 @@ serviceInstall() {
     serviceHelp
     return
   fi
-
+  
   # If Daemon exists?
   if [ -e "/etc/init.d/$1" ]; then
     echo "Ups! Daemon $1 already exists"
@@ -107,7 +108,7 @@ serviceInstall() {
   LXCURRENTUSER=`id -n -u`
   LXCURRENTGROUP=`id -n -g`
 
-  # Some variables, for better handlin
+  # Some variables, for better handling
   local LXDAEMON="$1"
   local LXNODEVERSION="$2"
   local LXAPP="$3"
@@ -120,17 +121,25 @@ serviceInstall() {
   local LXTARGET="/etc/init.d/$LXDAEMON"
 
   echo "Register Daemon..."
-  # Replaces the Text Marks in Daemon template
-  sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"
+  
+  # If Debian system?
+  if [ `which update-rc.d 2>/dev/null` ]; then
+    LXSOURCE="$LXSOURCE.debian"
+    # Replaces the Text Marks in Daemon template
+    sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"
 
-  # Make Script executable
-  chmod +x "$LXTARGET"
+    # Make Script executable
+    chmod +x "$LXTARGET"
 
-  # Register Service
-  update-rc.d $LXDAEMON defaults
-  echo "Done..."
-  echo
-  echo "Enter 'lxm service start $LXDAEMON' to start application..."
+    # Register Service
+    update-rc.d $LXDAEMON defaults
+    echo "Done..."
+    echo
+    echo "Enter 'lxm service start $LXDAEMON' to start application..."
+    return 1
+  fi
+  
+  return 0
 }
 
 serviceRemove() {
@@ -164,11 +173,17 @@ serviceRemove() {
   "/etc/init.d/$LXDAEMON" stop
   fi
 
-  echo "Remove..."
-  update-rc.d -f $LXDAEMON remove
-  rm -f /etc/init.d/$LXDAEMON
-
-  echo "Done..."
+  echo "Remove $LXDAEMON..."
+  
+  # If Debian system?
+  if [ `which update-rc.d 2>/dev/null` ]; then
+    update-rc.d -f $LXDAEMON remove
+    rm -f /etc/init.d/$LXDAEMON
+    echo "Done..."
+    return 1
+  fi
+     
+  return 0
 }
 
 serviceControl() {
@@ -445,7 +460,7 @@ nodeInstall() {
   local shasum='shasum'
   local nobinary
 
-  if [ -z "`which shasum`" ]; then
+  if [ -z "`which shasum 2>/dev/null`" ]; then
     shasum='sha1sum'
   fi
 
@@ -636,6 +651,7 @@ lxmHeader
 # No Arguments? Show Help.
 if [ $# -lt 1 ]; then
   lxmHelp
+  echo
   exit 1
 fi
 
@@ -644,7 +660,8 @@ case $1 in
   "help" ) lxmHelp ;;
   "version" ) lxmVersion ;;
   "service" )
-    if [ $LXSERVICEENABLED = 0 ]; then
+      # If Debian system?
+    if [ `which update-rc.d 2>/dev/null` ]; then
       case $2 in
         "install" ) serviceInstall ${@:3} ;;
         "remove" ) serviceRemove $3 ;;

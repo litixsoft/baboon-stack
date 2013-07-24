@@ -43,7 +43,7 @@ if [ -d "$bshome/node" ]; then
   echo "Remove Node.JS"
   rm /bin/node
   rm /bin/npm
-  rm -r "$bshome/node"
+  rm -rf "$bshome/node"
 fi
 
 # Remove lxManager
@@ -51,12 +51,12 @@ if [ -d "$bshome/lxm" ]; then
   # Remove Symlink
   echo "Remove lxManager"
   rm /bin/lxm
-  rm -r "$bshome/lxm"
+  rm -rf "$bshome/lxm"
 fi
 
 if [ bsmode = "all" ]; then
   echo "Remove $bshome"
-  rm -r "$bshome"
+  rm -rf "$bshome"
 fi
 
 echo "Done! Bye..."

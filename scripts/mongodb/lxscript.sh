@@ -3,53 +3,51 @@
 # Package: mongodb
 LXCURDIR=$(dirname $(readlink -f $0))
 
-installDaemon() {
+function installDaemon() {
   local srcbinary="$LXCURDIR/$1"
   local desbinary="/etc/init.d/$1"
 
   # If Debian system?
-  if [ `which update-rc.d ; echo $?` ]; then
+  if [ `which update-rc.d 2>/dev/null` ]; then
     ln -s "$srcbinary.debian" "$desbinary"
     update-rc.d $1 defaults
-    return 1
+    return 0
   fi
 
   # If Fedora system?
-  if [ `which chkconfig ; echo $?` ]; then
+  if [ `which chkconfig 2>/dev/null` ]; then
     ln -s "$srcbinary.fedora" "$desbinary"
     chkconfig --add $1
     chkconfig $1 on
-    systemctl --system daemon-reload
-    return 1
+    return 0
   fi
   
-  return 0
+  return 1
 }
 
-removeDaemon() {
+function removeDaemon() {
   local srcbinary="$LXCURDIR/$1"
   local desbinary="/etc/init.d/$1"
 
   # If Debian system?
-  if [ `which update-rc.d ; echo $?` ]; then   
+  if [ `which update-rc.d 2>/dev/null` ]; then   
     update-rc.d -f $1 remove    
-    return 1
+    return 0
   fi
 
   # If Fedora system?
-  if [ `which chkconfig ; echo $?` ]; then
+  if [ `which chkconfig 2>/dev/null` ]; then
     chkconfig $1 off
-    chkconfig --del $1    
-    systemctl --system daemon-reload    
-    return 1
+    chkconfig --del $1
+    return 0
   fi
   
-  return 0
+  return 1
 }
 
 if [ $# -lt 1 ]; then
   echo "lxScript for Linux"
-  return
+  exit 1
 fi
 
 case $1 in
@@ -60,7 +58,7 @@ case $1 in
 
     # Register Services
     echo "Register MongoDB Daemon 'mongod'..."
-    if [ `installDaemon mongod` ]; then
+    if ( installDaemon mongod ); then
       echo "Start Service..."
       /etc/init.d/mongod start
     fi
@@ -73,7 +71,7 @@ case $1 in
     echo "Remove MongoDB Daemon..."
     /etc/init.d/mongod stop
     
-    if [ `removeDaemon mongod`  ]; then
+    if ( removeDaemon mongod ); then
       # Remove Link
       rm /etc/init.d/mongod   
     fi
