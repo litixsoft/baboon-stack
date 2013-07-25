@@ -24,7 +24,12 @@ esac
 LXSERVER="http://packages.litixsoft.de"
 
 # Some variables
-bshome=/opt/litixsoft/baboonstack
+bshome=""
+
+case "$LXOS" in
+ linux) bshome=/opt/litixsoft/baboonstack ;;
+ darwin) bshome=/usr/share/litixsoft/baboonstack ;;
+esac
 
 # Reads remote Server Packets
 lxm_ls_remote() {
