@@ -22,7 +22,7 @@ esac
 
 LXVERSION="1.0.0"
 LXSERVER="http://packages.litixsoft.de"
-LXPACKET="baboonstack-v$LXVERSION-linux-$LXARCH.tar.gz"
+LXPACKET="baboonstack-v$LXVERSION-$LXOS-$LXARCH.tar.gz"
 LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
 LXNODEPATH=$LXPATH/node
 
@@ -308,7 +308,7 @@ lxm_ls_remote() {
     fi
 
     if [ "$PATTERN" = "update" ]; then
-        PATTERN="baboonstack-v.*-linux-$LXARCH.tar.gz"
+        PATTERN="baboonstack-v.*-$LXOS-$LXARCH.tar.gz"
     fi
 
     VERSIONS=`curl -s "$LXSERVER/" | sed -n 's/.*">\(.*\)<\/a>.*/\1/p' | grep -w "${PATTERN}"`
