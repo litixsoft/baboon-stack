@@ -24,11 +24,18 @@ esac
 LXSERVER="http://packages.litixsoft.de"
 
 # Some variables
-bshome=""
+LXHOMEPATH=""
+LXBINPATH="/bin"
 
 case "$LXOS" in
- linux) bshome=/opt/litixsoft/baboonstack ;;
- darwin) bshome=/usr/share/litixsoft/baboonstack ;;
+  linux)
+    LXHOMEPATH=/opt/litixsoft/baboonstack
+    LXBINPATH="/bin"
+  ;;
+  darwin)    
+    LXHOMEPATH=/usr/share/litixsoft/baboonstack
+    LXBINPATH="/usr/bin"
+  ;;
 esac
 
 # Reads remote Server Packets
@@ -76,42 +83,42 @@ fi
 echo "Install $REMOTEPACKET..."
 
 # Create Directory
-if [ ! -d "$bshome" ]; then
-  echo "Create $bshome..."
-  mkdir -p $bshome
+if [ ! -d "$LXHOMEPATH" ]; then
+  echo "Create $LXHOMEPATH..."
+  mkdir -p $LXHOMEPATH
 fi
 
 # Extract Files
 echo "Extract Files..."
-tar -zxf "$REMOTEPACKET" -C "$bshome"
+tar -zxf "$REMOTEPACKET" -C "$LXHOMEPATH"
 rm $REMOTEPACKET
 
 # Link Node.JS Binarys
 echo "Register Node.JS..."
 
 # Find the current Node Version
-nodedir=`find "$bshome/node/" -maxdepth 1 -type d -name "*.*.*" | sort | tail -n1`
+nodedir=`find "$LXHOMEPATH/node/" -maxdepth 1 -type d -name "*.*.*" | sort | tail -n1`
 
 # Map current
-ln -s "$nodedir/bin/node" "/bin/node"
-ln -s "$nodedir/bin/npm" "/bin/npm"
+ln -s "$nodedir/bin/node" "$LXBINPATH/node"
+ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
 
 echo "Register lxManager..."
 # Link lxManager Script
-ln -s "$bshome/lxm/lxm.sh" "/bin/lxm"
+ln -s "$LXHOMEPATH/lxm/lxm.sh" "$LXBINPATH/lxm"
 
 # Okay execute every lxscript.sh for completed the installation
-dirs=`find "$bshome" -maxdepth 1 -type d -exec basename '{}' ';'`
+dirs=`find "$LXHOMEPATH" -maxdepth 1 -type d -exec basename '{}' ';'`
 for dir in $dirs; do
   # If Directory AND lxscript.sh exists
-  if [ -x "$bshome/$dir/lxscript.sh" ]; then
+  if [ -x "$LXHOMEPATH/$dir/lxscript.sh" ]; then
     # Execute Script
     echo "Execute Installscript $dir/lxscript.sh..."
-    sh "$bshome/$dir/lxscript.sh" install
+    sh "$LXHOMEPATH/$dir/lxscript.sh" install
   fi    
 done    
 
-echo "BaboonStack installed to $bshome"
+echo "BaboonStack installed to $LXHOMEPATH"
 echo "Done! Bye..."
 echo
 echo "Enter 'lxm' for more informations" 
