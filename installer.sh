@@ -103,6 +103,17 @@ nodedir=`find "$LXHOMEPATH/node/" -maxdepth 1 -type d -name "*.*.*" | sort | tai
 ln -s "$nodedir/bin/node" "$LXBINPATH/node"
 ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
 
+# Write global NPM Configuration
+NPMRC="/etc/npmrc"
+
+if [ -d "/etc" ] && [ ! -e "$NPMRC" ]; then
+  echo "Create global 'npmrc' configuration file..."
+  echo "tmp=/tmp" > $NPMRC
+  echo "cache=$LXHOMEPATH/node/npm" >> $NPMRC
+else
+  echo "Global 'npmrc' configuration file exists, no changes made..."
+fi
+
 echo "Register lxManager..."
 # Link lxManager Script
 ln -s "$LXHOMEPATH/lxm/lxm.sh" "$LXBINPATH/lxm"
@@ -114,7 +125,7 @@ for dir in $dirs; do
   if [ -x "$LXHOMEPATH/$dir/lxscript.sh" ]; then
     # Execute Script
     echo "Execute Installscript $dir/lxscript.sh..."
-    sh "$LXHOMEPATH/$dir/lxscript.sh" install
+    bash "$LXHOMEPATH/$dir/lxscript.sh" install
   fi    
 done    
 

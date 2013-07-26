@@ -46,6 +46,11 @@ if [ -d "$bshome/node" ]; then
   rm -rf "$bshome/node"
 fi
 
+if [ -e "/etc/npmrc" ]; then
+  echo "Remove global 'npmrc' configuration file..."
+  rm -f "/etc/npmrc"
+fi
+
 # Remove lxManager
 if [ -d "$bshome/lxm" ]; then
   # Remove Symlink
