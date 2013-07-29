@@ -1,6 +1,9 @@
 #!/bin/sh
 # Baboonstack Online Installer
 # curl http://packages.litixsoft.de/installer.sh | sudo sh
+# Platform: Linux x86
+#           Linux x86_64
+#           MacOSX x86_64
 
 # Try to figure out the arch
 LXUNNAME="$(uname -a)"
