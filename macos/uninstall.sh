@@ -15,7 +15,7 @@ function request {
 }
 
 # Some variables
-LXHOMEPATH="$(dirname $(readlink ${BASH_SOURCE[0]} || echo ${BASH_SOURCE[0]#*/}))"
+LXHOMEPATH="$(pwd)"
 LXBINPATH="/usr/bin"
 LXMODE=""
 
