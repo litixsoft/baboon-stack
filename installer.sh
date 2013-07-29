@@ -32,7 +32,7 @@ case "$LXOS" in
     LXHOMEPATH=/opt/litixsoft/baboonstack
     LXBINPATH="/bin"
   ;;
-  darwin)    
+  darwin)
     LXHOMEPATH=/usr/share/litixsoft/baboonstack
     LXBINPATH="/usr/bin"
   ;;
@@ -125,8 +125,12 @@ for dir in $dirs; do
   if [ -x "$LXHOMEPATH/$dir/lxscript.sh" ]; then
     # Execute Script
     echo "Execute Installscript $dir/lxscript.sh..."
-    bash "$LXHOMEPATH/$dir/lxscript.sh" install
-  fi    
+    if [ $(head -n 1 "$LXHOMEPATH/$dir/lxscript.sh") = "#!/bin/bash" ]; then
+      bash "$LXHOMEPATH/$dir/lxscript.sh" install
+    else
+      sh "$LXHOMEPATH/$dir/lxscript.sh" install
+    fi
+  fi
 done    
 
 echo "BaboonStack installed to $LXHOMEPATH"

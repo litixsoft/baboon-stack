@@ -33,7 +33,11 @@ fi
 files=`find "$bshome" -maxdepth 2 -type f -name "lxscript.sh"`
 for scriptfile in $files; do
   if [ -x "$scriptfile" ]; then
-    sh "$scriptfile" remove $bsmode
+    if [ $(head -n 1 "$scriptfile") = "#!/bin/bash" ]; then
+      bash "$scriptfile" remove $bsmode
+    else
+      sh "$scriptfile" remove $bsmode
+    fi
   fi
 done
 
