@@ -257,8 +257,8 @@ lxmUpdate() {
 
       # Copy Content
       echo "Copy Content from $dir..."
-      cp -f -R "$tmpdir/$dir/" "$LXBASEPATH"
-
+      cp -f -R "$tmpdir/$dir" "$LXBASEPATH"
+      
       # If Directory AND lxscript.sh exists
       if [ -x "$LXBASEPATH/$dir/lxscript.sh" ]; then
         # Execute Script
