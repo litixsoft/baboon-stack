@@ -1,6 +1,5 @@
 #!/bin/bash
-# BaboonStack for Linux
-# Includes Code from NVM - https://github.com/creationix/nvm
+# BaboonStack for Linux/MacOS
 
 # Try to figure out the arch
 LXUNNAME="$(uname -a)"
@@ -10,8 +9,10 @@ LXOS=
 case "$LXUNNAME" in
   Linux\ *) LXOS=linux ;;
   Darwin\ *) LXOS=darwin ;;
-  SunOS\ *) LXOS=sunos ;;
-  FreeBSD\ *) LXOS=freebsd ;;
+  *) 
+    echo "Sorry! Unsupported OS."
+    exit 5
+  ;;
 esac
 
 case "$LXUNNAME" in
@@ -23,9 +24,28 @@ esac
 LXVERSION="1.0.0"
 LXSERVER="http://packages.litixsoft.de"
 LXPACKET="baboonstack-v$LXVERSION-$LXOS-$LXARCH.tar.gz"
-LXPATH="$( cd "$( dirname "$(readlink -f $0)" )" && cd .. && pwd )"
-LXNODEPATH=$LXPATH/node
 
+# Some OS specified operations to detect current path etc
+case "$LXOS" in
+  linux )
+    # Linux
+    LXCURRPATH="$( dirname "$(readlink -f $0)" )"
+    LXBASEPATH="$( cd "$LXCURRPATH" ; cd .. ; pwd )"
+    LXSERVICEENABLED=`which update-rc.d 2>/dev/null`
+  ;;
+  
+  darwin )
+    # MacOSX
+    LXCURRPATH="$(dirname $(readlink ${BASH_SOURCE[0]} || echo ${BASH_SOURCE[0]}))"
+    LXBASEPATH="$(cd "$LXCURRPATH"; cd ..; pwd -P)"
+    LXSERVICEENABLED=
+  ;;
+esac
+
+# Node Path
+LXNODEPATH=$LXBASEPATH/node
+
+# Start lxm
 lxmHeader() {
   echo
   echo "lxManager by Litixsoft GmbH 2013"
@@ -33,7 +53,7 @@ lxmHeader() {
 }
 
 lxmVersion() {
-  echo "$LXVERSION $LXARCH"
+  echo "$LXVERSION-$LXOS-$LXARCH"
 }
 
 lxmHelp() {
@@ -42,169 +62,15 @@ lxmHelp() {
   echo "    lxm update                        Search and Installs BaboonStack Updates"
   echo
   echo "    lxm node                          Node Module Controls"
-  
-  # If Debian system?
-  if [ `which update-rc.d 2>/dev/null` ]; then
+
+  # Service modul enabled?
+  if [ $LXSERVICEENABLED ]; then
     echo "    lxm service                       Service Module Controls for Node.JS"
   fi
-  
+
   echo
   echo "    Some operations required root access."
 }
-
-## Begin Service
-
-serviceHelp() {
-  echo "Usage:"
-  echo "    lxm service install [name] [version] [app] Install a Node.JS Daemon"
-  echo "    lxm service remove [name]                  Removes a Node.JS Daemon"
-  echo "    lxm service start [name]                   Start Daemon"
-  echo "    lxm service stop [name]                    Stop Daemon"
-  echo
-  echo "Example:"
-  echo "    lxm service install lxappd 0.10.12 /home/user/myapp/app.js"
-  echo "    lxm service remove lxappd"
-  echo
-}
-
-#
-serviceInstall() {
-  # $1 == Daemonname
-  # $2 == Node Version Number
-  # $3 == Node Application
-  # $4 == Application Arguments optional
-
-  # Make sure only root can run our script
-  if [[ $EUID -ne 0 ]]; then
-    echo "This operation must be run as root" 1>&2
-    echo
-    exit 1
-  fi
-
-  if [ $# -lt 3 ]; then
-    serviceHelp
-    return
-  fi
-  
-  # If Daemon exists?
-  if [ -e "/etc/init.d/$1" ]; then
-    echo "Ups! Daemon $1 already exists"
-    return
-  fi
-
-  # If Node.JS locally available
-  if [ `nvm_ls $2` == "N/A" ]; then
-    echo "Node.JS Version $2 not found. Please use 'lxm node install $2' to install first."
-    return
-  fi
-
-  # If Node Application exits
-  if [ ! -e "$3" ]; then
-    echo "Node.JS Application not found: $3"
-    return
-  fi
-
-  # Collect current User
-  LXCURRENTUSER=`id -n -u`
-  LXCURRENTGROUP=`id -n -g`
-
-  # Some variables, for better handling
-  local LXDAEMON="$1"
-  local LXNODEVERSION="$2"
-  local LXAPP="$3"
-  local LXPARAM="$4"
-  local LXHOME="$LXPATH"
-  local LXNODEUSER="$LXCURRENTUSER:$LXCURRENTGROUP"
-
-  # Uff
-  local LXSOURCE="$LXPATH/lxm/lxnoded"
-  local LXTARGET="/etc/init.d/$LXDAEMON"
-
-  echo "Register Daemon..."
-  
-  # If Debian system?
-  if [ `which update-rc.d 2>/dev/null` ]; then
-    LXSOURCE="$LXSOURCE.debian"
-    # Replaces the Text Marks in Daemon template
-    sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"
-
-    # Make Script executable
-    chmod +x "$LXTARGET"
-
-    # Register Service
-    update-rc.d $LXDAEMON defaults
-    echo "Done..."
-    echo
-    echo "Enter 'lxm service start $LXDAEMON' to start application..."
-    return 1
-  fi
-  
-  return 0
-}
-
-serviceRemove() {
-  # $1 == Daemonname
-
-  # Make sure only root can run our script
-  if [[ $EUID -ne 0 ]]; then
-    echo "This operation must be run as root" 1>&2
-    echo
-    exit 1
-  fi
-
-  if [ $# -lt 1 ]; then
-    serviceHelp
-    return
-  fi
-
-  local LXDAEMON=$1
-
-  # If Daemon exists?
-  if [ ! -e "/etc/init.d/$LXDAEMON" ]; then
-    echo "Ups! Daemon $LXDAEMON not exists"
-    return
-  fi
-
-  # If Daemon runnig?
-  LXEXITCODE=`/etc/init.d/$LXDAEMON status &> /dev/null ; echo $?`
-
-  if [ $LXEXITCODE == 0 ] ; then
-  echo "Stop Daemon..."
-  "/etc/init.d/$LXDAEMON" stop
-  fi
-
-  echo "Remove $LXDAEMON..."
-  
-  # If Debian system?
-  if [ `which update-rc.d 2>/dev/null` ]; then
-    update-rc.d -f $LXDAEMON remove
-    rm -f /etc/init.d/$LXDAEMON
-    echo "Done..."
-    return 1
-  fi
-     
-  return 0
-}
-
-serviceControl() {
-  # Make sure only root can run our script
-  if [[ $EUID -ne 0 ]]; then
-    echo "This operation must be run as root" 1>&2
-    echo
-    exit 1
-  fi
-
-  if [ $# -lt 2 ]; then
-    serviceHelp
-    return
-  fi
-
-  # Simple
-  echo "Execute /etc/init.d/$1 $2..."
-  /etc/init.d/$1 $2
-}
-
-## End Service
 
 ## Begin NVM
 
@@ -357,7 +223,7 @@ lxmUpdate() {
     exit 1
   fi
 
-  local tmpdir="$LXPATH/.update"
+  local tmpdir="$LXBASEPATH/.update"
   local tmptar="$tmpdir/$VERSION"
 
   echo "Update $LXPACKET => $VERSION..."
@@ -380,19 +246,27 @@ lxmUpdate() {
       fi
 
       # If Directory AND lxscript.sh exists
-      if [ -x "$LXPATH/$dir/lxscript.sh" ]; then
+      if [ -x "$LXBASEPATH/$dir/lxscript.sh" ]; then
         # Execute Script
-        sh "$LXPATH/$dir/lxscript.sh" remove
+        if [ $(head -n 1 "$LXBASEPATH/$dir/lxscript.sh") = "#!/bin/bash" ]; then
+          bash "$LXBASEPATH/$dir/lxscript.sh" remove
+        else
+          sh "$LXBASEPATH/$dir/lxscript.sh" remove
+        fi
       fi
 
       # Copy Content
       echo "Copy Content from $dir..."
-      cp -f -R "$tmpdir/$dir/" "$LXPATH"
+      cp -f -R "$tmpdir/$dir/" "$LXBASEPATH"
 
       # If Directory AND lxscript.sh exists
-      if [ -x "$LXPATH/$dir/lxscript.sh" ]; then
+      if [ -x "$LXBASEPATH/$dir/lxscript.sh" ]; then
         # Execute Script
-        sh "$LXPATH/$dir/lxscript.sh" install
+        if [ $(head -n 1 "$LXBASEPATH/$dir/lxscript.sh") = "#!/bin/bash" ]; then
+          bash "$LXBASEPATH/$dir/lxscript.sh" install
+        else
+          sh "$LXBASEPATH/$dir/lxscript.sh" install
+        fi
       fi
     done
 
@@ -402,9 +276,9 @@ lxmUpdate() {
   fi
 
   # Remove Update Directory
-  if [ -d "$LXPATH/.update" ]; then
+  if [ -d "$LXBASEPATH/.update" ]; then
     echo "Cleaning up..."
-    rm -rf "$LXPATH/.update"
+    rm -rf "$LXBASEPATH/.update"
   fi
   
   exit 2
@@ -419,15 +293,14 @@ nodeHelp() {
   echo "    lxm node install [version]       Install a specific version number"
   echo "    lxm node switch [version]        Switch to Version"
   echo "    lxm node run <version> [<args>]  Run <version> with <args> as arguments"
-  echo "    lxm node ls                      View locally available version"
-  echo "    lxm node remotels                View remote available version"
+  echo "    lxm node ls                      View available version"
   echo
   echo "Example:"
   echo "    lxm node install 0.10.12         Install a specific version"
   echo "    lxm node switch 0.10             Use the latest available 0.10.x release"
   echo "    lxm node remove 0.10.12          Removes a specific version from Disc"
   echo "    lxm node ls 0.10                 Lists all locally available 0.10.x releases"
-  echo "    lxm node remotels 0.10           Lists all remote available 0.10.x releases"
+  echo "    lxm node ls remote 0.10          Lists all remote available 0.10.x releases"
   echo
 }
 
@@ -581,18 +454,18 @@ nodeSwitch() {
   echo "Switch to $nodever..."
 
   # Remove symbolic link for node
-  if [ -h "/bin/node" ] ; then
-    rm "/bin/node"
+  if [ -h "/usr/bin/node" ] ; then
+    rm "/usr/bin/node"
   fi
 
   # Remove symbolic link for npm
-  if [ -h "/bin/npm" ] ; then
-    rm "/bin/npm"
+  if [ -h "/usr/bin/npm" ] ; then
+    rm "/usr/bin/npm"
   fi
   
   # Create link
-  ln -s "$nodedir/bin/node" "/bin/node"
-  ln -s "$nodedir/bin/npm" "/bin/npm"
+  ln -s "$nodedir/bin/node" "/usr/bin/node"
+  ln -s "$nodedir/bin/npm" "/usr/bin/npm"
 }
 
 # Run specified Node.js Version
@@ -607,7 +480,7 @@ nodeRun() {
 
   if [ ! -d $LXNODEPATH/${VERSION:1} ]; then
     echo "$1 version is not installed yet"
-    return;
+    return
   fi
 
   echo "Running node $VERSION"
@@ -615,6 +488,12 @@ nodeRun() {
 }
 
 nodeList() {
+  # Show remote versions
+  if [ "$1" = "remote" ]; then
+    nodeListRemote ${@:2}
+    return
+  fi
+
   local CURRENT=`nvm_ls current`
 
   echo "local available version:"
@@ -645,6 +524,162 @@ nodeListRemote() {
   done
 }
 
+## End NVM
+
+## Begin Service
+
+serviceHelp() {
+  echo "Usage:"
+  echo "    lxm service install [name] [version] [app] Install a Node.JS Daemon"
+  echo "    lxm service remove [name]                  Removes a Node.JS Daemon"
+  echo "    lxm service start [name]                   Start Daemon"
+  echo "    lxm service stop [name]                    Stop Daemon"
+  echo
+  echo "Example:"
+  echo "    lxm service install lxappd 0.10.12 /home/user/myapp/app.js"
+  echo "    lxm service remove lxappd"
+  echo
+}
+
+#
+serviceInstall() {
+  # $1 == Daemonname
+  # $2 == Node Version Number
+  # $3 == Node Application
+  # $4 == Application Arguments optional
+
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi
+
+  if [ $# -lt 3 ]; then
+    serviceHelp
+    return
+  fi
+  
+  # If Daemon exists?
+  if [ -e "/etc/init.d/$1" ]; then
+    echo "Ups! Daemon $1 already exists"
+    return
+  fi
+
+  # If Node.JS locally available
+  if [ `nvm_ls $2` == "N/A" ]; then
+    echo "Node.JS Version $2 not found. Please use 'lxm node install $2' to install first."
+    return
+  fi
+
+  # If Node Application exits
+  if [ ! -e "$3" ]; then
+    echo "Node.JS Application not found: $3"
+    return
+  fi
+
+  # Collect current User
+  LXCURRENTUSER=`id -n -u`
+  LXCURRENTGROUP=`id -n -g`
+
+  # Some variables, for better handling
+  local LXDAEMON="$1"
+  local LXNODEVERSION="$2"
+  local LXAPP="$3"
+  local LXPARAM="$4"
+  local LXHOME="$LXBASEPATH"
+  local LXNODEUSER="$LXCURRENTUSER:$LXCURRENTGROUP"
+
+  # Uff
+  local LXSOURCE="$LXBASEPATH/lxm/lxnoded"
+  local LXTARGET="/etc/init.d/$LXDAEMON"
+
+  echo "Register Daemon..."
+  
+  # If Debian system?
+  if [ `which update-rc.d 2>/dev/null` ]; then
+    LXSOURCE="$LXSOURCE.debian"
+    # Replaces the Text Marks in Daemon template
+    sed -e "s#{{LXDAEMON}}#$LXDAEMON#g" -e "s#{{LXAPP}}#$LXAPP#g" -e "s#{{LXPARAM}}#$LXPARAM#g" -e "s#{{LXHOME}}#$LXHOME#g" -e "s#{{LXNODEVERSION}}#$LXNODEVERSION#g" -e "s#{{LXNODEUSER}}#$LXNODEUSER#g" "$LXSOURCE" > "$LXTARGET"
+
+    # Make Script executable
+    chmod +x "$LXTARGET"
+
+    # Register Service
+    update-rc.d $LXDAEMON defaults
+    echo "Done..."
+    echo
+    echo "Enter 'lxm service start $LXDAEMON' to start application..."
+    return 1
+  fi
+  
+  return 0
+}
+
+serviceRemove() {
+  # $1 == Daemonname
+
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi
+
+  if [ $# -lt 1 ]; then
+    serviceHelp
+    return
+  fi
+
+  local LXDAEMON=$1
+
+  # If Daemon exists?
+  if [ ! -e "/etc/init.d/$LXDAEMON" ]; then
+    echo "Ups! Daemon $LXDAEMON not exists"
+    return
+  fi
+
+  # If Daemon runnig?
+  LXEXITCODE=`/etc/init.d/$LXDAEMON status &> /dev/null ; echo $?`
+
+  if [ $LXEXITCODE == 0 ] ; then
+  echo "Stop Daemon..."
+  "/etc/init.d/$LXDAEMON" stop
+  fi
+
+  echo "Remove $LXDAEMON..."
+  
+  # If Debian system?
+  if [ `which update-rc.d 2>/dev/null` ]; then
+    update-rc.d -f $LXDAEMON remove
+    rm -f /etc/init.d/$LXDAEMON
+    echo "Done..."
+    return 1
+  fi
+     
+  return 0
+}
+
+serviceControl() {
+  # Make sure only root can run our script
+  if [[ $EUID -ne 0 ]]; then
+    echo "This operation must be run as root" 1>&2
+    echo
+    exit 1
+  fi
+
+  if [ $# -lt 2 ]; then
+    serviceHelp
+    return
+  fi
+
+  # Simple
+  echo "Execute /etc/init.d/$1 $2..."
+  /etc/init.d/$1 $2
+}
+
+## End Service
+
 # Show Header
 lxmHeader 
 
@@ -659,9 +694,20 @@ fi
 case $1 in
   "help" ) lxmHelp ;;
   "version" ) lxmVersion ;;
+  "update" ) lxmUpdate ;;
+  "node" )
+    case $2 in
+      "install" ) nodeInstall $3 ;;
+      "remove" ) nodeRemove $3 ;;
+      "switch" ) nodeSwitch $3 ;;
+      "run" ) nodeRun ${@:3} ;;
+      "list" ) nodeList ${@:3} ;;
+      "ls" ) nodeList ${@:3} ;;
+      *) nodeHelp ;;
+    esac
+  ;;
   "service" )
-      # If Debian system?
-    if [ `which update-rc.d 2>/dev/null` ]; then
+    if [ $LXSERVICEENABLED ]; then
       case $2 in
         "install" ) serviceInstall ${@:3} ;;
         "remove" ) serviceRemove $3 ;;
@@ -672,20 +718,7 @@ case $1 in
     else
       lxmHelp
     fi
-  ;;
-  "update" ) lxmUpdate ;;
-  "node" )
-    case $2 in
-      "install" ) nodeInstall $3 ;;
-      "remove" ) nodeRemove $3 ;;
-      "switch" ) nodeSwitch $3 ;;
-      "run" ) nodeRun ${@:3} ;;
-      "list" ) nodeList $3 ;;
-      "ls" ) nodeList $3 ;;
-      "remotels" ) nodeListRemote $3 ;;
-      *) nodeHelp ;;
-    esac
-  ;;
+  ;;    
   * ) lxmHelp ;;
 esac
 
