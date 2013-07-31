@@ -41,6 +41,19 @@ case "$LXOS" in
   ;;
 esac
 
+# Reads local Server Packets
+lxm_ls_local() {
+ VERSIONS=`find . -maxdepth 1 -name "baboonstack-v.*-$LXOS-$LXARCH.tar.gz" -exec basename '{}' ';' | sort | tail -n1`
+  
+ if [ ! "$VERSIONS" ]; then
+    echo "N/A"
+    return
+  fi
+
+  echo "$VERSIONS"
+  return
+}
+
 # Reads remote Server Packets
 lxm_ls_remote() {
   VERSIONS=`curl -s "$LXSERVER/" | sed -n 's/.*">\(.*\)<\/a>.*/\1/p' | grep -w "baboonstack-v.*-$LXOS-$LXARCH.tar.gz"`
@@ -54,8 +67,45 @@ lxm_ls_remote() {
   return
 }
 
+# Installer Help Options
+showHelp() {
+  echo "Unknow Parameter: $1"
+  echo
+  echo "Available Parameters:"
+  echo
+  echo " --without-mongodb                   Exclude MongoDB from Installation"
+  echo " --without-redisio                   Exclude RedisIO from Installation"
+  echo
+  exit 2
+}
+
 echo "BaboonStack Online Installer"
 echo
+
+# Parse Commando Line Arguments to exclude BaboonStack Parts
+EXCLUDES=
+if [ $# -gt 0 ]; then
+  for param in $@; do
+    if echo "${param}" | grep -q "\-\-without\-*" ; then
+      case "$param" in
+        # No MongoDB
+        *mongo* )
+          echo "Exclude MongoDB..."
+          EXCLUDES="$EXCLUDES --excludes=mongo"
+        ;;
+        # No RedisIO
+        *redis* )
+          echo "Exclude RedisIO..."
+          EXCLUDES="$EXCLUDES --excludes=redisio"
+        ;;
+        *) showHelp $param ;;
+      esac
+    else
+      showHelp $param
+    fi
+  done
+fi
+
 
 # Make sure only root can run our script
 if  [ ! $(id -u) = 0 ]; then
@@ -64,26 +114,34 @@ if  [ ! $(id -u) = 0 ]; then
   exit 1
 fi
 
-# Get latest Baboonstack Version from Server
-REMOTEPACKET=`lxm_ls_remote | sort | tail -n1 | tr -d ' '`
+# First, search locally
+BSPACKAGE=`lxm_ls_local`
+BSSOURCE=0
 
-# Packet available
-if [ "$REMOTEPACKET" = "N/A" ]; then
-  echo "Ups, sorry. No package found on server."
-  echo
-  exit 2
+# No local Packet found, then try online
+if [ "$BSPACKAGE" = "N/A" ]; then
+  # Get latest Baboonstack Version from Server
+  BSPACKAGE=`lxm_ls_remote | sort | tail -n1 | tr -d ' '`
+  BSSOURCE=1
+
+  # Packet available
+  if [ "$BSPACKAGE" = "N/A" ]; then
+    echo "Ups, sorry. No package found on server."
+    echo
+    exit 2
+  fi
+
+  echo "Download $BSPACKAGE..."
+
+  # Download Packet from Server
+  if !(curl -C - --progress-bar "$LXSERVER/$BSPACKAGE" -o "$BSPACKAGE") then
+    echo "Sorry, a error occured. Please try again."
+    echo
+    exit 2
+  fi
 fi
 
-echo "Download $REMOTEPACKET..."
-
-# Download Packet from Server
-if !(curl -C - --progress-bar "$LXSERVER/$REMOTEPACKET" -o "$REMOTEPACKET") then
-  echo "Sorry, a error occured. Please try again."
-  echo
-  exit 2
-fi
-
-echo "Install $REMOTEPACKET..."
+echo "Install $BSPACKAGE..."
 
 # Create Directory
 if [ ! -d "$LXHOMEPATH" ]; then
@@ -91,10 +149,14 @@ if [ ! -d "$LXHOMEPATH" ]; then
   mkdir -p $LXHOMEPATH
 fi
 
-# Extract Files
+# Extract Files with $EXCLUDES
 echo "Extract Files..."
-tar -zxf "$REMOTEPACKET" -C "$LXHOMEPATH"
-rm $REMOTEPACKET
+tar -zxf "$BSPACKAGE" -C "$LXHOMEPATH" $EXCLUDES
+
+# If Remote Packet then delete
+if [ $BSSOURCE = 1 ]; then
+  rm $BSPACKAGE
+fi
 
 # Link Node.JS Binarys
 echo "Register Node.JS..."
