@@ -43,8 +43,8 @@ esac
 
 # Reads local Server Packets
 lxm_ls_local() {
- VERSIONS=`find . -maxdepth 1 -name "baboonstack-v.*-$LXOS-$LXARCH.tar.gz" -exec basename '{}' ';' | sort | tail -n1`
-  
+ VERSIONS=`find . -maxdepth 1 -name "baboonstack-v*-$LXOS-$LXARCH.tar.gz" -exec basename '{}' ';' | sort | tail -n1`
+
  if [ ! "$VERSIONS" ]; then
     echo "N/A"
     return
@@ -79,8 +79,15 @@ showHelp() {
   exit 2
 }
 
-echo "BaboonStack Online Installer"
+echo "BaboonStack Installer for Linux/MacOS"
 echo
+
+# Make sure only root can run our script
+if  [ ! $(id -u) = 0 ]; then
+  echo "This script must be run as root" 1>&2
+  echo
+  exit 1
+fi
 
 # Parse Commando Line Arguments to exclude BaboonStack Parts
 EXCLUDES=
@@ -91,12 +98,12 @@ if [ $# -gt 0 ]; then
         # No MongoDB
         *mongo* )
           echo "Exclude MongoDB..."
-          EXCLUDES="$EXCLUDES --excludes=mongo"
+          EXCLUDES="$EXCLUDES --exclude=mongo"
         ;;
         # No RedisIO
         *redis* )
           echo "Exclude RedisIO..."
-          EXCLUDES="$EXCLUDES --excludes=redisio"
+          EXCLUDES="$EXCLUDES --exclude=redisio"
         ;;
         *) showHelp $param ;;
       esac
@@ -104,14 +111,6 @@ if [ $# -gt 0 ]; then
       showHelp $param
     fi
   done
-fi
-
-
-# Make sure only root can run our script
-if  [ ! $(id -u) = 0 ]; then
-  echo "This script must be run as root" 1>&2
-  echo
-  exit 1
 fi
 
 # First, search locally
@@ -139,6 +138,8 @@ if [ "$BSPACKAGE" = "N/A" ]; then
     echo
     exit 2
   fi
+else
+  echo "Local Packet found..."
 fi
 
 echo "Install $BSPACKAGE..."
@@ -152,6 +153,12 @@ fi
 # Extract Files with $EXCLUDES
 echo "Extract Files..."
 tar -zxf "$BSPACKAGE" -C "$LXHOMEPATH" $EXCLUDES
+
+# Files succesfully extracted?
+if [ $? -ne 0 ]; then
+  echo "Uuuh, error while extract files. Abort!"
+  exit 2
+fi
 
 # If Remote Packet then delete
 if [ $BSSOURCE = 1 ]; then
@@ -196,7 +203,7 @@ for dir in $dirs; do
       sh "$LXHOMEPATH/$dir/lxscript.sh" install
     fi
   fi
-done    
+done
 
 echo "BaboonStack installed to $LXHOMEPATH"
 echo "Done! Bye..."
