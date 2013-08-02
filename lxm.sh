@@ -31,7 +31,7 @@ case "$LXOS" in
     # Linux
     LXCURRPATH="$( dirname "$(readlink -f $0)" )"
     LXBASEPATH="$( cd "$LXCURRPATH" ; cd .. ; pwd )"
-    LXBINPATH="/usr"
+    LXBINPATH="/bin"
     LXSERVICEENABLED=`which update-rc.d 2>/dev/null`
   ;;
   
@@ -39,7 +39,7 @@ case "$LXOS" in
     # MacOSX
     LXCURRPATH="$(dirname $(readlink ${BASH_SOURCE[0]} || echo ${BASH_SOURCE[0]}))"
     LXBASEPATH="$(cd "$LXCURRPATH"; cd ..; pwd -P)"
-    LXBINPATH="/usr"
+    LXBINPATH="/usr/bin"
     LXSERVICEENABLED=
   ;;
 esac

@@ -37,7 +37,7 @@ case "$LXOS" in
   ;;
   darwin)
     LXHOMEPATH=/usr/share/litixsoft/baboonstack
-    LXBINPATH="/bin"
+    LXBINPATH="/usr/bin"
   ;;
 esac
 
@@ -175,16 +175,10 @@ nodedir=`find "$LXHOMEPATH/node/" -maxdepth 1 -type d -name "*.*.*" | sort | tai
 ln -s "$nodedir/bin/node" "$LXBINPATH/node"
 ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
 
-# Write global NPM Configuration
-NPMRC="/etc/npmrc"
-
-if [ -d "/etc" ] && [ ! -e "$NPMRC" ]; then
-  echo "Create global 'npmrc' configuration file..."
-  echo "tmp=/tmp" > $NPMRC
-  echo "cache=$LXHOMEPATH/node/npm" >> $NPMRC
-else
-  echo "Global 'npmrc' configuration file exists, no changes made..."
-fi
+# Set global NPM Configuration
+echo "Create global NPM configuration file..."
+npm --global config set tmp /tmp
+npm --global config set cache "$LXHOMEPATH/node/npm"
 
 echo "Register lxManager..."
 # Link lxManager Script
