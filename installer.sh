@@ -37,7 +37,7 @@ case "$LXOS" in
   ;;
   darwin)
     LXHOMEPATH=/usr/share/litixsoft/baboonstack
-    LXBINPATH="/usr/bin"
+    LXBINPATH="/bin"
   ;;
 esac
 

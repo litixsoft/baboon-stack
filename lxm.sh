@@ -31,6 +31,7 @@ case "$LXOS" in
     # Linux
     LXCURRPATH="$( dirname "$(readlink -f $0)" )"
     LXBASEPATH="$( cd "$LXCURRPATH" ; cd .. ; pwd )"
+    LXBINPATH="/usr"
     LXSERVICEENABLED=`which update-rc.d 2>/dev/null`
   ;;
   
@@ -38,6 +39,7 @@ case "$LXOS" in
     # MacOSX
     LXCURRPATH="$(dirname $(readlink ${BASH_SOURCE[0]} || echo ${BASH_SOURCE[0]}))"
     LXBASEPATH="$(cd "$LXCURRPATH"; cd ..; pwd -P)"
+    LXBINPATH="/usr"
     LXSERVICEENABLED=
   ;;
 esac
@@ -454,18 +456,18 @@ nodeSwitch() {
   echo "Switch to $nodever..."
 
   # Remove symbolic link for node
-  if [ -h "/usr/bin/node" ] ; then
-    rm "/usr/bin/node"
+  if [ -h "$LXBINPATH/node" ] ; then
+    rm "$LXBINPATH/node"
   fi
 
   # Remove symbolic link for npm
-  if [ -h "/usr/bin/npm" ] ; then
-    rm "/usr/bin/npm"
+  if [ -h "$LXBINPATH/npm" ] ; then
+    rm "$LXBINPATH/npm"
   fi
   
   # Create link
-  ln -s "$nodedir/bin/node" "/usr/bin/node"
-  ln -s "$nodedir/bin/npm" "/usr/bin/npm"
+  ln -s "$nodedir/bin/node" "$LXBINPATH/node"
+  ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
 }
 
 # Run specified Node.js Version
