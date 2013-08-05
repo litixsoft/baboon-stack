@@ -47,8 +47,12 @@ def reporthook(blocknum, blocksize, filesize):
     pass
 
 # Returns if nodeversion the correct format
-def getIfNodeVersion(nodeversion):
+def getIfNodeVersionFormat(nodeversion):
     return regex.match('[0-9]+\.[0-9]+\.[0-9]+', nodeversion) != None
+
+# Returns if nodeversion installed
+def getIfNodeVersionInstalled(nodeversion):
+    return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
 # Download a Remote File to a temporary File and returns the filename
 # Displays a Progress Bar during Download
@@ -222,7 +226,7 @@ def getLocalNodeVersionList():
 
     # Filter the non confirm Versions :D
     for entry in srcNodeList:
-        if getIfNodeVersion(entry):
+        if getIfNodeVersionFormat(entry):
             tarNodeList.append(entry)
 
     return tarNodeList
@@ -230,7 +234,7 @@ def getLocalNodeVersionList():
 # Activate a local available Node Version
 def setLocalNodeVersion(nodeversion):
     # Check if syntax correct
-    if not getIfNodeVersion(nodeversion):
+    if not getIfNodeVersionFormat(nodeversion):
         print('{0} is not a Node Version Format.'.format(nodeversion))
         return False
 
@@ -292,7 +296,7 @@ def getIfNodeVersionActive(nodeversion):
 # Removes a local installed Version
 def rmLocalNodeVersion(nodeversion):
     # Check if syntax correct
-    if not getIfNodeVersion(nodeversion):
+    if not getIfNodeVersionFormat(nodeversion):
         print('{0} is not a Node Version Format.'.format(nodeversion))
         return False
 
@@ -320,7 +324,7 @@ def rmLocalNodeVersion(nodeversion):
 
 def runSpecifiedNodeVersion(nodeversion, app, arg=''):
     # Check if syntax correct
-    if not getIfNodeVersion(nodeversion):
+    if not getIfNodeVersionFormat(nodeversion):
         print('{0} is not a Node Version Format.'.format(nodeversion))
         return False
 

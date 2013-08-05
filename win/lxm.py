@@ -15,6 +15,7 @@ import tempfile
 import platform
 import hashlib
 import lxtools
+import service
 import sys
 import os
 
@@ -118,6 +119,52 @@ def lxmNode(params):
     # No Command found, show Help
     lxmNodeHelp()
 
+# Service Operations
+
+def lxmServiceHelp():
+    print('Usage:\n')
+    print('    lxm service install [name] [version] [app] Install a Node.JS Service')
+    print('    lxm service remove [name]                  Removes a Node.JS Service')
+    print('    lxm service start [name]                   Start Service')
+    print('    lxm service stop [name]                    Stop Service\n')
+    print('Example:\n')
+    print('    lxm service install lxappd 0.10.12 c:\\projects\\web\app.js')
+    print('    lxm service remove lxappd\n')
+    pass
+
+def lxmService(params):
+    if len(params) == 0:
+        lxmServiceHelp()
+        return
+
+    # Get First Command
+    command = params.pop(0).lower()
+
+    # Installs a Service
+    if command == 'install' and len(params) == 3:
+        return service.installService(params.pop(0), params.pop(0), params.pop(0))
+
+    # Removes a Service
+    if command == 'remove' and len(params) != 0:
+        return service.removeService(params.pop(0))
+
+    # Starts a Service
+    if command == 'start' and len(params) != 0:
+        return service.startService(params.pop(0))
+
+    # Stops a Service
+    if command == 'stop' and len(params) != 0:
+        return service.stopService(params.pop(0))
+
+    # No Command found, show Help
+    lxmServiceHelp()
+
+# Update Operations
+
+def lxmUpdate(params):
+    print('No update')
+    return
+
 # Default Schrottie Schrott Schrott
 def main():
     # Check Parameters
@@ -135,7 +182,7 @@ def main():
 
     # Service Module
     if moduleName == 'service':
-        return
+        return lxmService(params)
 
     # Prints the Baboonstack Version
     if moduleName == 'version':
@@ -143,7 +190,7 @@ def main():
 
     # Check if update on remote Server
     if moduleName == 'update':
-        return
+        return lxmUpdate(params)
 
     # Show Help
     lxmHelp()
