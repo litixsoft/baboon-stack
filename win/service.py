@@ -9,9 +9,11 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 import subprocess
+import os
+
+# lxManager Modules
 import lxtools
 import nvm
-import os
 
 # Some global variables
 lxBasePath = os.environ['LXPATH']
@@ -157,9 +159,3 @@ def stopService(servicename):
         return False
 
     return True
-
-def main():
-    pass
-
-if __name__ == '__main__':
-    main()

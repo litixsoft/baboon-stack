@@ -8,10 +8,11 @@
 # Copyright:   (c) Thomas Scheibe 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-
 import platform
 import hashlib
+import urllib.request as urlrequest
 import ctypes
+import sys
 import os
 
 # Returns if x86 or x64
@@ -80,8 +81,56 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
 def getIfSymbolicLink(lpFilename):
     return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040)  == 1040
 
-def main():
-    pass
+# Displays a Progress bar
+def showProgress(amtDone):
+    sys.stdout.write("\rProgress: [{0:50s}] {1:.1f}% ".format('#' * int(amtDone * 50), amtDone * 100))
+    sys.stdout.flush()
 
-if __name__ == '__main__':
-    main()
+# Callback for urlretrieve (Downloadprogress)
+def reporthook(blocknum, blocksize, filesize):
+    if (blocknum != 0):
+        percent =  blocknum / (filesize / blocksize)
+    else:
+        percent = 0
+
+    showProgress(percent)
+
+# Download a Remote File to a temporary File and returns the filename
+# Displays a Progress Bar during Download
+def getRemoteFile(url, tempfile=''):
+    showProgress(0);
+    try:
+        local_filename, headers = urlrequest.urlretrieve(url, tempfile, reporthook=reporthook)
+        showProgress(1);
+    except KeyboardInterrupt:
+        print('Abort!')
+        return -1
+    except e as Exception:
+        print('Exception occured!')
+        print(e)
+        return -1
+
+    return local_filename
+
+# Clear temporary internet files
+def cleanUpTemporaryFiles():
+    urlrequest.urlcleanup
+
+# Downloads a Remote File to a temporary File and returns the data
+def getRemoteData(url):
+    # Download from URL
+    try:
+        local_filename, headers = urlrequest.urlretrieve(url)
+    except e as Exception:
+        print('Exception occured!')
+        print(e)
+        return -1
+
+    # Open and Read local temporary File
+    html = open(local_filename)
+    data = html.read()
+    html.close()
+
+    # Delete temporary Internet File
+    urlrequest.urlcleanup()
+    return data

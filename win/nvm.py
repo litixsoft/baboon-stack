@@ -8,13 +8,14 @@
 # Copyright:   (c) Thomas Scheibe 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-import urllib.request as urlrequest
 import re as regex
 import subprocess
 import tempfile
-import lxtools
 import sys
 import os
+
+# lxManager Modules
+import lxtools
 
 # Global
 remotePackage = 'node-v{0}-{1}.msi'
@@ -29,22 +30,14 @@ lxBasePath = os.environ['LXPATH']
 lxNodePath = os.path.join(lxBasePath, 'Node')
 lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
 
-# Displays a Progress bar
-def showProgress(amtDone):
-    sys.stdout.write("\rProgress: [{0:50s}] {1:.1f}% ".format('#' * int(amtDone * 50), amtDone * 100))
-    sys.stdout.flush()
+# CleanUp
+def cleanUp():
+    # Remove temporary internet files
+    lxtools.cleanUpTemporaryFiles()
 
-    pass
-
-# Callback for urlretrieve (Downloadprogress)
-def reporthook(blocknum, blocksize, filesize):
-    if (blocknum != 0):
-        percent =  blocknum / (filesize / blocksize)
-    else:
-        percent = 0
-
-    showProgress(percent)
-    pass
+    # Clear temporary node directory
+    if os.path.exists(tempNodeDir):
+        lxtools.rmDirectory(tempNodeDir)
 
 # Returns if nodeversion the correct format
 def getIfNodeVersionFormat(nodeversion):
@@ -54,54 +47,10 @@ def getIfNodeVersionFormat(nodeversion):
 def getIfNodeVersionInstalled(nodeversion):
     return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
-# Download a Remote File to a temporary File and returns the filename
-# Displays a Progress Bar during Download
-def getRemoteFile(url):
-    showProgress(0);
-    try:
-        local_filename, headers = urlrequest.urlretrieve(url, reporthook=reporthook)
-        showProgress(1);
-    except KeyboardInterrupt:
-        print('Abort!')
-        return -1
-    except e as Exception:
-        print('Exception occured!')
-        print(e)
-        return -1
-
-    return local_filename
-
-def cleanUp():
-    # Clear temporary internet files
-    urlrequest.urlcleanup
-
-    # Clear temporary node directory
-    if os.path.exists(tempNodeDir):
-        lxtools.rmDirectory(tempNodeDir)
-
-    pass
-
-# Downloads a Remote File to a temporary File and returns the data
-def getRemoteData(url):
-    # Download from URL
-    try:
-        local_filename, headers = urlrequest.urlretrieve(url)
-    except:
-        return -1
-
-    # Open and Read local temporary File
-    html = open(local_filename)
-    data = html.read()
-    html.close()
-
-    # Delete temporary Internet File
-    urlrequest.urlcleanup()
-    return data
-
 # Returns the remote available Files with RegEx Filter
 def getRemoteList(url, filter = "(.*)"):
     # Download from URL
-    data = getRemoteData(url)
+    data = lxtools.getRemoteData(url)
 
     # Exception or Abort
     if data == -1:
@@ -112,7 +61,7 @@ def getRemoteList(url, filter = "(.*)"):
 
 def getRemoteChecksumList(url):
     # Download from URL
-    data = getRemoteData(url + '/SHASUMS.txt')
+    data = lxtools.getRemoteData(url + '/SHASUMS.txt')
 
     # Exception or Abort
     if data == -1:
@@ -168,7 +117,7 @@ def getRemoteNodeVersion(nodeversion):
 
     # Download Binary from Server
     print('Download installation package...')
-    tempRemoteFile = getRemoteFile("http://nodejs.org/dist/v" + nodeversion + '/' + remoteFilename)
+    tempRemoteFile = lxtools.getRemoteFile("http://nodejs.org/dist/v" + nodeversion + '/' + remoteFilename)
 
     # Abort or Exception
     if tempRemoteFile == -1:
@@ -341,7 +290,6 @@ def runSpecifiedNodeVersion(nodeversion, app, arg=''):
         print('Application not found!')
         return False
 
-
     exeName = os.path.join(nodeDir, 'node.exe')
     # RUN
     print('Run Application with Node v{0}...'.format(nodeversion))
@@ -350,10 +298,4 @@ def runSpecifiedNodeVersion(nodeversion, app, arg=''):
     except KeyboardInterrupt:
         print('Abort!')
 
-    return
-
-def main():
-    pass
-
-if __name__ == '__main__':
-    main()
+    return True

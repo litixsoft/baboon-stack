@@ -9,27 +9,20 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 import urllib.request as urlrequest
-import re as regex
-import subprocess
-import tempfile
-import platform
-import hashlib
-import lxtools
-import service
 import sys
 import os
+import re as regex
 
 # Litixsoft Modules
+import lxtools
+import service
+import version
+import update
 import nvm
 
-# Global
-lxVersion = '1.0.0'
-lxServer = 'http://packages.litixsoft.de'
-
-# Header
+# Header, the only one
 def lxmHeader():
     print('\nlxManager by Litixsoft GmbH 2013\n')
-
     pass
 
 # Prints the lxManager Version
@@ -48,7 +41,7 @@ def lxmHelp():
 
 # Prints Baboonstack Version
 def lxmVersion():
-    print('Version {0}\n'.format(lxVersion))
+    print('Version {0}\n'.format(version.lxVersion))
     pass
 
 # Node Operations
@@ -162,8 +155,7 @@ def lxmService(params):
 # Update Operations
 
 def lxmUpdate(params):
-    print('No update')
-    return
+    return update.doUpdate()
 
 # Default Schrottie Schrott Schrott
 def main():
