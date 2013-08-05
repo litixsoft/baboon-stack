@@ -31,6 +31,7 @@ def lxmHeader():
 
     pass
 
+# Prints the lxManager Version
 def lxmHelp():
     print('Usage:\n')
 
@@ -43,6 +44,8 @@ def lxmHelp():
     print('    Some operations required "administrator" rights.')
     pass
 
+
+# Prints Baboonstack Version
 def lxmVersion():
     print('Version {0}\n'.format(lxVersion))
     pass
@@ -64,36 +67,40 @@ def lxmNodeHelp():
     pass
 
 def lxmNode(params):
-    #ver = '5.a.0'
-    #print(regex.match('[0-9]+\.[0-9]+\.[0-9]+', ver)) == None
-    if params.count == 0:
+    if len(params) == 0:
         lxmNodeHelp()
         return
 
+    # Get First Command
     command = params.pop(0).lower()
 
     # Download a specified Version from Node.JS remote Server and activated it locally
-    if command == 'install':
-        return nvm.getRemoteNodeVersion("0.10.15")
+    if command == 'install' and len(params) != 0:
+        return nvm.getRemoteNodeVersion(params.pop(0).lower())
 
     # Switch to a local available Node.JS version
-    if command == 'switch':
-        return
+    if command == 'switch' and len(params) != 0:
+        return nvm.setLocalNodeVersion(params.pop(0).lower())
 
     # Runs a specified Node.JS Version
-    if command == 'run':
-        return
+    if command == 'run' and len(params) > 1:
+        return nvm.runSpecifiedNodeVersion(params.pop(0).lower(), params.pop(0).lower())
 
     # Removes a local installed Node.JS Version
-    if command == 'remove':
-        return
+    if command == 'remove' and len(params) != 0:
+        return nvm.rmLocalNodeVersion(params.pop(0).lower())
 
     # Lists locally or remote available Node.JS Versions
     if command == 'ls':
+        # Get current active Version
+        curr = nvm.getLocalNodeVersion()
+
         # show remote available Version?
         if 'remote' in params:
+            print('Remote available Node.JS Versions:\n')
             list = nvm.getRemoteNodeVersionList()
         else:
+            print('Local available Node.JS Versions:\n')
             list = nvm.getLocalNodeVersionList()
 
         # Sort list
@@ -101,10 +108,15 @@ def lxmNode(params):
 
         # Prints sorted list
         for entry in list:
-            print('  {0}'.format(entry))
-        return
+            if curr != '' and curr == entry:
+                print(' * {0}'.format(entry))
+            else:
+                print('   {0}'.format(entry))
 
-    pass
+        return True
+
+    # No Command found, show Help
+    lxmNodeHelp()
 
 # Default Schrottie Schrott Schrott
 def main():
@@ -133,14 +145,16 @@ def main():
     if moduleName == 'update':
         return
 
+    # Show Help
     lxmHelp()
 
-    pass
-
 if __name__ == '__main__':
+    lxmHeader()
 
-    if lxtools.getIfAdmin():
-        print(lxtools.setDirectoryLink('C:\\litixsoft\\baboonstack\\lxm\\test', 'C:\\litixsoft\\baboonstack\\node\\0.10.15'));
-
-    #lxmHeader()
-    #main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('Abort! Bye!')
+    except e as Exception:
+        print('Exception occured!')
+        print(e)

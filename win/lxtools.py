@@ -40,7 +40,7 @@ def rmDirectory(directory, subdirectory = ''):
             except IOError as e:
                 print("Remove File error. I/O error({0}): {1}".format(e.errno, e.strerror))
         elif os.path.isdir(itemName):
-            self.removeDirectory(directory, baseName)
+            rmDirectory(directory, baseName)
 
     try:
         os.rmdir(fulldirectory)
@@ -74,11 +74,11 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
     CreateSymbolicLink.restype = ctypes.c_bool
 
     return CreateSymbolicLink(lpSymlinkName, lpTargetName, 1)
-    #return ctypes.windll.kernel32.CreateSymbolicLinkW(str(lpSymlinkName, 'utf-8'), str(lpTargetName, 'utf-8'), 1) != 0
 
-# Removes a symbolic link
-def rmLinkDirectory(directory):
-    return
+# Returns if lpFilename a Directory AND Reparse Point (Symbolic Link)
+# FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_REPARSE_POINT
+def getIfSymbolicLink(lpFilename):
+    return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040)  == 1040
 
 def main():
     pass

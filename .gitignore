@@ -1,3 +1,5 @@
 /packets
 /tarhelp.txt
 .DS_Store
+win/__pycache__
+win/lxm.cmd
