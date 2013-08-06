@@ -123,8 +123,6 @@ def getRemoteNodeVersion(nodeversion):
     if tempRemoteFile == -1:
         return False
 
-    print('Done!')
-
     # Generate Checksum of downloaded Binary
     print('Generate Checksum...')
     localChecksum = lxtools.getSHAChecksum(tempRemoteFile)
@@ -214,7 +212,7 @@ def setLocalNodeVersion(nodeversion):
         # Remove Link
         try:
             os.remove(lxBinPath)
-        except e as Exception:
+        except:
             return False
 
     # Set new link
@@ -267,7 +265,7 @@ def rmLocalNodeVersion(nodeversion):
     try:
         lxtools.rmDirectory(nodeDir)
         return True
-    except e as Exception:
+    except Exception as e:
         print('ERROR: Node v{0} could not be removed.'.format(nodeversion))
         return False
 

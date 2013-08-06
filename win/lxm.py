@@ -194,6 +194,6 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print('Abort! Bye!')
-    except e as Exception:
+    except Exception as e:
         print('Exception occured!')
         print(e)

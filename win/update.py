@@ -35,8 +35,26 @@ def getLatestRemoteVersion():
     # Returns the LAST entry
     return versionList.pop()
 
+def getRemoteChecksum(filename):
+    # Download from URL
+    data = lxtools.getRemoteData(version.lxServer + '/SHASUMS.txt')
+
+    # Exception or Abort
+    if data == -1:
+        return ''
+
+    # Split data in to array and find checksum for file
+    for checksumEntry in data.split('\n'):
+        value = checksumEntry.split('  ')
+
+        if value[1] == filename:
+            return value[0]
+
+    return ''
+
 def doUpdate():
     # Get latest Version on Server
+    print('Check for update...')
     versionRemote = getLatestRemoteVersion()
 
     # No files?
@@ -67,5 +85,25 @@ def doUpdate():
         return False
 
     # Verify (if availabled)
+    print('Get Checksum from Server...')
+    remoteChecksum = getRemoteChecksum(versionRemote)
 
+    if remoteChecksum != '':
+        print('Verify Checksum...')
+        localChecksum = lxtools.getSHAChecksum(localPacket)
 
+        # Check Checksum
+        if (localChecksum == remoteChecksum):
+            print('Checksum are correct...')
+        else:
+            print('Checksum missmatch... Abort!')
+            print('Filename  ' + remoteFilename)
+            print('Remote SHA' + remoteChecksum)
+            print('Local  SHA' + localChecksum)
+            return False
+
+    # Run Installation and exit
+    print('Execute installer...')
+    os.startfile(localPacket)
+    print('Installation routine will start separately, exit now...')
+    return True

@@ -102,12 +102,18 @@ def getRemoteFile(url, tempfile=''):
     try:
         local_filename, headers = urlrequest.urlretrieve(url, tempfile, reporthook=reporthook)
         showProgress(1);
+        print('Done!')
     except KeyboardInterrupt:
         print('Abort!')
         return -1
-    except e as Exception:
-        print('Exception occured!')
+    except IOError as e:
+        print('Error!')
+        print('IO Error! Abort!\n')
         print(e)
+        return -1
+    except:
+        print('Error!')
+        print('Unknow Error occured! Abort!')
         return -1
 
     return local_filename
@@ -121,9 +127,12 @@ def getRemoteData(url):
     # Download from URL
     try:
         local_filename, headers = urlrequest.urlretrieve(url)
-    except e as Exception:
-        print('Exception occured!')
+    except IOError as e:
+        print('IO Error! Abort!\n')
         print(e)
+        return -1
+    except:
+        print('Unknow Error occured! Abort!')
         return -1
 
     # Open and Read local temporary File
