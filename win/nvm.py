@@ -8,6 +8,7 @@
 # Copyright:   (c) Thomas Scheibe 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
+from distutils.version import StrictVersion
 import re as regex
 import subprocess
 import tempfile
@@ -71,27 +72,43 @@ def getRemoteChecksumList(url):
     return data.split('\n')
 
 # Returns the remote available Node Version Directories
-def getRemoteNodeVersionList():
-    return getRemoteList("http://nodejs.org/dist/", "(v.*)\/")
+def getRemoteNodeVersionList(filter = '.*'):
+    versionList = getRemoteList("http://nodejs.org/dist/", "v(" + filter + ")\/")
+    versionList.sort(key=StrictVersion) # Sort list FROM oldest Version TO newer Version
+    return versionList
 
 # Returns, if remote Node Version for Windows available
 def getRemoteNodeVersion(nodeversion):
     checksum = ''
+
+    # Check if admin
+    if not lxtools.getIfAdmin():
+        print('This operation required Administrator rights!')
+        return
+
+    # Check if version available on remote server
+    print('Retrieve available version...')
+    versionList = getRemoteNodeVersionList(nodeversion + '.*')
+
+    # No Version found
+    if len(versionList) == 0:
+        print('Node v{0} not found on remote server.'.format(nodeversion))
+        return
+
+    # Get the last element from list
+    nodeversion = versionList.pop()
+
+    # Inform User about the version choose (only if more items exists)
+    if len(versionList) != 0:
+        print('Take Node v{0}...'.format(nodeversion))
+
+    # Build target Path
     targetDirectory = os.path.join(lxNodePath, nodeversion)
 
     # Check if already installed
     if os.path.exists(targetDirectory):
         print('Version already installed.')
         return
-
-    # Check if version available on remote server
-    versionList = getRemoteNodeVersionList()
-
-    if 'v' + nodeversion not in versionList:
-        print('Node v{0} not found on remote server.'.format(nodeversion))
-        return
-
-    print('Retrieve Node Version v{0}...'.format(nodeversion))
 
     # The 64Bit Windows Version of Node is in a seperate Folder on Server
     if lxtools.getOsArchitecture() == 'x86':
@@ -100,7 +117,7 @@ def getRemoteNodeVersion(nodeversion):
         remoteFilename = 'x64/' + remotePackage.format(nodeversion, 'x64')
 
     # Get Checksumlist from remote Server
-    print('Download Checksum List...')
+    print('Retrieve Checksum list...')
     checksumList = getRemoteChecksumList("http://nodejs.org/dist/v" + nodeversion)
 
     # Find Checksum for the Binary
@@ -116,7 +133,7 @@ def getRemoteNodeVersion(nodeversion):
         print('No checksum for remote Binary...')
 
     # Download Binary from Server
-    print('Download installation package...')
+    print('Retrieve Node Version v{0} Installation packet...'.format(nodeversion))
     tempRemoteFile = lxtools.getRemoteFile("http://nodejs.org/dist/v" + nodeversion + '/' + remoteFilename)
 
     # Abort or Exception
@@ -167,24 +184,41 @@ def getRemoteNodeVersion(nodeversion):
     return setLocalNodeVersion(nodeversion)
 
 # Retrives local available Node Versions
-def getLocalNodeVersionList():
+def getLocalNodeVersionList(filter = ''):
     srcNodeList = os.listdir(lxNodePath)
     tarNodeList = []
 
     # Filter the non confirm Versions :D
     for entry in srcNodeList:
         if getIfNodeVersionFormat(entry):
+            # If filter, then MUST match
+            if filter != '' and regex.match(filter + '.*', entry) == None:
+                continue
+
             tarNodeList.append(entry)
 
+    # Sort list FROM oldest Version TO newer Version
+    tarNodeList.sort(key=StrictVersion)
     return tarNodeList
 
 # Activate a local available Node Version
 def setLocalNodeVersion(nodeversion):
-    # Check if syntax correct
-    if not getIfNodeVersionFormat(nodeversion):
-        print('{0} is not a Node Version Format.'.format(nodeversion))
-        return False
+    # Retrive local available Version
+    versionList = getLocalNodeVersionList(nodeversion)
 
+    # No Version found
+    if len(versionList) == 0:
+        print('Sorry, no existing Node version {0} found locally.'.format(nodeversion))
+        return
+
+    # Get the last element from list
+    nodeversion = versionList.pop()
+
+    # Inform User about the version choose (only if more items exists)
+    if len(versionList) != 0:
+        print('Take Node v{0}...'.format(nodeversion))
+
+    # If version already active?
     if getIfNodeVersionActive(nodeversion):
         print('Node v{0} already active.'.format(nodeversion))
         return False
@@ -270,10 +304,20 @@ def rmLocalNodeVersion(nodeversion):
         return False
 
 def runSpecifiedNodeVersion(nodeversion, app, arg=''):
-    # Check if syntax correct
-    if not getIfNodeVersionFormat(nodeversion):
-        print('{0} is not a Node Version Format.'.format(nodeversion))
-        return False
+    # Retrive local available Version
+    versionList = getLocalNodeVersionList(nodeversion)
+
+    # No Version found
+    if len(versionList) == 0:
+        print('Sorry, no existing Node version {0} found locally.'.format(nodeversion))
+        return
+
+    # Get the last element from list
+    nodeversion = versionList.pop()
+
+    # Inform User about the version choose (only if more items exists)
+    if len(versionList) != 0:
+        print('Take Node v{0}...'.format(nodeversion))
 
     # Get original Path
     nodeDir = os.path.join(lxNodePath, nodeversion)

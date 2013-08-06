@@ -15,6 +15,31 @@ import ctypes
 import sys
 import os
 
+class Arguments:
+
+    def __init__(self):
+        self.args = sys.argv.copy()
+        self.args.pop(0) # Remove the first Argument
+
+    # Returns item count
+    def count(self):
+        return len(self.args)
+
+    # Get the FIRST element and remove it from list
+    def get(self, defaultValue = ''):
+        if self.count() != 0:
+            return self.args.pop(0)
+        else:
+            return defaultValue
+
+    # Returns TRUE or FALSE if NAME in list, if TRUE then removes element
+    def find(self, name):
+        if name in self.args:
+            self.args.pop(self.args.index(name))
+            return True
+        else:
+            return False
+
 # Returns if x86 or x64
 def getOsArchitecture():
     if platform.machine().endswith('64'):
