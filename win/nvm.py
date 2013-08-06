@@ -79,8 +79,6 @@ def getRemoteNodeVersionList(filter = '.*'):
 
 # Returns, if remote Node Version for Windows available
 def getRemoteNodeVersion(nodeversion):
-    checksum = ''
-
     # Check if admin
     if not lxtools.getIfAdmin():
         print('This operation required Administrator rights!')
@@ -119,18 +117,20 @@ def getRemoteNodeVersion(nodeversion):
     # Get Checksumlist from remote Server
     print('Retrieve Checksum list...')
     checksumList = getRemoteChecksumList("http://nodejs.org/dist/v" + nodeversion)
+    remoteChecksum = ''
 
     # Find Checksum for the Binary
-    for checksumEntry in checksumList:
-        value = checksumEntry.split('  ')
+    if len(checksumList) != '':
+        for checksumEntry in checksumList:
+            value = checksumEntry.split('  ')
 
-        if value[1] == remoteFilename:
-            remoteChecksum = value[0]
-            break
+            if len(value) > 1 and value[1] == remoteFilename:
+                remoteChecksum = value[0]
+                break
 
     # If Checksum found?
     if remoteChecksum == '':
-        print('No checksum for remote Binary...')
+        print('No checksum for remote Binary, if exists?\nTry to retrieve...')
 
     # Download Binary from Server
     print('Retrieve Node Version v{0} Installation packet...'.format(nodeversion))
