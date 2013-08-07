@@ -147,7 +147,7 @@ def lxmService():
         return service.startService(args.get())
 
     # Stops a Service
-    if command == 'stop' and largs.count() != 0:
+    if command == 'stop' and args.count() != 0:
         return service.stopService(args.get())
 
     # No Command found, show Help
@@ -181,9 +181,12 @@ def main():
     # Show Help
     lxmHelp()
 
+# lxManager Main
 if __name__ == '__main__':
+    # Shows the Header
     lxmHeader()
 
+    # Execute main() and catch all Exceptions
     try:
         main()
     except KeyboardInterrupt:

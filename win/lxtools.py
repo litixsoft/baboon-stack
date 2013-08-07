@@ -14,6 +14,7 @@ import urllib.request as urlrequest
 import ctypes
 import sys
 import os
+import winreg
 
 class Arguments:
 
@@ -168,3 +169,10 @@ def getRemoteData(url):
     # Delete temporary Internet File
     urlrequest.urlcleanup()
     return data
+
+# Returns the HOMEPATH of Baboonstack
+def getBaboonStackDirectory():
+    if 'LXPATH' in os.environ:
+        return os.environ['LXPATH']
+    else:
+        return os.path.dirname(os.getcwd())

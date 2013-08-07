@@ -27,7 +27,7 @@ tempNodeDir = os.path.join(tempfile.gettempdir(), 'node')
 moveNodeDir = os.path.join(tempNodeDir, 'nodejs')
 
 # Node Directory
-lxBasePath = os.environ['LXPATH']
+lxBasePath = lxtools.getBaboonStackDirectory()
 lxNodePath = os.path.join(lxBasePath, 'Node')
 lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
 
@@ -276,6 +276,11 @@ def getIfNodeVersionActive(nodeversion):
 
 # Removes a local installed Version
 def rmLocalNodeVersion(nodeversion):
+    # Check if admin
+    if not lxtools.getIfAdmin():
+        print('This operation required Administrator rights!')
+        return
+
     # Check if syntax correct
     if not getIfNodeVersionFormat(nodeversion):
         print('{0} is not a Node Version Format.'.format(nodeversion))

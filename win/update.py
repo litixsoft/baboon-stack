@@ -16,6 +16,7 @@ import os
 import version
 import lxtools
 
+# Returns the LATEST available Version on Server
 def getLatestRemoteVersion():
     # Download Filelist
     data = lxtools.getRemoteData(version.lxServer + '/')
@@ -35,6 +36,7 @@ def getLatestRemoteVersion():
     # Returns the LAST entry
     return versionList.pop()
 
+# Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
     # Download from URL
     data = lxtools.getRemoteData(version.lxServer + '/SHASUMS.txt')
@@ -50,8 +52,10 @@ def getRemoteChecksum(filename):
         if value[1] == filename:
             return value[0]
 
+    # No checksum for this file, return empty string
     return ''
 
+# Check for Update
 def doUpdate():
     # Get latest Version on Server
     print('Check for update...')

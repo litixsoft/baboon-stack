@@ -16,7 +16,7 @@ import lxtools
 import nvm
 
 # Some global variables
-lxBasePath = os.environ['LXPATH']
+lxBasePath = lxtools.getBaboonStackDirectory()
 lxMgrPath = os.path.join(lxBasePath, 'lxm')
 lxServiceBinary = os.path.join(lxMgrPath, 'lxservice.exe')
 
