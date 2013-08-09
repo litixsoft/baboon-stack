@@ -37,11 +37,13 @@ def main(folder):
 
             hashList.append(result)
 
-    # Build SHASUM.TXT
+    # Build SHASUMS.TXT
+    print('Write SHASUMS File...')
     shasumFile = open(shasumFilename, 'w')
     for entry in hashList:
         shasumFile.write('  '.join(entry) + '\n')
     shasumFile.close()
+    print('Done...')
     pass
 
 if __name__ == '__main__':
