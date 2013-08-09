@@ -48,9 +48,15 @@ def getOsArchitecture():
     else:
         return 'x86'
 
-# Returns if User an Admin
+# Returns if User an Admin or Root
 def getIfAdmin():
-    return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    if sys.platform == 'win32':
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        return os.geteuid() == 0
+
+    return False
 
 # Removes a Directory from System with all files
 def rmDirectory(directory):
@@ -90,6 +96,7 @@ def getSHAChecksum(filename):
 
 # Creates a symbolic link of Directory
 def setDirectoryLink(lpSymlinkName, lpTargetName):
+    #os.symlink
     if os.path.exists(lpSymlinkName):
         print(lpSymlinkName)
         return False

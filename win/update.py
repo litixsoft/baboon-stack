@@ -26,7 +26,8 @@ def getLatestRemoteVersion():
         return ''
 
     # Get the available BaboonStack Packages for this OS
-    versionList = regex.findall('">(baboonstack-.*-windows-' + lxtools.getOsArchitecture() + '.exe)<\/a', data)
+    Packagename = version.lxConfig['package'].format(lxtools.getOsArchitecture())
+    versionList = regex.findall('">(' + Packagename + ')<\/a', data)
     versionList.sort()
 
     # If list empty?

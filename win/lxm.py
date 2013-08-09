@@ -44,7 +44,7 @@ def lxmHelp():
 
 # Prints Baboonstack Version
 def lxmVersion():
-    print('Version {0}\n'.format(version.lxVersion))
+    print('Version {0}\n'.format(version.lxConfig['version']))
     pass
 
 # Node Operations

@@ -12,6 +12,7 @@ from distutils.version import StrictVersion
 import re as regex
 import subprocess
 import tempfile
+import version
 import sys
 import os
 
@@ -19,7 +20,6 @@ import os
 import lxtools
 
 # Global
-remotePackage = 'node-v{0}-{1}.msi'
 msiexecArguments = 'msiexec /quiet /a {0} /qb targetdir={1}'
 
 # NodeJS
@@ -108,11 +108,8 @@ def getRemoteNodeVersion(nodeversion):
         print('Version already installed.')
         return
 
-    # The 64Bit Windows Version of Node is in a seperate Folder on Server
-    if lxtools.getOsArchitecture() == 'x86':
-        remoteFilename = remotePackage.format(nodeversion, 'x86')
-    else:
-        remoteFilename = 'x64/' + remotePackage.format(nodeversion, 'x64')
+    # Get the Os specified Node Remote Package
+    remoteFilename = version.lxConfig['node'][lxtools.getOsArchitecture()].format(nodeversion)
 
     # Get Checksumlist from remote Server
     print('Retrieve Checksum list...')
