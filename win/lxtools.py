@@ -53,13 +53,11 @@ def getIfAdmin():
     return ctypes.windll.shell32.IsUserAnAdmin() != 0
 
 # Removes a Directory from System with all files
-def rmDirectory(directory, subdirectory = ''):
-    fulldirectory = os.path.join(directory, subdirectory)
-    nodes = os.listdir(fulldirectory)
+def rmDirectory(directory):
+    nodes = os.listdir(directory)
 
     for item in nodes:
-        itemName = os.path.join(fulldirectory, item)
-        baseName = os.path.join(subdirectory, item)
+        itemName = os.path.join(directory, item)
 
         if os.path.isfile(itemName):
             try:
@@ -67,10 +65,10 @@ def rmDirectory(directory, subdirectory = ''):
             except IOError as e:
                 print("Remove File error. I/O error({0}): {1}".format(e.errno, e.strerror))
         elif os.path.isdir(itemName):
-            rmDirectory(directory, baseName)
+            rmDirectory(itemName)
 
     try:
-        os.rmdir(fulldirectory)
+        os.rmdir(directory)
     except IOError as e:
         print("Remove Directory error. I/O error({0}): {1}".format(e.errno, e.strerror))
 

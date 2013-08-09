@@ -12,6 +12,7 @@ import lxtools
 import sys
 import os
 
+# Show
 def header():
     print('buildChecksum - SHA1 Checksum Generator\n')
 
@@ -33,8 +34,6 @@ def main(folder):
             result = []
             result.append(lxtools.getSHAChecksum(fullFilename))
             result.append(entry)
-
-
             hashList.append(result)
 
     # Build SHASUMS.TXT
