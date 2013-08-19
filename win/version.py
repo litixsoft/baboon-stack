@@ -9,7 +9,7 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
-lxVersion = '1.1.0'
+lxVersion = '1.1.1'
 lxServer = 'http://packages.litixsoft.de'
 #lxServer = 'http://localhost'
 lxPacket = 'baboonstack-v{0}-windows-{1}.exe'
