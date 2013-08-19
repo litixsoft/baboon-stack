@@ -49,7 +49,7 @@ def getIfNodeVersionInstalled(nodeversion):
     return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
 # Returns the remote available Files with RegEx Filter
-def getRemoteList(url, filter = "(.*)"):
+def getRemoteList(url, filter = '(.*)'):
     # Download from URL
     data = lxtools.getRemoteData(url)
 
@@ -73,9 +73,9 @@ def getRemoteChecksumList(url):
 
 # Returns the remote available Node Version Directories
 def getRemoteNodeVersionList(filter = '.*'):
-    versionList = getRemoteList("http://nodejs.org/dist/", "v(" + filter + ")\/")
+    versionList = getRemoteList('http://nodejs.org/dist/', 'v(' + filter + ')\/')
     versionList.sort(key=StrictVersion) # Sort list FROM oldest Version TO newer Version
-    return versionList
+    return versionList # Return sorted Versionlist
 
 # Returns, if remote Node Version for Windows available
 def getRemoteNodeVersion(nodeversion):
@@ -113,7 +113,7 @@ def getRemoteNodeVersion(nodeversion):
 
     # Get Checksumlist from remote Server
     print('Retrieve Checksum list...')
-    checksumList = getRemoteChecksumList("http://nodejs.org/dist/v" + nodeversion)
+    checksumList = getRemoteChecksumList('http://nodejs.org/dist/v' + nodeversion)
     remoteChecksum = ''
 
     # Find Checksum for the Binary
@@ -131,7 +131,7 @@ def getRemoteNodeVersion(nodeversion):
 
     # Download Binary from Server
     print('Retrieve Node Version v{0} Installation packet...'.format(nodeversion))
-    tempRemoteFile = lxtools.getRemoteFile("http://nodejs.org/dist/v" + nodeversion + '/' + remoteFilename)
+    tempRemoteFile = lxtools.getRemoteFile('http://nodejs.org/dist/v' + nodeversion + '/' + remoteFilename)
 
     # Abort or Exception
     if tempRemoteFile == -1:

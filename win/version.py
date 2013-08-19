@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Name:        module1
+# Name:        version
 # Purpose:
 #
 # Author:      Thomas Scheibe
@@ -13,7 +13,6 @@ import sys
 
 lxVersion = '1.1.0'
 lxServer = 'http://packages.litixsoft.de'
-#lxServer = 'http://localhost'
 lxPacket = 'baboonstack-v{0}-windows-{1}.exe'
 
 lxInfo = {
@@ -46,12 +45,13 @@ lxInfo = {
         }
 }
 
-
-
+# Returns Program Information for the current Operation System
+# Returns empty object, if no Information available
 def getConfig():
     if sys.platform in lxInfo:
         return lxInfo[sys.platform]
     else:
         return {}
 
+# Programconfiguration
 lxConfig = getConfig()
