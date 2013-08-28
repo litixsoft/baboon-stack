@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Name:        module1
+# Name:        version
 # Purpose:
 #
 # Author:      Thomas Scheibe
@@ -9,7 +9,7 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
-lxVersion = '1.1.1'
+lxVersion = '1.1.2'
 lxServer = 'http://packages.litixsoft.de'
 #lxServer = 'http://localhost'
 lxPacket = 'baboonstack-v{0}-windows-{1}.exe'
