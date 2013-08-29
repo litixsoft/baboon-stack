@@ -11,7 +11,7 @@
 import platform
 import sys
 
-lxVersion = '1.1.0'
+lxVersion = '1.1.2'
 lxServer = 'http://packages.litixsoft.de'
 lxPacket = 'baboonstack-v{0}-windows-{1}.exe'
 

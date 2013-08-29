@@ -35,8 +35,10 @@ def lxmHelp():
     print('    lxm version                       Displays the version number')
     print('    lxm update                        Search and Installs BaboonStack Updates\n')
 
-    print('    lxm node                          Node Module Controls')
-    print('    lxm service                       Service Module Controls for Node.JS\n')
+    # Enable NVM und SERVICE module only if Node Component installed
+    if lxtools.getIfNodeModuleEnabled():
+        print('    lxm node                          Node Module Controls')
+        print('    lxm service                       Service Module Controls for Node.JS\n')
 
     print('    Some operations required "administrator" rights.')
     pass
@@ -163,11 +165,11 @@ def main():
     moduleName = args.get().lower()
 
     # Node.JS Module
-    if  moduleName == 'node':
+    if moduleName == 'node' and lxtools.getIfNodeModuleEnabled():
         return lxmNode()
 
     # Service Module
-    if moduleName == 'service':
+    if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():
         return lxmService()
 
     # Prints the Baboonstack Version

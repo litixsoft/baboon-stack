@@ -20,6 +20,7 @@ import os
 import lxtools
 
 # Global
+
 msiexecArguments = 'msiexec /quiet /a {0} /qb targetdir={1}'
 
 # NodeJS
@@ -49,7 +50,8 @@ def getIfNodeVersionInstalled(nodeversion):
     return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
 # Returns the remote available Files with RegEx Filter
-def getRemoteList(url, filter = '(.*)'):
+
+def getRemoteList(url, filter = ''):
     # Download from URL
     data = lxtools.getRemoteData(url)
 
@@ -57,8 +59,17 @@ def getRemoteList(url, filter = '(.*)'):
     if data == -1:
         return []
 
-    # Returns list
-    return regex.findall('">' + filter + '<\/a', data)
+    # FIX: Changes on node.js distribution site
+    # Find all with correct Node Version Format
+    srvNodeList = regex.findall('">v([0-9]+\.[0-9]+\.[0-9]+)\/<\/a', data)
+
+    # If filter given, then
+    if filter != '':
+        srvNodeList = '\n'.join(srvNodeList)
+        srvNodeList = regex.findall('(' + filter + '.*)\n', srvNodeList)
+
+    # Return List
+    return srvNodeList
 
 def getRemoteChecksumList(url):
     # Download from URL
@@ -72,9 +83,11 @@ def getRemoteChecksumList(url):
     return data.split('\n')
 
 # Returns the remote available Node Version Directories
-def getRemoteNodeVersionList(filter = '.*'):
-    versionList = getRemoteList('http://nodejs.org/dist/', 'v(' + filter + ')\/')
+
+def getRemoteNodeVersionList(filter = ''):
+    versionList = getRemoteList("http://nodejs.org/dist/", filter)
     versionList.sort(key=StrictVersion) # Sort list FROM oldest Version TO newer Version
+
     return versionList # Return sorted Versionlist
 
 # Returns, if remote Node Version for Windows available
@@ -108,11 +121,13 @@ def getRemoteNodeVersion(nodeversion):
         print('Version already installed.')
         return
 
+
     # Get the Os specified Node Remote Package
     remoteFilename = version.lxConfig['node'][lxtools.getOsArchitecture()].format(nodeversion)
 
     # Get Checksumlist from remote Server
     print('Retrieve Checksum list...')
+
     checksumList = getRemoteChecksumList('http://nodejs.org/dist/v' + nodeversion)
     remoteChecksum = ''
 
@@ -131,6 +146,7 @@ def getRemoteNodeVersion(nodeversion):
 
     # Download Binary from Server
     print('Retrieve Node Version v{0} Installation packet...'.format(nodeversion))
+
     tempRemoteFile = lxtools.getRemoteFile('http://nodejs.org/dist/v' + nodeversion + '/' + remoteFilename)
 
     # Abort or Exception

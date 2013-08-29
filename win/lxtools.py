@@ -181,3 +181,9 @@ def getBaboonStackDirectory():
         return os.environ['LXPATH']
     else:
         return os.path.dirname(os.getcwd())
+
+# Returns if NODE.JS Module (NVM/SERVICE) enabled
+# Checks only if %LXPATH%\node exits
+def getIfNodeModuleEnabled():
+    nodePath = os.path.join(getBaboonStackDirectory(), 'node')
+    return os.path.exists(nodePath)
