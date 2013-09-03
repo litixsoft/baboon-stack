@@ -8,28 +8,28 @@ For Linux and MacOS, run this command on your Terminal.
 
 	curl http://packages.litixsoft.de/installer.sh | sudo sh
 
-Windows Users follow this link to download the installation file. 
+Windows Users follow this link to download the installation file.
 
-http://http://www.litixsoft.de/products-baboonstack
+http://www.litixsoft.de/products-baboonstack
 
 #### Baboonstack Directory Structure
 
-* BABOONSTACK
-    * LXM
-    	* NODE - Windows only. The target of the link of the current node version.
-    	* 	[Place lxManager here]
-    * REDISIO
-        * BIN	- Binaryfolder
-        * LOG	- Logfolder
-        * DB	- Databasefolder
-        * lxScript.sh/lxScript.cmd
-    * MONGO
-        * BIN	- Binaryfolder
-        * LOG   - Logfolder
-        * DB    - Databasefolder
-        * lxScript.sh/lxScript.cmd
-    * NODE
-        * x.xx.xx - NodeJS Installation
+    └───BABOONSTACK
+        ├── LXM
+        │   ├── NODE - Windows only. The target of the link of the current node version.
+        │   └── [Place lxManager here]
+        ├── REDISIO
+        │   ├── BIN - Binaryfolder
+        │   ├── LOG - Logfolder
+        │   ├── DB  - Databasefolder
+        │   └── lxScript.sh/lxScript.cmd
+        ├── MONGO
+        │   ├── BIN - Binaryfolder
+        │   ├── LOG - Logfolder
+        │   ├── DB  - Databasefolder
+        │   └── lxScript.sh/lxScript.cmd
+        └── NODE
+            └── x.xx.xx - NodeJS Version x.xx.xx Installation
 
 ## lxManager
 
@@ -37,27 +37,27 @@ A powerful tool with a integrated **Node Version Manager** and **Node Service Ma
 
 ### File and Directory Overview
 
-* lxm.sh - lxManager for Unix systems
-* installer.sh - Online/Offline installer for Unix systems
-    *	LINUX - Contains scripts for Linux system
-    *	MACOS - Contains scripts for MacOS system
-    *	WIN   - Contains lxManager for Windows system
-    	*	TOOLS - Contains tools for Windows
+	└───YOUR DIRECTORY
+        ├── lxm.sh - lxManager for Unix systems
+        └── installer.sh - Online/Offline installer for Unix systems
+            ├── LINUX - Contains scripts for Linux system
+            ├── MACOS - Contains scripts for MacOS system
+            └── WIN   - Contains lxManager for Windows system
+                ├── TOOLS - Contains tools for Windows
+                └── RESSOURCES - BaboonStack icon
 
 ## Build Linux/MacOS Client
 
-Requirements:
+**Requirements:**
 * Shell
 
 #### Build Instructions
-
-Not required.
 
 Just copy lxm.sh to your **baboonstack/lxm** folder.
 
 ## Build Windows Client
 
-Requirements:
+**Requirements:**
 * Python 3.3_x86 Runtime (see http://www.python.org/)
 * cxFreeze for Python 3.3 (see http://cx-freeze.sourceforge.net/)
 * Microsoft Visual C++ 2010 x86 Redistributable Package Service Pack 1
@@ -66,6 +66,7 @@ Requirements:
 
 Be sure that the dependencies have been installed correctly. Then start the build scripts.
 
-	win\build.cmd
+	cd win
+    build.cmd
 
 Copy all content from **win\build** to your **baboonstack\lxm** folder include the files from **win\tools**
