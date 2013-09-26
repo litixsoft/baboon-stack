@@ -75,6 +75,7 @@ showHelp() {
   echo
   echo " --without-mongodb                   Exclude MongoDB from Installation"
   echo " --without-redisio                   Exclude RedisIO from Installation"
+  echo " --without-nodejs                    Exclude NodeJS from Installation"
   echo
   exit 2
 }
@@ -104,6 +105,11 @@ if [ $# -gt 0 ]; then
         *redis* )
           echo "Exclude RedisIO..."
           EXCLUDES="$EXCLUDES --exclude=redisio"
+        ;;
+        # No NodeJS
+        *node* )
+          echo "Exclude NodeJS..."
+          EXCLUDES="$EXCLUDES --exclude=node"
         ;;
         *) showHelp $param ;;
       esac
@@ -165,20 +171,22 @@ if [ $BSSOURCE = 1 ]; then
   rm $BSPACKAGE
 fi
 
-# Link Node.JS Binarys
-echo "Register Node.JS..."
+# Link Node.JS Binarys, if installed
+if [ -d "$LXHOMEPATH/node" ]; then
+  echo "Register Node.JS..."
 
-# Find the current Node Version
-nodedir=`find "$LXHOMEPATH/node/" -maxdepth 1 -type d -name "*.*.*" | sort | tail -n1`
+  # Find the current Node Version
+  nodedir=`find "$LXHOMEPATH/node/" -maxdepth 1 -type d -name "*.*.*" | sort | tail -n1`
 
-# Map current
-ln -s "$nodedir/bin/node" "$LXBINPATH/node"
-ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
+  # Map current
+  ln -s "$nodedir/bin/node" "$LXBINPATH/node"
+  ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
 
-# Set global NPM Configuration
-echo "Create global NPM configuration file..."
-npm --global config set tmp /tmp
-npm --global config set cache "$LXHOMEPATH/node/npm"
+  # Set global NPM Configuration
+  echo "Create global NPM configuration file..."
+  npm --global config set tmp /tmp
+  npm --global config set cache "$LXHOMEPATH/node/npm"
+fi
 
 echo "Register lxManager..."
 # Link lxManager Script
