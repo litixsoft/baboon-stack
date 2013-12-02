@@ -26,8 +26,7 @@ def getLatestRemoteVersion():
         return ''
 
     # Get the available BaboonStack Packages for this OS
-    Packagename = version.lxConfig['package'].format(lxtools.getOsArchitecture())
-    versionList = regex.findall('">(' + Packagename + ')<\/a', data)
+    versionList = regex.findall('">(baboonstack-.*-windows-' + lxtools.getOsArchitecture() + '.exe)<\/a', data)
     versionList.sort()
 
     # If list empty?
@@ -94,7 +93,6 @@ def doUpdate():
     print('Get Checksum from Server...')
     remoteChecksum = getRemoteChecksum(versionRemote)
 
-    # Checksum available from Server, proof
     if remoteChecksum != '':
         print('Verify Checksum...')
         localChecksum = lxtools.getSHAChecksum(localPacket)
@@ -103,7 +101,6 @@ def doUpdate():
         if (localChecksum == remoteChecksum):
             print('Checksum are correct...')
         else:
-            # Checksum missmatch, report and abort operation
             print('Checksum missmatch... Abort!')
             print('Filename  ' + remoteFilename)
             print('Remote SHA' + remoteChecksum)

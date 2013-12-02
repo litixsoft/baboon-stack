@@ -12,15 +12,18 @@ from distutils.version import StrictVersion
 import re as regex
 import subprocess
 import tempfile
-import version
 import sys
 import os
 
-# lxManager Modules
+# Platform specified modules
+if sys.platform == 'linux' or sys.platform == 'darwin':
+    import tarfile
+
+# Baboonstack modules
+import version
 import lxtools
 
 # Global
-
 msiexecArguments = 'msiexec /quiet /a {0} /qb targetdir={1}'
 
 # NodeJS
@@ -50,7 +53,6 @@ def getIfNodeVersionInstalled(nodeversion):
     return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
 # Returns the remote available Files with RegEx Filter
-
 def getRemoteList(url, filter = ''):
     # Download from URL
     data = lxtools.getRemoteData(url)
@@ -83,12 +85,10 @@ def getRemoteChecksumList(url):
     return data.split('\n')
 
 # Returns the remote available Node Version Directories
-
 def getRemoteNodeVersionList(filter = ''):
     versionList = getRemoteList("http://nodejs.org/dist/", filter)
     versionList.sort(key=StrictVersion) # Sort list FROM oldest Version TO newer Version
-
-    return versionList # Return sorted Versionlist
+    return versionList
 
 # Returns, if remote Node Version for Windows available
 def getRemoteNodeVersion(nodeversion):
@@ -121,14 +121,12 @@ def getRemoteNodeVersion(nodeversion):
         print('Version already installed.')
         return
 
-
     # Get the Os specified Node Remote Package
-    remoteFilename = version.lxConfig['node'][lxtools.getOsArchitecture()].format(nodeversion)
+    remoteFilename = version.lxConfig['node']['package'][lxtools.getOsArchitecture()].format(nodeversion)
 
     # Get Checksumlist from remote Server
     print('Retrieve Checksum list...')
-
-    checksumList = getRemoteChecksumList('http://nodejs.org/dist/v' + nodeversion)
+    checksumList = getRemoteChecksumList("http://nodejs.org/dist/v" + nodeversion)
     remoteChecksum = ''
 
     # Find Checksum for the Binary
@@ -146,8 +144,7 @@ def getRemoteNodeVersion(nodeversion):
 
     # Download Binary from Server
     print('Retrieve Node Version v{0} Installation packet...'.format(nodeversion))
-
-    tempRemoteFile = lxtools.getRemoteFile('http://nodejs.org/dist/v' + nodeversion + '/' + remoteFilename)
+    tempRemoteFile = lxtools.getRemoteFile("http://nodejs.org/dist/v" + nodeversion + '/' + remoteFilename)
 
     # Abort or Exception
     if tempRemoteFile == -1:
@@ -167,20 +164,34 @@ def getRemoteNodeVersion(nodeversion):
         print('Local  SHA' + localChecksum)
         return
 
-    # Extract MSI Package
-    print('Execute installation package...')
-    try:
-        retcode = subprocess.call(msiexecArguments.format(tempRemoteFile, tempNodeDir), shell=False)
+    # Windows specified stuff
+    if sys.platform == 'win32':
+        # Extract MSI Package
+        print('Execute installation package...')
+        try:
+            retcode = subprocess.call(msiexecArguments.format(tempRemoteFile, tempNodeDir), shell=False)
 
-        # If return code otherwise then 0, ERROR
-        if retcode != 0:
-            print('ABORT: Huh? Installer reports error!\n\nDo you canceled it? Returncode {0}'.format(retcode))
+            # If return code otherwise then 0, ERROR
+            if retcode != 0:
+                print('ABORT: Huh? Installer reports error!\n\nDo you canceled it? Returncode {0}'.format(retcode))
+                cleanUp()
+                return False
+        except:
+            print('ERROR: Install package error!')
             cleanUp()
             return False
-    except:
-        print('ERROR: Install package error!')
-        cleanUp()
-        return False
+
+    # Unix specified stuff
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        # Extract TAR Package
+        try:
+            tar = tarfile.open(tempRemoteFile)
+            tar.extractall(tempNodeDir)
+            tar.close()
+        except BaseException as e:
+            print('ERROR:', e)
+            cleanUp()
+            return False
 
     # Now copies node
     print('Copy files...')
@@ -249,26 +260,31 @@ def setLocalNodeVersion(nodeversion):
         print('Required administrator Rights.')
         return False
 
-    # Delete old LINK Directory when exits
-    if os.path.exists(lxBinPath):
-        # If Directory a Symbolic Link
-        if not lxtools.getIfSymbolicLink(lxBinPath):
-            print('ERROR: Target Directory is not a link and can not be removed.')
+    # Windows
+    if sys.platform == 'win32':
+        # Delete old LINK Directory when exits
+        if os.path.exists(lxBinPath):
+            # If Directory a Symbolic Link
+            if not lxtools.getIfSymbolicLink(lxBinPath):
+                print('ERROR: Target Directory is not a link and can not be removed.')
+                return False
+
+            # Remove Link
+            try:
+                os.remove(lxBinPath)
+            except BaseException as e:
+                print('ERROR:', e)
+                return False
+
+        # Set new link
+        if not lxtools.setDirectoryLink(lxBinPath, nodeDir):
+            print('ERROR while link to new Node Version.')
             return False
 
-        # Remove Link
-        try:
-            os.remove(lxBinPath)
-        except:
-            return False
+        print('Switched to Node v{0}...'.format(nodeversion))
+        return True
 
-    # Set new link
-    if not lxtools.setDirectoryLink(lxBinPath, nodeDir):
-        print('ERROR while link to new Node Version.')
-        return False
-
-    print('Switched to Node v{0}...'.format(nodeversion))
-    return True
+    return False
 
 # Returns the actual linked Version
 def getLocalNodeVersion():

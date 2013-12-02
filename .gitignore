@@ -4,3 +4,5 @@
 win/__pycache__
 win/lxm.cmd
 /win/build
+/__pycache__
+/.idea

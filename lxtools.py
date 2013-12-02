@@ -14,7 +14,6 @@ import urllib.request as urlrequest
 import ctypes
 import sys
 import os
-import winreg
 
 class Arguments:
 
@@ -27,11 +26,11 @@ class Arguments:
         return len(self.args)
 
     # Get the FIRST element and remove it from list
-    def get(self, defaultValue = ''):
+    def get(self, defaultvalue=''):
         if self.count() != 0:
             return self.args.pop(0)
         else:
-            return defaultValue
+            return defaultvalue
 
     # Returns TRUE or FALSE if NAME in list, if TRUE then removes element
     def find(self, name):
@@ -48,7 +47,7 @@ def getOsArchitecture():
     else:
         return 'x86'
 
-# Returns if User an Admin or Root
+# Returns if User an Admin
 def getIfAdmin():
     if sys.platform == 'win32':
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
@@ -96,21 +95,34 @@ def getSHAChecksum(filename):
 
 # Creates a symbolic link of Directory
 def setDirectoryLink(lpSymlinkName, lpTargetName):
-    #os.symlink
     if os.path.exists(lpSymlinkName):
-        print(lpSymlinkName)
         return False
 
-    CreateSymbolicLink = ctypes.windll.kernel32.CreateSymbolicLinkW
-    CreateSymbolicLink.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
-    CreateSymbolicLink.restype = ctypes.c_bool
+    # Windows
+    if sys.platform == 'win32':
+        CreateSymbolicLink = ctypes.windll.kernel32.CreateSymbolicLinkW
+        CreateSymbolicLink.argtypes = (ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint32)
+        CreateSymbolicLink.restype = ctypes.c_bool
 
-    return CreateSymbolicLink(lpSymlinkName, lpTargetName, 1)
+        return CreateSymbolicLink(lpSymlinkName, lpTargetName, 1)
+
+    # TODO: Test in UNIX
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        return os.link(lpSymlinkName, lpTargetName)
+
+    raise 'ERROR: No API for setDirectoryLink.'
 
 # Returns if lpFilename a Directory AND Reparse Point (Symbolic Link)
 # FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_REPARSE_POINT
 def getIfSymbolicLink(lpFilename):
-    return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040)  == 1040
+    if sys.platform == 'win32':
+        return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040) == 1040
+
+    # TODO: Test in UNIX
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        return os.path.isdir(lpFilename) | os.path.islink(lpFilename)
+
+    raise 'ERROR: No API for getIfSymbolicLink.'
 
 # Displays a Progress bar
 def showProgress(amtDone):
@@ -129,10 +141,10 @@ def reporthook(blocknum, blocksize, filesize):
 # Download a Remote File to a temporary File and returns the filename
 # Displays a Progress Bar during Download
 def getRemoteFile(url, tempfile=''):
-    showProgress(0);
+    showProgress(0)
     try:
         local_filename, headers = urlrequest.urlretrieve(url, tempfile, reporthook=reporthook)
-        showProgress(1);
+        showProgress(1)
         print('Done!')
     except KeyboardInterrupt:
         print('Abort!')
@@ -187,3 +199,11 @@ def getBaboonStackDirectory():
 def getIfNodeModuleEnabled():
     nodePath = os.path.join(getBaboonStackDirectory(), 'node')
     return os.path.exists(nodePath)
+
+def getIfMongoModuleEnabled():
+    mongoPath = os.path.join(getBaboonStackDirectory(), 'mongo')
+    return os.path.exists(mongoPath)
+
+def getIfRedisModuleEnabled():
+    redisPath = os.path.join(getBaboonStackDirectory(), 'redisio')
+    return os.path.exists(redisPath)

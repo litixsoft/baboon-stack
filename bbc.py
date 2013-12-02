@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Name:        lxManager
+# Name:        BaboonStack
 # Purpose:
 #
 # Author:      Thomas Scheibe
@@ -8,11 +8,6 @@
 # Copyright:   (c) Thomas Scheibe 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-import urllib.request as urlrequest
-import sys
-import os
-import re as regex
-
 # Litixsoft Modules
 import lxtools
 import service
@@ -24,51 +19,63 @@ import nvm
 args = lxtools.Arguments()
 
 # Header, the only one
-def lxmHeader():
+def bbcHeader():
     print('\nlxManager by Litixsoft GmbH 2013\n')
     pass
 
 # Prints the lxManager Version
-def lxmHelp():
+def bbcHelp():
     print('Usage:\n')
 
-    print('    lxm version                       Displays the version number')
-    print('    lxm update                        Search and Installs BaboonStack Updates\n')
+    print('    bbc version                       Displays the version number')
+    print('    bbc update                        Search and Installs BaboonStack Updates')
+    #print('    bbc setup                         Add Baboobstack Components')
+    #print('    bbc uninstall                     Uninstall Baboonstack')
+    print('')
 
     # Enable NVM und SERVICE module only if Node Component installed
     if lxtools.getIfNodeModuleEnabled():
-        print('    lxm node                          Node Module Controls')
-        print('    lxm service                       Service Module Controls for Node.JS\n')
+        print('    bbc node                          Node Module Controls')
+        print('    bbc service                       Service Module Controls for Node.JS')
 
+    # Enable MONGO module only if MongoDB installed
+    if lxtools.getIfMongoModuleEnabled():
+        print('    bbc mongo                         Mongo Module Controls')
+
+    # Enable REDIS module only if RedisIO installed
+    if lxtools.getIfRedisModuleEnabled():
+        print('    bbc redis                         Redis Module Controls')
+
+    print('')
     print('    Some operations required "administrator" rights.')
     pass
 
 
 # Prints Baboonstack Version
-def lxmVersion():
+def bbcVersion():
     print('Version {0}\n'.format(version.lxConfig['version']))
     pass
 
 # Node Operations
 
-def lxmNodeHelp():
+def bbcNodeHelp():
     print('Usage:\n')
-    print('    lxm node install [version]       Install a specific version number')
-    print('    lxm node switch [version]        Switch to Version')
-    print('    lxm node run <version> [<args>]  Run <version> with <args> as arguments')
-    print('    lxm node ls                      View available version\n')
+    print('    bbc node install [version]       Install a specific version number')
+    print('    bbc node switch [version]        Switch to Version')
+    print('    bbc node run <version> [<args>]  Run <version> with <args> as arguments')
+    print('    bbc node ls                      View available version\n')
     print('Example:\n')
-    print('    lxm node install 0.10.12         Install 0.10.12 release')
-    print('    lxm node install 0.10            Install the latest available 0.10 release')
-    print('    lxm node switch 0.10             Use the latest available 0.10 release')
-    print('    lxm node remove 0.10.12          Removes a specific version from System')
-    print('    lxm node ls                      Lists all locally available 0.10 releases')
-    print('    lxm node ls remote 0.10          Lists all remote available 0.10 releases\n')
+    print('    bbc node install 0.10.12         Install 0.10.12 release')
+    print('    bbc node install 0.10            Install the latest available 0.10 release')
+    print('    bbc node switch 0.10             Use the latest available 0.10 release')
+    print('    bbc node remove 0.10.12          Removes a specific version from System')
+    print('    bbc node ls                      Lists all locally available 0.10 releases')
+    print('    bbc node ls remote 0.10          Lists all remote available 0.10 releases\n')
     pass
 
-def lxmNode():
+def bbcNode():
     if args.count() == 0:
-        lxmNodeHelp()
+        bbcNodeHelp()
         return
 
     # Get First Command
@@ -113,24 +120,24 @@ def lxmNode():
         return True
 
     # No Command found, show Help
-    lxmNodeHelp()
+    bbcNodeHelp()
 
 # Service Operations
 
-def lxmServiceHelp():
+def bbcServiceHelp():
     print('Usage:\n')
-    print('    lxm service install [name] [version] [app] Install a Node.JS Service')
-    print('    lxm service remove [name]                  Removes a Node.JS Service')
-    print('    lxm service start [name]                   Start Service')
-    print('    lxm service stop [name]                    Stop Service\n')
+    print('    bbc service install [name] [version] [app] Install a Node.JS Service')
+    print('    bbc service remove [name]                  Removes a Node.JS Service')
+    print('    bbc service start [name]                   Start Service')
+    print('    bbc service stop [name]                    Stop Service\n')
     print('Example:\n')
-    print('    lxm service install lxappd 0.10.12 c:\\projects\\web\app.js')
-    print('    lxm service remove lxappd\n')
+    print('    bbc service install lxappd 0.10.12 c:\\projects\\web\app.js')
+    print('    bbc service remove lxappd\n')
     pass
 
-def lxmService():
+def bbcService():
     if args.count() == 0:
-        lxmServiceHelp()
+        bbcServiceHelp()
         return
 
     # Get First Command
@@ -153,40 +160,39 @@ def lxmService():
         return service.stopService(args.get())
 
     # No Command found, show Help
-    lxmServiceHelp()
+    bbcServiceHelp()
 
 # Update Operations
-
-def lxmUpdate():
+def bbcUpdate():
     return update.doUpdate()
 
-# Default Schrottie Schrott Schrott
+# Default
 def main():
     moduleName = args.get().lower()
 
     # Node.JS Module
     if moduleName == 'node' and lxtools.getIfNodeModuleEnabled():
-        return lxmNode()
+        return bbcNode()
 
     # Service Module
     if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():
-        return lxmService()
+        return bbcService()
 
     # Prints the Baboonstack Version
     if moduleName == 'version':
-        return lxmVersion()
+        return bbcVersion()
 
     # Check if update on remote Server
     if moduleName == 'update':
-        return lxmUpdate()
+        return bbcUpdate()
 
     # Show Help
-    lxmHelp()
+    bbcHelp()
 
 # lxManager Main
 if __name__ == '__main__':
     # Shows the Header
-    lxmHeader()
+    bbcHeader()
 
     # Execute main() and catch all Exceptions
     try:
