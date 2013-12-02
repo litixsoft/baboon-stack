@@ -185,7 +185,7 @@ if [ -d "$LXHOMEPATH/node" ]; then
   # Set global NPM Configuration
   echo "Create global NPM configuration file..."
   npm --global config set tmp /tmp
-  npm --global config set cache "$LXHOMEPATH/node/npm"
+  npm --global config delete cache
 fi
 
 echo "Register lxManager..."

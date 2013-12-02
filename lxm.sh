@@ -21,7 +21,7 @@ case "$LXUNNAME" in
   *armv6l*) LXARCH=arm-pi ;;
 esac
 
-LXVERSION="1.0.0"
+LXVERSION="1.1.0"
 LXSERVER="http://packages.litixsoft.de"
 LXPACKET="baboonstack-v$LXVERSION-$LXOS-$LXARCH.tar.gz"
 
@@ -31,7 +31,8 @@ case "$LXOS" in
     # Linux
     LXCURRPATH="$( dirname "$(readlink -f $0)" )"
     LXBASEPATH="$( cd "$LXCURRPATH" ; cd .. ; pwd )"
-    LXBINPATH="/bin"
+    LXBINPATH="/usr/bin"
+    LXLIBPATH="/usr/lib"
     LXSERVICEENABLED=`which update-rc.d 2>/dev/null`
   ;;
   
@@ -40,6 +41,7 @@ case "$LXOS" in
     LXCURRPATH="$(dirname $(readlink ${BASH_SOURCE[0]} || echo ${BASH_SOURCE[0]}))"
     LXBASEPATH="$(cd "$LXCURRPATH"; cd ..; pwd -P)"
     LXBINPATH="/usr/bin"
+    LXLIBPATH="/usr/lib"    
     LXSERVICEENABLED=
   ;;
 esac
@@ -464,10 +466,26 @@ nodeSwitch() {
   if [ -h "$LXBINPATH/npm" ] ; then
     rm "$LXBINPATH/npm"
   fi
+
+  # Remove symbolic link for npm
+  if [ -h "$LXLIBPATH/node_modules/npm" ] ; then
+    rm "$LXLIBPATH/node_modules/npm"
+  else
+    if [ -d "$LXLIBPATH/node_modules/npm" ] ; then
+      rm -R "$LXLIBPATH/node_modules/npm"
+    fi
+  fi
   
   # Create link
   ln -s "$nodedir/bin/node" "$LXBINPATH/node"
   ln -s "$nodedir/bin/npm" "$LXBINPATH/npm"
+  
+  # node modules
+  if [ ! -d "$LXLIBPATH/node_modules" ] ; then
+    mkdir "$LXLIBPATH/node_modules"
+  fi
+  
+  ln -s "$nodedir/lib/node_modules/npm/" "$LXLIBPATH/node_modules/npm"
 }
 
 # Run specified Node.js Version
