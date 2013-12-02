@@ -102,18 +102,16 @@ def bbcNode():
         # Get current active Version
         curr = nvm.getLocalNodeVersion()
 
-        print('Current Version:', curr)
-
         # show remote available Version?
         if args.find('remote'):
             print('Remote available Node.JS Versions:\n')
-            list = nvm.getRemoteNodeVersionList(args.get() + '.*')
+            nodelist = nvm.getRemoteNodeVersionList(args.get() + '.*')
         else:
             print('Local available Node.JS Versions:\n')
-            list = nvm.getLocalNodeVersionList(args.get())
+            nodelist = nvm.getLocalNodeVersionList(args.get())
 
         # Prints sorted list
-        for entry in list:
+        for entry in nodelist:
             if curr != '' and curr == entry:
                 print(' * {0}'.format(entry))
             else:

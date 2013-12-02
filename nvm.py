@@ -300,8 +300,7 @@ def getLocalNodeVersion():
     try:
         path = os.readlink(lxBinPath) # Read symbolic Link
 
-        # Special for non win32 platforms
-        #
+        # Remove bin/node. Only for non win32 platforms
         if sys.platform != 'win32':
             path = path.rsplit(os.sep, 2)[0]
 
