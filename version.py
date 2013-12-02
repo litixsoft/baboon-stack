@@ -18,6 +18,7 @@ lxInfo = {
     'linux': {
         'osname': 'linux',
         'version': lxVersion,
+        'basedir': '/opt/litixsoft/baboonstack',
         'package': 'baboonstack-.*-linux-{0}.tar.gz',
         'node': {
             'package': {
@@ -33,6 +34,7 @@ lxInfo = {
     'darwin': {
         'osname': 'darwin',
         'version': lxVersion,
+        'basedir': '/usr/share/litixsoft/baboonstack',
         'package': 'baboonstack-.*-darwin-{0}.tar.gz',
         'node': {
             'package': {
@@ -67,6 +69,21 @@ def getConfig():
         return lxInfo[sys.platform]
     else:
         return {}
+
+def getConfigKey(key):
+    keypath = key.split('.')
+    keydata = lxConfig
+
+    for keyname in keypath:
+        if keyname in keydata:
+            if isinstance(keydata[keyname], dict):
+                keydata = keydata[keyname]
+            else:
+                return keydata[keyname]
+        else:
+            break
+
+    return ''
 
 # Programconfiguration
 lxConfig = getConfig()

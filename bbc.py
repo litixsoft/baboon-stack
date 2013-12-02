@@ -102,6 +102,8 @@ def bbcNode():
         # Get current active Version
         curr = nvm.getLocalNodeVersion()
 
+        print('Current Version:', curr)
+
         # show remote available Version?
         if args.find('remote'):
             print('Remote available Node.JS Versions:\n')

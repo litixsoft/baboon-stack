@@ -15,6 +15,8 @@ import ctypes
 import sys
 import os
 
+import version
+
 class Arguments:
 
     def __init__(self):
@@ -189,10 +191,15 @@ def getRemoteData(url):
 
 # Returns the HOMEPATH of Baboonstack
 def getBaboonStackDirectory():
-    if 'LXPATH' in os.environ:
-        return os.environ['LXPATH']
-    else:
-        return os.path.dirname(os.getcwd())
+    if sys.platform == 'win32':
+        if 'LXPATH' in os.environ:
+            return os.environ['LXPATH']
+
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        if os.path.exists(version.lxConfig['basedir']):
+            return version.lxConfig['basedir']
+
+    return os.path.dirname(os.getcwd())
 
 # Returns if NODE.JS Module (NVM/SERVICE) enabled
 # Checks only if %LXPATH%\node exits

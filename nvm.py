@@ -33,7 +33,12 @@ moveNodeDir = os.path.join(tempNodeDir, 'nodejs')
 # Node Directory
 lxBasePath = lxtools.getBaboonStackDirectory()
 lxNodePath = os.path.join(lxBasePath, 'Node')
-lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
+
+if sys.platform == 'win32':
+    lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
+else:
+    # Unix Systems are below
+    lxBinPath = os.path.join(version.getConfigKey('node.target.bin'), 'node')
 
 # CleanUp
 def cleanUp():
@@ -294,7 +299,13 @@ def getLocalNodeVersion():
 
     try:
         path = os.readlink(lxBinPath) # Read symbolic Link
-        return path.rsplit('\\').pop() # Splits the Seperator and Returns the last Pathname (nodeversion)
+
+        # Special for non win32 platforms
+        #
+        if sys.platform != 'win32':
+            path = path.rsplit(os.sep, 2)[0]
+
+        return path.rsplit(os.sep).pop() # Splits the Seperator and Returns the last Pathname (nodeversion)
     except:
         return ''
 
