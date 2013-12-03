@@ -77,7 +77,7 @@ lxInfo = {
                 'x32': 'node-v{0}-x86.msi',
                 'x64': 'x64/node-v{0}-x64.msi'
             },
-            'target': {
+            'links': {
             }
         }
     }
