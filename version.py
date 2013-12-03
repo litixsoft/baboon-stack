@@ -25,9 +25,19 @@ lxInfo = {
                 'x32': 'node-v{0}-linux-x86.tar.gz',
                 'x64': 'node-v{0}-linux-x64.tar.gz'
             },
-            'target': {
-                'bin': '/usr/bin',
-                'lib': '/usr/lib'
+            'links': {
+                'node': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'npm': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'node_modules': {
+                    'source': 'lib',
+                    'target': '/usr/lib'
+                }
             }
         }
     },
@@ -41,9 +51,20 @@ lxInfo = {
                 'x32': 'node-v{0}-darwin-x86.tar.gz',
                 'x64': 'node-v{0}-darwin-x64.tar.gz'
             },
-            'target': {
-                'bin': '/usr/bin',
-                'lib': '/usr/lib'
+            'links': {
+                'node': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'npm': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'node_modules/npm': {
+                    'source': 'lib',
+                    'target': '/usr/lib',
+                    'options': ['create_base_dir', 'remove_if_exists']
+                }
             }
         }
     },
@@ -70,9 +91,13 @@ def getConfig():
     else:
         return {}
 
-def getConfigKey(key):
+# Programconfiguration
+lxConfig = getConfig()
+
+# Helper
+def getConfigKey(key, defaultvalue=None, data=lxConfig):
     keypath = key.split('.')
-    keydata = lxConfig
+    keydata = data
 
     for keyname in keypath:
         if keyname in keydata:
@@ -81,9 +106,9 @@ def getConfigKey(key):
             else:
                 return keydata[keyname]
         else:
-            break
+            if not defaultvalue:
+                raise Exception('No Key "' + keyname + '" in "' + key + '"...')
+            else:
+                return defaultvalue
 
-    return ''
-
-# Programconfiguration
-lxConfig = getConfig()
+    return keydata

@@ -32,13 +32,13 @@ moveNodeDir = os.path.join(tempNodeDir, 'nodejs')
 
 # Node Directory
 lxBasePath = lxtools.getBaboonStackDirectory()
-lxNodePath = os.path.join(lxBasePath, 'Node')
+lxNodePath = os.path.join(lxBasePath, 'node')
 
 if sys.platform == 'win32':
     lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
 else:
     # Unix Systems are below
-    lxBinPath = os.path.join(version.getConfigKey('node.target.bin'), 'node')
+    lxBinPath = os.path.join(version.getConfigKey('node.links.node.target'), 'node')
 
 # CleanUp
 def cleanUp():
@@ -289,6 +289,67 @@ def setLocalNodeVersion(nodeversion):
         print('Switched to Node v{0}...'.format(nodeversion))
         return True
 
+    # Unix
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        links = version.getConfigKey('node.links')
+
+        # check if all required source directories exits
+        pathexists = True
+        for names in links:
+            fullname = os.path.join(nodeDir, links[names]['source'], names)
+
+            # Check, if required source not found
+            if not os.path.isfile(fullname) and not os.path.isdir(fullname):
+                print('ERROR: Required Element "' +
+                      os.path.join(links[names]['source'], names) +
+                      '" in "' +
+                      nodeDir +
+                      '" not found...')
+                pathexists = False
+
+        # A required Source was not found, abort
+        if not pathexists:
+            return False
+
+        # Unlink old version and link new version
+        for names in links:
+            target = os.path.join(links[names]['target'], names)
+            source = os.path.join(nodeDir, links[names]['source'], names)
+            options = links[names].get('options', [])
+
+            basedir = target.rsplit(os.sep, 1).pop(0)
+
+            # Check if link, when true then remove it
+            if os.path.islink(target):
+                try:
+                    os.remove(target)
+                except BaseException as e:
+                    raise e
+            else:
+                # Check if "fullname" a real existing path/file, then raise Exception
+                if os.path.isdir(target) or os.path.isfile(target):
+                    if 'remove_if_exists' in options:
+                        try:
+                            print('Remove Directory', target)
+                            lxtools.rmDirectory(target)
+                        except BaseException as e:
+                            raise e
+                    else:
+                        raise Exception('UUh, a target is not a link...', target)
+
+            # Check if basedir exitst, if not then
+            if not os.path.isdir(basedir) and 'create' in links[names]:
+                if 'create_base_dir' in options:
+                    print('Create required Directory', basedir)
+                    os.makedirs(basedir, 755, True)
+
+            # Link
+            if not lxtools.setDirectoryLink(target, source):
+                raise Exception('Link creation failed!\n' + source + ' => ' + target)
+
+        print('Switched to Node v{0}...'.format(nodeversion))
+        return True
+
     return False
 
 # Returns the actual linked Version
@@ -298,13 +359,15 @@ def getLocalNodeVersion():
         return ''
 
     try:
-        path = os.readlink(lxBinPath) # Read symbolic Link
+        # Read symbolic Link
+        path = os.readlink(lxBinPath)
 
         # Remove bin/node. Only for non win32 platforms
         if sys.platform != 'win32':
             path = path.rsplit(os.sep, 2)[0]
 
-        return path.rsplit(os.sep).pop() # Splits the Seperator and Returns the last Pathname (nodeversion)
+        # Splits the Seperator and Returns the last Pathname (nodeversion)
+        return path.rsplit(os.sep).pop()
     except:
         return ''
 
@@ -345,6 +408,7 @@ def rmLocalNodeVersion(nodeversion):
         return True
     except Exception as e:
         print('ERROR: Node v{0} could not be removed.'.format(nodeversion))
+        print('EXCEPTION:', e)
         return False
 
 def runSpecifiedNodeVersion(nodeversion, app, arg=''):

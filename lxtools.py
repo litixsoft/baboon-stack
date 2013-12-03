@@ -108,11 +108,15 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
 
         return CreateSymbolicLink(lpSymlinkName, lpTargetName, 1)
 
-    # TODO: Test in UNIX
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        return os.link(lpSymlinkName, lpTargetName)
+        try:
+            os.symlink(lpTargetName, lpSymlinkName)
+            return True
+        except BaseException as e:
+            print('ERROR: ', e)
+            return False
 
-    raise 'ERROR: No API for setDirectoryLink.'
+    raise Exception('ERROR: No API for setDirectoryLink.')
 
 # Returns if lpFilename a Directory AND Reparse Point (Symbolic Link)
 # FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_REPARSE_POINT
@@ -120,11 +124,10 @@ def getIfSymbolicLink(lpFilename):
     if sys.platform == 'win32':
         return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040) == 1040
 
-    # TODO: Test in UNIX
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        return os.path.isdir(lpFilename) | os.path.islink(lpFilename)
+        return os.path.isdir(lpFilename) & os.path.islink(lpFilename)
 
-    raise 'ERROR: No API for getIfSymbolicLink.'
+    raise Exception('ERROR: No API for getIfSymbolicLink.')
 
 # Displays a Progress bar
 def showProgress(amtDone):
@@ -165,7 +168,7 @@ def getRemoteFile(url, tempfile=''):
 
 # Clear temporary internet files
 def cleanUpTemporaryFiles():
-    urlrequest.urlcleanup
+    urlrequest.urlcleanup()
 
 # Downloads a Remote File to a temporary File and returns the data
 def getRemoteData(url):
