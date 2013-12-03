@@ -20,7 +20,7 @@ args = lxtools.Arguments()
 
 # Header, the only one
 def bbcHeader():
-    print('\nlxManager by Litixsoft GmbH 2013\n')
+    print('\nlxManager for BaboonStack - Litixsoft GmbH 2013\n')
     pass
 
 # Prints the lxManager Version

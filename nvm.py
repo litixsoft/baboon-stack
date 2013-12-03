@@ -28,7 +28,6 @@ msiexecArguments = 'msiexec /quiet /a {0} /qb targetdir={1}'
 
 # NodeJS
 tempNodeDir = os.path.join(tempfile.gettempdir(), 'node')
-moveNodeDir = os.path.join(tempNodeDir, 'nodejs')
 
 # Node Directory
 lxBasePath = lxtools.getBaboonStackDirectory()
@@ -169,8 +168,20 @@ def getRemoteNodeVersion(nodeversion):
         print('Local  SHA' + localChecksum)
         return
 
+    # Default temp Directory
+    moveNodeDir = tempNodeDir
+
+    # Remove temp, if exists
+    if os.path.exists(tempNodeDir):
+        try:
+            lxtools.rmDirectory(tempNodeDir)
+        except Exception as e:
+            raise e
+
     # Windows specified stuff
     if sys.platform == 'win32':
+        moveNodeDir = os.path.join(tempNodeDir, 'nodejs')
+
         # Extract MSI Package
         print('Execute installation package...')
         try:
@@ -188,6 +199,8 @@ def getRemoteNodeVersion(nodeversion):
 
     # Unix specified stuff
     if sys.platform == 'linux' or sys.platform == 'darwin':
+        moveNodeDir = os.path.join(tempNodeDir, remoteFilename.rstrip('.tar.gz'))
+
         # Extract TAR Package
         try:
             tar = tarfile.open(tempRemoteFile)
@@ -341,7 +354,7 @@ def setLocalNodeVersion(nodeversion):
             if not os.path.isdir(basedir) and 'create' in links[names]:
                 if 'create_base_dir' in options:
                     print('Create required Directory', basedir)
-                    os.makedirs(basedir, 755, True)
+                    os.makedirs(basedir, mode=0o755)
 
             # Link
             if not lxtools.setDirectoryLink(target, source):
