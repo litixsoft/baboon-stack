@@ -9,6 +9,7 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 # Litixsoft Modules
+import package
 import lxtools
 import service
 import version
@@ -29,7 +30,7 @@ def bbcHelp():
 
     print('    bbc version                       Displays the version number')
     print('    bbc update                        Search and Installs BaboonStack Updates')
-    #print('    bbc setup                         Add Baboobstack Components')
+    #print('    bbc packages                      Add Baboobstack Components')
     #print('    bbc uninstall                     Uninstall Baboonstack')
     print('')
 
@@ -185,6 +186,10 @@ def main():
     # Check if update on remote Server
     if moduleName == 'update':
         return bbcUpdate()
+
+    # TODO: Remove this test operation
+    if moduleName == 'package':
+        return package.main()
 
     # Show Help
     bbcHelp()

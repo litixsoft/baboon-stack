@@ -10,10 +10,11 @@
 #-------------------------------------------------------------------------------
 import sys
 
-lxVersion = '1.3.0'
+lxVersion = '0.9.0'
 lxServer = 'http://packages.litixsoft.de'
-lxPacket = 'baboonstack-v{0}-windows-{1}.exe'
+lxPackage = 'baboonstack.package.conf'
 
+# {packagename}-v{version}-{osname}-{arch}.tar.gz
 lxInfo = {
     'linux': {
         'osname': 'linux',

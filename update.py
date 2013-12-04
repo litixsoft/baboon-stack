@@ -10,7 +10,12 @@
 #-------------------------------------------------------------------------------
 import tempfile
 import re as regex
+import sys
 import os
+
+# Platform specified modules
+if sys.platform == 'linux' or sys.platform == 'darwin':
+    import tarfile
 
 # lxManager Modules
 import version
@@ -26,7 +31,8 @@ def getLatestRemoteVersion():
         return ''
 
     # Get the available BaboonStack Packages for this OS
-    versionList = regex.findall('">(baboonstack-.*-windows-' + lxtools.getOsArchitecture() + '.exe)<\/a', data)
+    packageName = str(version.getConfigKey('package', '')).format(lxtools.getOsArchitecture())
+    versionList = regex.findall('">(' + packageName + ')<\/a', data)
     versionList.sort()
 
     # If list empty?
@@ -67,7 +73,8 @@ def doUpdate():
         return False
 
     # Get local version
-    versionLocal = version.lxPacket.format(version.lxVersion, lxtools.getOsArchitecture())
+    packageName = str(version.getConfigKey('package', '')).replace('{0}', '{1}').replace('.*', 'v{0}')
+    versionLocal = packageName.format(version.lxVersion, lxtools.getOsArchitecture())
 
     # Update required?
     if not versionRemote.lower() > versionLocal.lower():
@@ -102,13 +109,38 @@ def doUpdate():
             print('Checksum are correct...')
         else:
             print('Checksum missmatch... Abort!')
-            print('Filename  ' + remoteFilename)
+            print('Filename  ' + versionRemote)
             print('Remote SHA' + remoteChecksum)
             print('Local  SHA' + localChecksum)
             return False
 
-    # Run Installation and exit
-    print('Execute installer...')
-    os.startfile(localPacket)
-    print('Installation routine will start separately, exit now...')
-    return True
+    # Run Installation and exit under Windows
+    if sys.platform == 'win32':
+        print('Execute installer...')
+        os.startfile(localPacket)
+        print('Installation routine will start separately, exit now...')
+        return True
+
+    # Under Unix we must do all stuff
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        tempUpdateDir = os.path.join(tempfile.gettempdir(), localPacket.rstrip('.tar.gz'))
+
+        # Extract TAR Package
+        try:
+            tar = tarfile.open(localPacket)
+            tar.extractall(tempUpdateDir)
+            tar.close()
+        except BaseException as e:
+            lxtools.cleanUpTemporaryFiles()
+            print('ERROR:', e)
+            return False
+
+        # Clean up temporary internet files
+        lxtools.cleanUpTemporaryFiles()
+
+        # Clean up temporary update files
+        lxtools.rmDirectory(tempUpdateDir)
+
+        return True
+
+    return False
