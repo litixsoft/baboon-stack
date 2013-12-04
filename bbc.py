@@ -47,7 +47,7 @@ def bbcHelp():
         print('    bbc redis                         Redis Module Controls')
 
     print('')
-    print('    Some operations required "administrator" rights.')
+    print('    Some operations required "{0}" rights.'.format(version.getMessage('ADMINNAME')))
     pass
 
 
@@ -61,7 +61,7 @@ def bbcVersion():
 def bbcNodeHelp():
     print('Usage:\n')
     print('    bbc node install [version]       Install a specific version number')
-    print('    bbc node switch [version]        Switch to Version')
+    print('    bbc node use [version]           Switch to Version')
     print('    bbc node run <version> [<args>]  Run <version> with <args> as arguments')
     print('    bbc node ls                      View available version\n')
     print('Example:\n')
@@ -86,7 +86,7 @@ def bbcNode():
         return nvm.getRemoteNodeVersion(args.get().lower())
 
     # Switch to a local available Node.JS version
-    if command == 'switch' and args.count() != 0:
+    if command == 'use' and args.count() != 0:
         return nvm.setLocalNodeVersion(args.get().lower())
 
     # Runs a specified Node.JS Version

@@ -98,7 +98,7 @@ def getRemoteNodeVersionList(filter = ''):
 def getRemoteNodeVersion(nodeversion):
     # Check if admin
     if not lxtools.getIfAdmin():
-        print('This operation required Administrator rights!')
+        print(version.getMessage('REQUIREADMIN'))
         return
 
     # Check if version available on remote server
@@ -275,7 +275,7 @@ def setLocalNodeVersion(nodeversion):
 
     # If User Admin?
     if not lxtools.getIfAdmin():
-        print('Required administrator Rights.')
+        print(version.getMessage('REQUIREADMIN'))
         return False
 
     # Windows
@@ -393,7 +393,7 @@ def getIfNodeVersionActive(nodeversion):
 def rmLocalNodeVersion(nodeversion):
     # Check if admin
     if not lxtools.getIfAdmin():
-        print('This operation required Administrator rights!')
+        print(version.getMessage('REQUIREADMIN'))
         return
 
     # Check if syntax correct

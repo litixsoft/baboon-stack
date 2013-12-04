@@ -39,7 +39,12 @@ lxInfo = {
                     'target': '/usr/lib'
                 }
             }
+        },
+        'messages': {
+            'ADMINNAME': 'root',
+            'REQUIREADMIN': 'This operation required root rights!'
         }
+
     },
     'darwin': {
         'osname': 'darwin',
@@ -66,6 +71,10 @@ lxInfo = {
                     'options': ['create_base_dir', 'remove_if_exists']
                 }
             }
+        },
+        'messages': {
+            'ADMINNAME': 'super user',
+            'REQUIREADMIN': 'This operation required super user rights!'
         }
     },
     'win32': {
@@ -79,6 +88,10 @@ lxInfo = {
             },
             'links': {
             }
+        },
+        'messages': {
+            'ADMINNAME': 'administrator',
+            'REQUIREADMIN': 'This operation required administrator rights!'
         }
     }
 }
@@ -112,3 +125,10 @@ def getConfigKey(key, defaultvalue=None, data=lxConfig):
                 return defaultvalue
 
     return keydata
+
+# Returns system specified messages
+def getMessage(key):
+    if 'messages' in lxConfig and str(key).upper() in lxConfig['messages']:
+        return lxConfig['messages'][str(key).upper()]
+    else:
+        return ''
