@@ -131,7 +131,7 @@ def bbcServiceHelp():
     print('    bbc service start [name]                   Start Service')
     print('    bbc service stop [name]                    Stop Service\n')
     print('Example:\n')
-    print('    bbc service install lxappd 0.10.12 c:\\projects\\web\app.js')
+    print('    bbc service install lxappd 0.10.12 c:\\projects\\web\\app.js')
     print('    bbc service remove lxappd\n')
     pass
 

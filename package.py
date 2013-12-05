@@ -83,7 +83,23 @@ class BaboonStackPackage:
 
             # If package locally installed
             if os.path.exists(os.path.join(rootdir, pkgdata.get('dirname', 'none'))):
-                pkginfo['installed'] = 'Installed'
+                binlist = pkgdata.get('binary', False)
+                pkgexists = True
+
+                # Check if binarys exists
+                if binlist:
+                    dirname = os.path.join(rootdir, pkgdata.get('dirname'))
+
+                    if isinstance(binlist, str):
+                        binlist = [binlist]
+
+                    for binname in binlist:
+                        if not os.path.exists(os.path.join(dirname, binname)):
+                            pkgexists = False
+                            break
+
+                if pkgexists:
+                    pkginfo['installed'] = 'Installed'
 
             # Add package info to list
             pkglist.append(pkginfo)
