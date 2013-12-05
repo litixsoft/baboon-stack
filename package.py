@@ -106,7 +106,7 @@ def getLatestRemoteVersion(packagename=''):
     if data == -1:
         return ''
 
-    # Get the available BaboonStack Packages for this OS
+    # Get the available packages for this OS
     versionlist = regex.findall('">(' + packagename + ')<\/a', data)
     versionlist.sort()
 
@@ -146,9 +146,11 @@ def main():
     print('BaboonStack Version'.ljust(20, '.'), ':', package.getpackageversion())
     print('Packages:')
     for pkg in package.getpackagesinfo():
-        print(str(' ' + pkg.get('name')).ljust(20, '.'), ':', pkg.get('installed', 'Not installed'))
+        print(' ' + pkg.get('name', '').ljust(20, ' '),
+              'v' + pkg.get('version', 'x.x').ljust(10, ' '),
+              pkg.get('installed', 'Not installed')
+        )
 
-    print('')
     return True
 
 
@@ -174,7 +176,7 @@ def install(pkgname):
     # Check if admin
     if not lxtools.getIfAdmin():
         print(version.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # create full package name
     fullpackagename = str(version.getConfigKey('package')).format(
@@ -186,6 +188,7 @@ def install(pkgname):
     # Download Filelist
     if not getLatestRemoteVersion(fullpackagename):
         print('SERVER ERROR: Package not found on server...')
+        return False
 
     # Retrieve package checksum
     packagechecksum = getRemoteChecksum(fullpackagename)
