@@ -30,7 +30,7 @@ def bbcHelp():
 
     print('    bbc version                       Displays the version number')
     print('    bbc update                        Search and Installs BaboonStack Updates')
-    #print('    bbc packages                      Add Baboobstack Components')
+    print('    bbc packages                      Manages Baboobstack Components')
     #print('    bbc uninstall                     Uninstall Baboonstack')
     print('')
 
@@ -55,7 +55,6 @@ def bbcHelp():
 # Prints Baboonstack Version
 def bbcVersion():
     print('Version {0}\n'.format(version.lxConfig['version']))
-    pass
 
 # Node Operations
 
@@ -163,6 +162,31 @@ def bbcService():
     # No Command found, show Help
     bbcServiceHelp()
 
+# Show package help
+def bbcPackageHelp():
+    print('Usage:\n')
+    print('    bbc package install [packagename]          Installs a package')
+    print('    bbc package remove [packagename]           Removes a packages')
+    print('')
+    print('Packages:\n')
+    return package.main()
+
+# Packages
+def bbcPackage():
+    # Get First Command
+    command = args.get().lower()
+
+    # Install
+    if command == 'install':
+        return package.install(args.get().lower())
+
+    # Remove
+    if command == 'remove':
+        return package.remove(args.get().lower())
+
+    return bbcPackageHelp()
+
+
 # Update Operations
 def bbcUpdate():
     return update.doUpdate()
@@ -179,6 +203,9 @@ def main():
     if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():
         return bbcService()
 
+    if moduleName == 'package':
+        return bbcPackage()
+
     # Prints the Baboonstack Version
     if moduleName == 'version':
         return bbcVersion()
@@ -186,21 +213,6 @@ def main():
     # Check if update on remote Server
     if moduleName == 'update':
         return bbcUpdate()
-
-    # TODO: Remove this test operation
-    if moduleName == 'package':
-        # Get First Command
-        command = args.get().lower()
-
-        # Install
-        if command == 'install':
-            return package.install(args.get().lower())
-
-        # Remove
-        if command == 'remove':
-            return package.remove(args.get().lower())
-
-        return package.main()
 
     # Show Help
     bbcHelp()

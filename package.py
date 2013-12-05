@@ -38,16 +38,15 @@ class BaboonStackPackage:
             data = cfgfile.read()
             cfgfile.close()
         except BaseException as e:
-            print('>> ERROR: Unable to read configuration file...')
+            print('>> ERROR: Unable to open package catalog...')
             print('>>', e)
             return False
 
         try:
             self.__packagedata = json.loads(data)
         except BaseException as e:
-            print('>> JSON ERROR: Unable to parse configuration file...')
+            print('>> JSON ERROR: Unable to parse package catalog...')
             print('>>', e)
-            print('>> Abort...')
             return False
 
         return True
@@ -143,8 +142,6 @@ def getRemoteChecksum(filename):
 
 # Main
 def main():
-    print('BaboonStack Version'.ljust(20, '.'), ':', package.getpackageversion())
-    print('Packages:')
     for pkg in package.getpackagesinfo():
         print(' ' + pkg.get('name', '').ljust(20, ' '),
               'v' + pkg.get('version', 'x.x').ljust(10, ' '),
