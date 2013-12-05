@@ -55,6 +55,9 @@ def getRemoteChecksum(filename):
     for checksumEntry in data.split('\n'):
         value = checksumEntry.split('  ')
 
+        if len(value) != 2:
+            continue
+
         if value[1] == filename:
             return value[0]
 
@@ -73,7 +76,7 @@ def doUpdate():
         return False
 
     # Get local version
-    packageName = str(version.getConfigKey('package', '')).replace('{0}', '{1}').replace('.*', 'v{0}')
+    packageName = str(version.getConfigKey('update', '')).replace('{0}', '{1}').replace('.*', 'v{0}')
     versionLocal = packageName.format(version.lxVersion, lxtools.getOsArchitecture())
 
     # Update required?
@@ -89,7 +92,7 @@ def doUpdate():
     url = version.lxServer + '/' + versionRemote
     localPacket = os.path.join(tempfile.gettempdir(), versionRemote)
 
-    # Downlaod Packet with Progressbar
+    # Download Packet with Progressbar
     result = lxtools.getRemoteFile(url, localPacket)
 
     # Exception or canceled

@@ -189,6 +189,17 @@ def main():
 
     # TODO: Remove this test operation
     if moduleName == 'package':
+        # Get First Command
+        command = args.get().lower()
+
+        # Install
+        if command == 'install':
+            return package.install(args.get().lower())
+
+        # Remove
+        if command == 'remove':
+            return package.remove(args.get().lower())
+
         return package.main()
 
     # Show Help

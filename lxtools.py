@@ -217,3 +217,29 @@ def getIfMongoModuleEnabled():
 def getIfRedisModuleEnabled():
     redisPath = os.path.join(getBaboonStackDirectory(), 'redisio')
     return os.path.exists(redisPath)
+
+def readkey(prompt, keys='Yn'):
+    keymap = []
+    defaultkey = None
+
+    # Build keymap
+    for key in keys:
+        if key.isupper() and not defaultkey:
+            defaultkey = key.lower()
+
+        keymap.append(key)
+
+    # Output message
+    msg = str('{0} ({1})').format(prompt, '/'.join(keymap))
+    keys = keys.lower()
+
+    while True:
+        inp = input(msg).lower()
+
+        # if RETURN pressed, then use default
+        if len(inp) == 0:
+            if defaultkey:
+                return defaultkey
+        else:
+            if inp[0] in keys:
+                return inp[0]

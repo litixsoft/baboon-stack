@@ -20,7 +20,8 @@ lxInfo = {
         'osname': 'linux',
         'version': lxVersion,
         'basedir': '/opt/litixsoft/baboonstack',
-        'package': 'baboonstack-.*-linux-{0}.tar.gz',
+        'update': 'baboonstack-.*-linux-{0}.tar.gz',
+        'package': '{0}-v{1}-linux-{2}.tar.gz',
         'node': {
             'package': {
                 'x32': 'node-v{0}-linux-x86.tar.gz',
@@ -51,7 +52,8 @@ lxInfo = {
         'osname': 'darwin',
         'version': lxVersion,
         'basedir': '/usr/share/litixsoft/baboonstack',
-        'package': 'baboonstack-.*-darwin-{0}.tar.gz',
+        'update': 'baboonstack-.*-darwin-{0}.tar.gz',
+        'package': '{0}-v{1}-darwin-{2}.tar.gz',
         'node': {
             'package': {
                 'x32': 'node-v{0}-darwin-x86.tar.gz',
@@ -81,7 +83,8 @@ lxInfo = {
     'win32': {
         'osname': 'windows',
         'version': lxVersion,
-        'package': 'baboonstack-.*-windows-{0}.exe',
+        'update': 'baboonstack-.*-windows-{0}.exe',
+        'package': '{0}-v{1}-linux-{2}.zip',
         'node': {
             'package': {
                 'x32': 'node-v{0}-x86.msi',
