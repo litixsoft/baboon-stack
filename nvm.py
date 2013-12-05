@@ -369,7 +369,7 @@ def setLocalNodeVersion(nodeversion):
 def getLocalNodeVersion():
     # Check if symbolic link
     if not lxtools.getIfSymbolicLink(lxBinPath):
-        return ''
+        return False
 
     try:
         # Read symbolic Link

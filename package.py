@@ -78,7 +78,8 @@ class BaboonStackPackage:
             pkginfo = {
                 'name': packagename,
                 'version': pkgdata.get('version', ''),
-                'dirname': pkgdata.get('dirname', packagename)
+                'dirname': pkgdata.get('dirname', packagename),
+                'saferemove': pkgdata.get('saferemove', False)
             }
 
             # If package locally installed
@@ -275,18 +276,25 @@ def remove(pkgname):
     # Script options
     scriptoption = ['remove']
 
-    # print('Would you like to keep their databases, configuration files? (Y/n)')
+    # Ask for remove databases, cfg if saferemove TRUE
+    if pkginfo.get('saferemove'):
+        key = lxtools.readkey('Would you like to keep their databases, configuration files?')
 
-    key = lxtools.readkey('Would you like to keep their databases, configuration files?')
-
-    if key != 'y':
-        scriptoption.append('all')
+        if key != 'y':
+            scriptoption.append('all')
 
     print('Remove package "' + pkgname + '"...')
 
     # Run remove script
     packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
-    os.system(os.path.join(packagedirectory, 'lxScript.sh {0}'.format(' '.join(scriptoption))))
+
+    if os.path.isfile(os.path.join(packagedirectory, 'lxScript.sh')):
+        os.system(os.path.join(packagedirectory, 'lxScript.sh {0}'.format(' '.join(scriptoption))))
+
+    # Delete directory, if not saferemove and exists
+    if not pkginfo.get('saferemove') and os.path.exists(packagedirectory):
+        print('Remove directory')
+        lxtools.rmDirectory(packagedirectory)
 
     # Done
     print('Done...')

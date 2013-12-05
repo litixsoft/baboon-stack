@@ -125,7 +125,7 @@ def getIfSymbolicLink(lpFilename):
         return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040) == 1040
 
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        return os.path.isdir(lpFilename) & os.path.islink(lpFilename)
+        return os.path.islink(lpFilename)
 
     raise Exception('ERROR: No API for getIfSymbolicLink.')
 
