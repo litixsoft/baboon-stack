@@ -98,6 +98,7 @@ class BaboonStackPackage:
                             pkgexists = False
                             break
 
+                # if installed
                 if pkgexists:
                     pkginfo['installed'] = 'Installed'
 
@@ -161,8 +162,7 @@ def main():
     for pkg in package.getpackagesinfo():
         print(' ' + pkg.get('name', '').ljust(20, ' '),
               'v' + pkg.get('version', 'x.x').ljust(10, ' '),
-              pkg.get('installed', 'Not installed')
-        )
+              pkg.get('installed', 'Not installed'))
 
     return True
 
