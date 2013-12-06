@@ -93,10 +93,11 @@ class BaboonStackPackage:
                     if isinstance(binlist, str):
                         binlist = [binlist]
 
-                    for binname in binlist:
-                        if not os.path.exists(os.path.join(dirname, binname)):
-                            pkgexists = False
-                            break
+                    if isinstance(binlist, list):
+                        for binname in binlist:
+                            if not os.path.exists(os.path.join(dirname, binname)):
+                                pkgexists = False
+                                break
 
                 # if installed
                 if pkgexists:
@@ -169,6 +170,31 @@ def main():
 
 # Install a package
 def install(pkgname):
+    # if pkgname is list, then install multiple
+    if isinstance(pkgname, list):
+        pkgcnt = 0
+        for name in pkgname:
+            print('Install package "' + name + '"...')
+            if install(name):
+                pkgcnt += 1
+            print('')
+
+        print(' {0} of {1} packages successfully installed'.format(str(pkgcnt), str(len(pkgname))))
+        return True
+
+    # Install ALL packages?
+    if pkgname == '*':
+        pkgname = []
+        for pkg in package.getpackagesinfo():
+            pkgname.append(pkg.get('name'))
+
+        # Rerun
+        return install(pkgname)
+
+    #
+    # Start install single package
+    #
+
     # Get package info
     pkginfo = None
     for pkg in package.getpackagesinfo():
@@ -267,6 +293,18 @@ def install(pkgname):
 
 # Removes a package
 def remove(pkgname):
+    # if pkgname is list, then remove multiple
+    if isinstance(pkgname, list):
+        pkgcnt = 0
+        for name in pkgname:
+            print('Remove package "' + name + '"...')
+            if remove(name):
+                pkgcnt += 1
+            print('')
+
+        print(' {0} of {1} packages successfully removed'.format(str(pkgcnt), str(len(pkgname))))
+        return True
+
     # Get package info
     pkginfo = None
     for pkg in package.getpackagesinfo():

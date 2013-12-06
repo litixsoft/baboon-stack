@@ -15,7 +15,9 @@ import ctypes
 import sys
 import os
 
+# Baboonstack modules
 import version
+
 
 class Arguments:
 
@@ -28,9 +30,22 @@ class Arguments:
         return len(self.args)
 
     # Get the FIRST element and remove it from list
-    def get(self, defaultvalue=''):
+    def get(self, defaultvalue='', count=1):
         if self.count() != 0:
-            return self.args.pop(0)
+            if count == 1 or self.count() == 1:
+                # Returns single
+                return self.args.pop(0)
+            else:
+                # Returns multi
+                if not count > 0:
+                    return self.args
+                else:
+                    result = []
+                    while self.count() != 0 and count > 0:
+                        result.append(self.args.pop(0))
+                        count -= 1
+
+                    return result
         else:
             return defaultvalue
 

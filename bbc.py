@@ -178,11 +178,11 @@ def bbcPackage():
 
     # Install
     if command == 'install':
-        return package.install(args.get().lower())
+        return package.install(args.get(count=0))
 
     # Remove
     if command == 'remove':
-        return package.remove(args.get().lower())
+        return package.remove(args.get(count=0))
 
     return bbcPackageHelp()
 
