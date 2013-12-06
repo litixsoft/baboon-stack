@@ -99,6 +99,21 @@ lxInfo = {
     }
 }
 
+lxOptions = {
+    'removeall': {
+        'short': '-r',
+        'long': '--remove-all'
+    },
+    'alwaysyes': {
+        'short': '-y',
+        'long': '--always-yes'
+    },
+    'ask': {
+        'short': '-ask',
+        'long': '--ask'
+    }
+}
+
 # Returns Program Information for the current Operation System
 # Returns empty object, if no Information available
 def getConfig():

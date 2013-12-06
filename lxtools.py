@@ -22,27 +22,48 @@ import version
 class Arguments:
 
     def __init__(self):
-        self.args = sys.argv.copy()
-        self.args.pop(0) # Remove the first Argument
+        self.__args = sys.argv.copy()
+        self.__options = []
+
+        # Remove the first Argument
+        self.__args.pop(0)
+
+        # Remove options
+        optlist = []
+        for opt in self.__args:
+            if opt[0] == '-':
+                optlist.append(opt.lower())
+                self.__args.remove(opt)
+
+        for opt in optlist:
+            if opt.count('-', 0, 2) == 1:
+                fieldname = 'short'
+            else:
+                fieldname = 'long'
+
+            for optname in version.lxOptions:
+                if version.lxOptions[optname].get(fieldname, '').lower() == opt:
+                    self.__options.append(optname)
+                    break
 
     # Returns item count
     def count(self):
-        return len(self.args)
+        return len(self.__args)
 
     # Get the FIRST element and remove it from list
     def get(self, defaultvalue='', count=1):
         if self.count() != 0:
             if count == 1 or self.count() == 1:
                 # Returns single
-                return self.args.pop(0)
+                return self.__args.pop(0)
             else:
                 # Returns multi
                 if not count > 0:
-                    return self.args
+                    return self.__args
                 else:
                     result = []
                     while self.count() != 0 and count > 0:
-                        result.append(self.args.pop(0))
+                        result.append(self.__args.pop(0))
                         count -= 1
 
                     return result
@@ -51,11 +72,14 @@ class Arguments:
 
     # Returns TRUE or FALSE if NAME in list, if TRUE then removes element
     def find(self, name):
-        if name in self.args:
-            self.args.pop(self.args.index(name))
+        if name in self.__args:
+            self.__args.pop(self.__args.index(name))
             return True
         else:
             return False
+
+    def getoptions(self):
+        return self.__options
 
 # Returns if x86 or x64
 def getOsArchitecture():

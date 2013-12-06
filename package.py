@@ -169,13 +169,16 @@ def main():
 
 
 # Install a package
-def install(pkgname):
+def install(pkgname, options=list()):
+    if pkgname is None:
+        return False
+
     # if pkgname is list, then install multiple
     if isinstance(pkgname, list):
         pkgcnt = 0
         for name in pkgname:
             print('Install package "' + name + '"...')
-            if install(name):
+            if install(name, options):
                 pkgcnt += 1
             print('')
 
@@ -183,13 +186,16 @@ def install(pkgname):
         return True
 
     # Install ALL packages?
-    if pkgname == '*':
+    if pkgname == '':
+        if 'ask' not in options:
+            options.append('ask')
+
         pkgname = []
         for pkg in package.getpackagesinfo():
-            pkgname.append(pkg.get('name'))
+            pkgname.append(pkg.get('name', None))
 
         # Rerun
-        return install(pkgname)
+        return install(pkgname, options)
 
     #
     # Start install single package
@@ -216,6 +222,13 @@ def install(pkgname):
     if not lxtools.getIfAdmin():
         print(version.getMessage('REQUIREADMIN'))
         return False
+
+    # Ask
+    if 'ask' in options:
+        key = lxtools.readkey('Really install "' + pkgname + '"...', 'Yn')
+
+        if key == 'n':
+            return False
 
     # create full package name
     fullpackagename = str(version.getConfigKey('package')).format(
@@ -255,7 +268,7 @@ def install(pkgname):
         else:
             print('Checksum missmatch... Abort!')
             print('Filename  ' + fullpackagename)
-            print('Remote SHA' + packagechecksum)
+            print('Remote SHA' + str(packagechecksum))
             print('Local  SHA' + localchecksum)
             return False
     else:
@@ -292,7 +305,10 @@ def install(pkgname):
 
 
 # Removes a package
-def remove(pkgname):
+def remove(pkgname, options=list()):
+    if pkgname is None:
+        return False
+
     # if pkgname is list, then remove multiple
     if isinstance(pkgname, list):
         pkgcnt = 0
@@ -326,6 +342,13 @@ def remove(pkgname):
     if not lxtools.getIfAdmin():
         print(version.getMessage('REQUIREADMIN'))
         return
+
+    # Ask
+    if 'ask' in options:
+        key = lxtools.readkey('Really remove "' + pkgname + '"...', 'Ny')
+
+        if key == 'n':
+            return False
 
     # Script options
     scriptoption = ['remove']
