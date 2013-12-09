@@ -21,31 +21,31 @@ import nvm
 args = lxtools.Arguments()
 
 # Header, the only one
-def bbcHeader():
+def bbsHeader():
     print('\nlxManager for BaboonStack - Litixsoft GmbH 2013\n')
 
 # Prints the lxManager Version
-def bbcHelp():
+def bbsHelp():
     print('Usage:\n')
 
-    print('    bbc version                       Displays the version number')
-    print('    bbc update                        Search and Installs BaboonStack Updates')
-    print('    bbc packages                      Manages Baboobstack Components')
-    #print('    bbc uninstall                     Uninstall Baboonstack')
+    print('    bbs version                       Displays the version number')
+    print('    bbs update                        Search and Install BaboonStack Updates')
+    print('    bbs package                       Manages Baboobstack Components')
+    #print('    bbs uninstall                     Uninstall Baboonstack')
     print('')
 
     # Enable NVM und SERVICE module only if Node Component installed
     if lxtools.getIfNodeModuleEnabled():
-        print('    bbc node                          Node Module Controls')
-        print('    bbc service                       Service Module Controls for Node.JS')
+        print('    bbs node                          Node Module Controls')
+        print('    bbs service                       Service Module Controls for Node.JS')
 
     # Enable MONGO module only if MongoDB installed
-    if lxtools.getIfMongoModuleEnabled():
-        print('    bbc mongo                         Mongo Module Controls')
+#    if lxtools.getIfMongoModuleEnabled():
+#        print('    bbs mongo                         Mongo Module Controls')
 
     # Enable REDIS module only if RedisIO installed
-    if lxtools.getIfRedisModuleEnabled():
-        print('    bbc redis                         Redis Module Controls')
+#    if lxtools.getIfRedisModuleEnabled():
+#        print('    bbs redis                         Redis Module Controls')
 
     print('')
     print('    Some operations required "{0}" rights.'.format(version.getMessage('ADMINNAME')))
@@ -53,31 +53,31 @@ def bbcHelp():
 
 
 # Prints Baboonstack Version
-def bbcVersion():
+def bbsVersion():
     print('Version {0}\n'.format(version.lxConfig['version']))
 
 # Node Operations
 
-def bbcNodeHelp():
+def bbsNodeHelp():
     print('Usage:\n')
-    print('    bbc node install [version]       Install a specific version number')
-    print('    bbc node remove [version]        Removes a specific version number')
-    print('    bbc node use [version]           Switch to Version')
-    print('    bbc node run <version> [<args>]  Run <version> with <args> as arguments')
-    print('    bbc node reset                   De-Register Node.js/npm')
-    print('    bbc node ls                      View available version\n')
+    print('    bbs node install [version]       Install a specific version number')
+    print('    bbs node remove [version]        Removes a specific version number')
+    print('    bbs node use [version]           Switch to Version')
+    print('    bbs node run <version> [<args>]  Run <version> with <args> as arguments')
+    print('    bbs node reset                   De-Register Node.js/npm')
+    print('    bbs node ls                      View available version\n')
     print('Example:\n')
-    print('    bbc node install 0.10.12         Install 0.10.12 release')
-    print('    bbc node install 0.10            Install the latest available 0.10 release')
-    print('    bbc node use 0.10                Use the latest available 0.10 release')
-    print('    bbc node remove 0.10.12          Removes a specific version from System')
-    print('    bbc node ls                      Lists all locally available 0.10 releases')
-    print('    bbc node ls remote 0.10          Lists all remote available 0.10 releases\n')
+    print('    bbs node install 0.10.12         Install 0.10.12 release')
+    print('    bbs node install 0.10            Install the latest available 0.10 release')
+    print('    bbs node use 0.10                Use the latest available 0.10 release')
+    print('    bbs node remove 0.10.12          Removes a specific version from System')
+    print('    bbs node ls                      Lists all locally available 0.10 releases')
+    print('    bbs node ls remote 0.10          Lists all remote available 0.10 releases\n')
     pass
 
-def bbcNode():
+def bbsNode():
     if args.count() == 0:
-        bbcNodeHelp()
+        bbsNodeHelp()
         return
 
     # Get First Command
@@ -132,24 +132,24 @@ def bbcNode():
         return True
 
     # No Command found, show Help
-    bbcNodeHelp()
+    bbsNodeHelp()
 
 # Service Operations
 
-def bbcServiceHelp():
+def bbsServiceHelp():
     print('Usage:\n')
-    print('    bbc service install [name] [version] [app] Install a Node.JS Service')
-    print('    bbc service remove [name]                  Removes a Node.JS Service')
-    print('    bbc service start [name]                   Start Service')
-    print('    bbc service stop [name]                    Stop Service\n')
+    print('    bbs service install [name] [version] [app] Install a Node.JS Service')
+    print('    bbs service remove [name]                  Removes a Node.JS Service')
+    print('    bbs service start [name]                   Start Service')
+    print('    bbs service stop [name]                    Stop Service\n')
     print('Example:\n')
-    print('    bbc service install lxappd 0.10.12 c:\\projects\\web\\app.js')
-    print('    bbc service remove lxappd\n')
+    print('    bbs service install lxappd 0.10.12 c:\\projects\\web\\app.js')
+    print('    bbs service remove lxappd\n')
     pass
 
-def bbcService():
+def bbsService():
     if args.count() == 0:
-        bbcServiceHelp()
+        bbsServiceHelp()
         return
 
     # Get First Command
@@ -172,19 +172,19 @@ def bbcService():
         return service.stopService(args.get())
 
     # No Command found, show Help
-    bbcServiceHelp()
+    bbsServiceHelp()
 
 # Show package help
-def bbcPackageHelp():
+def bbsPackageHelp():
     print('Usage:\n')
-    print('    bbc package install [packagename]          Install packages')
-    print('    bbc package remove [packagename]           Removes packages')
+    print('    bbs package install [packagename]          Install packages')
+    print('    bbs package remove [packagename]           Removes packages')
     print('')
     print('Packages:\n')
     return package.main()
 
 # Packages
-def bbcPackage():
+def bbsPackage():
     # Get First Command
     command = args.get().lower()
 
@@ -196,11 +196,11 @@ def bbcPackage():
     if command == 'remove':
         return package.remove(args.get(count=0), args.getoptions())
 
-    return bbcPackageHelp()
+    return bbsPackageHelp()
 
 
 # Update Operations
-def bbcUpdate():
+def bbsUpdate():
     return update.doUpdate()
 
 # Default
@@ -209,31 +209,31 @@ def main():
 
     # Node.JS Module
     if moduleName == 'node' and lxtools.getIfNodeModuleEnabled():
-        return bbcNode()
+        return bbsNode()
 
     # Service Module
     if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():
-        return bbcService()
+        return bbsService()
 
     if moduleName == 'package':
-        return bbcPackage()
+        return bbsPackage()
 
     # Prints the Baboonstack Version
     if moduleName == 'version':
-        return bbcVersion()
+        return bbsVersion()
 
     # Check if update on remote Server
     if moduleName == 'update':
-        return bbcUpdate()
+        return bbsUpdate()
 
     # Show Help
-    bbcHelp()
+    bbsHelp()
 
 # lxManager Main
 if __name__ == '__main__':
     # Shows the Header
     if args.isoption('noheader') is False:
-        bbcHeader()
+        bbsHeader()
 
     # Execute main() and catch all Exceptions
     exitNormally = False
