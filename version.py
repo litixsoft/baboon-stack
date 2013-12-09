@@ -111,6 +111,10 @@ lxOptions = {
     'ask': {
         'short': '-ask',
         'long': '--ask'
+    },
+    'noheader': {
+        'short': '-nh',
+        'long': '--noheader'
     }
 }
 

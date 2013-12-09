@@ -243,6 +243,67 @@ def getLocalNodeVersionList(filter = ''):
     tarNodeList.sort(key=StrictVersion)
     return tarNodeList
 
+# Deregister Node
+def resetNode():
+    # If User Admin?
+    if not lxtools.getIfAdmin():
+        print(version.getMessage('REQUIREADMIN'))
+        return False
+
+    # Windows
+    if sys.platform == 'win32':
+        # Delete old LINK Directory when exits
+        if os.path.exists(lxBinPath):
+            # If Directory a Symbolic Link
+            if not lxtools.getIfSymbolicLink(lxBinPath):
+                print('ERROR: Target Directory is not a link and can not be removed.')
+                return False
+
+            # Remove Link
+            try:
+                os.remove(lxBinPath)
+            except BaseException as e:
+                print('ERROR:', e)
+                return False
+
+        return True
+
+    # Unix
+    if sys.platform == 'linux' or sys.platform == 'darwin':
+        links = version.getConfigKey('node.links')
+
+        # Unlink old version
+        for names in links:
+            target = os.path.join(links[names]['target'], names)
+            options = links[names].get('options', [])
+
+            # Check if link, when true then remove it
+            if os.path.islink(target):
+                try:
+                    os.remove(target)
+                except BaseException as e:
+                    print('ERROR:', e)
+                    return False
+            else:
+                # Check if "fullname" a real existing path/file, then raise Exception
+                if os.path.isdir(target) or os.path.isfile(target):
+                    if 'remove_if_exists' in options:
+                        try:
+                            print('Remove Directory', target)
+                            lxtools.rmDirectory(target)
+                        except BaseException as e:
+                            print('ERROR:', e)
+                            return False
+                    else:
+                        print('UUh, a target is not a link...', target)
+                        return False
+
+        return True
+
+    # No operation for that system :(
+    return False
+
+
 # Activate a local available Node Version
 def setLocalNodeVersion(nodeversion):
     # Retrive local available Version
@@ -281,18 +342,8 @@ def setLocalNodeVersion(nodeversion):
     # Windows
     if sys.platform == 'win32':
         # Delete old LINK Directory when exits
-        if os.path.exists(lxBinPath):
-            # If Directory a Symbolic Link
-            if not lxtools.getIfSymbolicLink(lxBinPath):
-                print('ERROR: Target Directory is not a link and can not be removed.')
-                return False
-
-            # Remove Link
-            try:
-                os.remove(lxBinPath)
-            except BaseException as e:
-                print('ERROR:', e)
-                return False
+        if not resetNode():
+            return False
 
         # Set new link
         if not lxtools.setDirectoryLink(lxBinPath, nodeDir):
@@ -324,37 +375,14 @@ def setLocalNodeVersion(nodeversion):
         if not pathexists:
             return False
 
-        # Unlink old version and link new version
+        # Unlink old version
+        if not resetNode():
+            return False
+
+        # link new version
         for names in links:
             target = os.path.join(links[names]['target'], names)
             source = os.path.join(nodeDir, links[names]['source'], names)
-            options = links[names].get('options', [])
-
-            basedir = target.rsplit(os.sep, 1).pop(0)
-
-            # Check if link, when true then remove it
-            if os.path.islink(target):
-                try:
-                    os.remove(target)
-                except BaseException as e:
-                    raise e
-            else:
-                # Check if "fullname" a real existing path/file, then raise Exception
-                if os.path.isdir(target) or os.path.isfile(target):
-                    if 'remove_if_exists' in options:
-                        try:
-                            print('Remove Directory', target)
-                            lxtools.rmDirectory(target)
-                        except BaseException as e:
-                            raise e
-                    else:
-                        raise Exception('UUh, a target is not a link...', target)
-
-            # Check if basedir exitst, if not then
-            if not os.path.isdir(basedir) and 'create' in links[names]:
-                if 'create_base_dir' in options:
-                    print('Create required Directory', basedir)
-                    os.makedirs(basedir, mode=0o755)
 
             # Link
             if not lxtools.setDirectoryLink(target, source):

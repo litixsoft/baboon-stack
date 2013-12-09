@@ -78,7 +78,9 @@ class BaboonStackPackage:
                 'name': packagename,
                 'version': pkgdata.get('version', ''),
                 'dirname': pkgdata.get('dirname', packagename),
-                'saferemove': pkgdata.get('saferemove', False)
+                'saferemove': pkgdata.get('saferemove', False),
+                'nodownload': pkgdata.get('nodownload', False),
+                'script': pkgdata.get('script', {})
             }
 
             # If package locally installed
@@ -112,7 +114,6 @@ class BaboonStackPackage:
 
 # Load default
 package = BaboonStackPackage()
-
 
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion(packagename=''):
@@ -157,6 +158,28 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return False
 
+
+def runScript(pkginfo, scriptoption):
+    if not isinstance(scriptoption, list):
+        return
+
+    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
+
+    if os.path.isfile(os.path.join(packagedirectory, 'lxScript.sh')):
+        lxtools.run(os.path.join(packagedirectory, 'lxScript.sh {0}'.format(' '.join(scriptoption))))
+
+    # Has script sektion, then execute
+    script = pkginfo.get('script', None)
+
+    if isinstance(script, dict) and len(scriptoption) > 0:
+        script = script.get(scriptoption[0], None)
+
+        if isinstance(script, list):
+            for item in script:
+                lxtools.run(item)
+
+        if isinstance(script, str):
+            lxtools.run(script)
 
 # Main
 def main():
@@ -230,6 +253,23 @@ def install(pkgname, options=list()):
         if key == 'n':
             return False
 
+    # Download require
+    if pkginfo.get('nodownload', False) is True:
+        # No Download require, then create dir and exit
+        basedir = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
+        print('Create Directory...')
+        try:
+            os.mkdir(basedir, 0o755)
+
+            # Execute scripts
+            runScript(pkginfo, ['install'])
+        except BaseException as e:
+            print('ERROR:', e)
+            return False
+
+        print('Done...')
+        return True
+
     # create full package name
     fullpackagename = str(version.getConfigKey('package')).format(
         pkginfo.get('name'),
@@ -288,12 +328,8 @@ def install(pkgname, options=list()):
             print('Installing...')
             scriptoption = ['install']
 
-            # Execute script "lxscript.sh"
-            packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
-
-            if os.path.isfile(os.path.join(packagedirectory, 'lxScript.sh')):
-                # Only execute script if availabled
-                os.system(os.path.join(packagedirectory, 'lxScript.sh {0}'.format(' '.join(scriptoption))))
+            # Execute scripts
+            runScript(pkginfo, scriptoption)
         except BaseException as e:
             print('ERROR:', e)
             return False
@@ -354,7 +390,7 @@ def remove(pkgname, options=list()):
     scriptoption = ['remove']
 
     # Ask for remove databases, cfg if saferemove TRUE
-    if pkginfo.get('saferemove'):
+    if pkginfo.get('saferemove') is True:
         key = lxtools.readkey('Would you like to keep their databases, configuration files?')
 
         if key != 'y':
@@ -363,13 +399,12 @@ def remove(pkgname, options=list()):
     print('Remove package "' + pkgname + '"...')
 
     # Run remove script
-    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
-
-    if os.path.isfile(os.path.join(packagedirectory, 'lxScript.sh')):
-        os.system(os.path.join(packagedirectory, 'lxScript.sh {0}'.format(' '.join(scriptoption))))
+    runScript(pkginfo, scriptoption)
 
     # Delete directory, if not saferemove and exists
-    if not pkginfo.get('saferemove') and os.path.exists(packagedirectory):
+    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
+
+    if not pkginfo.get('saferemove') is True and os.path.exists(packagedirectory):
         print('Remove directory')
         lxtools.rmDirectory(packagedirectory)
 

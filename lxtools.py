@@ -81,6 +81,9 @@ class Arguments:
     def getoptions(self):
         return self.__options
 
+    def isoption(self, name):
+        return name in self.__options
+
 # Returns if x86 or x64
 def getOsArchitecture():
     if platform.machine().endswith('64'):
@@ -282,3 +285,13 @@ def readkey(prompt, keys='Yn'):
         else:
             if inp[0] in keys:
                 return inp[0]
+
+
+def run(command):
+    result = os.system(command)
+
+    if result != 0:
+        print('\nError while execute "' + command + '"...')
+        print('Exitcode ' + str(result) + '\n')
+
+    return result == 0

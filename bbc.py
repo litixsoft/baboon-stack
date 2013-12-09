@@ -14,6 +14,7 @@ import lxtools
 import service
 import version
 import update
+import sys
 import nvm
 
 # Command Line
@@ -22,7 +23,6 @@ args = lxtools.Arguments()
 # Header, the only one
 def bbcHeader():
     print('\nlxManager for BaboonStack - Litixsoft GmbH 2013\n')
-    pass
 
 # Prints the lxManager Version
 def bbcHelp():
@@ -61,13 +61,15 @@ def bbcVersion():
 def bbcNodeHelp():
     print('Usage:\n')
     print('    bbc node install [version]       Install a specific version number')
+    print('    bbc node remove [version]        Removes a specific version number')
     print('    bbc node use [version]           Switch to Version')
     print('    bbc node run <version> [<args>]  Run <version> with <args> as arguments')
+    print('    bbc node reset                   De-Register Node.js/npm')
     print('    bbc node ls                      View available version\n')
     print('Example:\n')
     print('    bbc node install 0.10.12         Install 0.10.12 release')
     print('    bbc node install 0.10            Install the latest available 0.10 release')
-    print('    bbc node switch 0.10             Use the latest available 0.10 release')
+    print('    bbc node use 0.10                Use the latest available 0.10 release')
     print('    bbc node remove 0.10.12          Removes a specific version from System')
     print('    bbc node ls                      Lists all locally available 0.10 releases')
     print('    bbc node ls remote 0.10          Lists all remote available 0.10 releases\n')
@@ -89,6 +91,11 @@ def bbcNode():
     if command == 'use' and args.count() != 0:
         return nvm.setLocalNodeVersion(args.get().lower())
 
+    # Switch to a local available Node.JS version; depreated
+    if command == 'switch' and args.count() != 0:
+        print('WARNING: Parameter "switch" is deprecated!')
+        return nvm.setLocalNodeVersion(args.get().lower())
+
     # Runs a specified Node.JS Version
     if command == 'run' and args.count() > 1:
         return nvm.runSpecifiedNodeVersion(args.get().lower(), args.get().lower())
@@ -96,6 +103,11 @@ def bbcNode():
     # Removes a local installed Node.JS Version
     if command == 'remove' and args.count() != 0:
         return nvm.rmLocalNodeVersion(args.get().lower())
+
+    # Reset, de-register node.js
+    if command == 'reset':
+        print('Unregister Node.js...')
+        return nvm.resetNode()
 
     # Lists locally or remote available Node.JS Versions
     if command == 'ls':
@@ -165,8 +177,8 @@ def bbcService():
 # Show package help
 def bbcPackageHelp():
     print('Usage:\n')
-    print('    bbc package install [packagename]          Installs a package')
-    print('    bbc package remove [packagename]           Removes a packages')
+    print('    bbc package install [packagename]          Install packages')
+    print('    bbc package remove [packagename]           Removes packages')
     print('')
     print('Packages:\n')
     return package.main()
@@ -220,15 +232,21 @@ def main():
 # lxManager Main
 if __name__ == '__main__':
     # Shows the Header
-    bbcHeader()
+    if args.isoption('noheader') is False:
+        bbcHeader()
 
     # Execute main() and catch all Exceptions
+    exitNormally = False
     try:
-        main()
+        exitNormally = main()
     except KeyboardInterrupt:
         print('Abort! Bye!')
     except Exception as e:
         print('Exception occured!')
         print(e)
 
-    print('')
+    if args.isoption('noheader') is False:
+        print('')
+
+    if not exitNormally:
+        sys.exit(1)
