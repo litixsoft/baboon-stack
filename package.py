@@ -508,21 +508,20 @@ def remove(pkgname, options=list()):
                         os.remove(fullpath)
                     except BaseException as e:
                         print(e)
-            else:
-                print('ERROR', filename)
 
         # Remove directory if empty
         for directory in dirlist:
             if len(os.listdir(directory)) == 0:
                 os.rmdir(directory)
 
-    # Remove base directory if empty
-    if len(os.listdir(basedir)) == 0:
-        os.rmdir(basedir)
-    else:
-        # Remove directory with all files if not safe remove
-        if not saferemove is True:
-            lxtools.rmDirectory(basedir)
+    # Remove base directory if exists and empty
+    if os.path.exists(basedir):
+        if len(os.listdir(basedir)) == 0:
+            os.rmdir(basedir)
+        else:
+            # Remove directory with all files if not safe remove
+            if not saferemove is True:
+                lxtools.rmDirectory(basedir)
 
     # Done
     print('Done...')
