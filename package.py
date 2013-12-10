@@ -18,6 +18,9 @@ import os
 if sys.platform == 'linux' or sys.platform == 'darwin':
     import tarfile
 
+if sys.platform == 'win32':
+    import zipfile
+
 # lxManager modules
 import version
 import lxtools
@@ -158,15 +161,30 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return False
 
-
+# Run system specified script
 def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
         return
 
-    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
+    scriptfile = version.lxConfig.get('scriptfile', None)
 
-    if os.path.isfile(os.path.join(packagedirectory, 'lxScript.sh')):
-        lxtools.run(os.path.join(packagedirectory, 'lxScript.sh {0}'.format(' '.join(scriptoption))))
+    # Is script file set
+    if not scriptfile is None:
+        packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
+
+        if os.path.isfile(os.path.join(packagedirectory, scriptfile)):
+            # Get current working directory
+            last_wd = os.getcwd()
+            try:
+                # Change working directory to script location
+                os.chdir(packagedirectory)
+                lxtools.run(os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))))
+            except BaseException as e:
+                print('ERROR while executing script!')
+                print(e)
+
+            # Back to previous working directory
+            os.chdir(last_wd)
 
     # Has script sektion, then execute
     script = pkginfo.get('script', None)
@@ -314,28 +332,64 @@ def install(pkgname, options=list()):
     else:
         print('WARNING: No Checksum for this package available...')
 
-    # Unix specified
-    if sys.platform == 'linux' or sys.platform == 'darwin':
-        # Extract TAR Package
-        try:
-            print('Extracting...')
+    # Extract Archive Package
+    try:
+        print('Extracting...')
+        dirname = os.path.join(pkginfo.get('dirname'), '')
+        archive_filelist = []
 
+        # Unix specified
+        if sys.platform == 'linux' or sys.platform == 'darwin':
             # Extract files
             tar = tarfile.open(localpacketname)
             tar.extractall(lxtools.getBaboonStackDirectory())
             tar.close()
 
-            print('Installing...')
-            scriptoption = ['install']
+        # Windows specified
+        if sys.platform == 'win32':
+            if zipfile.is_zipfile(localpacketname):
+                myzip = zipfile.ZipFile(localpacketname, 'r')
 
-            # Execute scripts
-            runScript(pkginfo, scriptoption)
-        except BaseException as e:
-            print('ERROR:', e)
-            return False
+                # Get the filelist from zipfile
+                for filename in myzip.namelist():
+                    normpath = os.path.normpath(filename)
+                    if normpath.startswith(dirname):
+                        archive_filelist.append(normpath[len(dirname):])
 
-        lxtools.cleanUpTemporaryFiles()
-        print('Done...')
+                # Extract files
+                try:
+                    myzip.extractall(lxtools.getBaboonStackDirectory())
+                except BaseException as e:
+                    print('Error in ZIP, see error below.')
+                    print(e)
+
+                myzip.close()
+            else:
+                print('ERROR: Archive is not a ZIP File.')
+                return False
+
+        # Save filelist into program directory for remove
+        if len(archive_filelist) != 0:
+            lstname = os.path.join(lxtools.getBaboonStackDirectory(), dirname, 'files.lst')
+            try:
+                fileslst = open(lstname, 'w')
+                fileslst.write('\n'.join(archive_filelist))
+                fileslst.close()
+            except BaseException as e:
+                print('Error while saving filelist!')
+                print(e)
+
+        print('Installing...')
+        scriptoption = ['install']
+
+        # Execute scripts
+        runScript(pkginfo, scriptoption)
+    except BaseException as e:
+        print('ERROR:', e)
+        return False
+
+    lxtools.cleanUpTemporaryFiles()
+    print('Done...')
 
     return True
 
@@ -401,12 +455,53 @@ def remove(pkgname, options=list()):
     # Run remove script
     runScript(pkginfo, scriptoption)
 
-    # Delete directory, if not saferemove and exists
-    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
+    # Delete files
+    dirname = os.path.join(pkginfo.get('dirname'), '')
+    basedir = os.path.join(lxtools.getBaboonStackDirectory(), dirname)
+    lstname = os.path.join(basedir, 'files.lst')
 
-    if not pkginfo.get('saferemove') is True and os.path.exists(packagedirectory):
-        print('Remove directory')
-        lxtools.rmDirectory(packagedirectory)
+    # Load files.lst, if exists
+    if os.path.exists(lstname):
+        dir_filelist = ['files.lst']
+        try:
+            fileslst = open(lstname, 'r')
+            for line in fileslst.readlines():
+                dir_filelist.append(line.rstrip('\n'))
+            fileslst.close()
+        except BaseException as e:
+            print('Error while saving filelist!')
+            print(e)
+    else:
+        dir_filelist = []
+
+    # Has files?
+    if len(dir_filelist) != 0:
+        dirlist = []
+
+        # Remove every file from directory and marks directories
+        print('Remove files...')
+        for filename in dir_filelist:
+            fullpath = os.path.join(basedir, filename)
+            if os.path.exists(fullpath):
+                if os.path.isdir(fullpath):
+                    dirlist.append(fullpath)
+                else:
+                    os.remove(fullpath)
+            else:
+                print('ERROR', filename)
+
+        # Remove directory if empty
+        for directory in dirlist:
+            if len(os.listdir(directory)) == 0:
+                os.rmdir(directory)
+
+    # Remove base directory if empty
+    if len(os.listdir(basedir)) == 0:
+        os.rmdir(basedir)
+    else:
+        # Remove directory with all files if not safe remove
+        if not pkginfo.get('saferemove') is True:
+            lxtools.rmDirectory(basedir)
 
     # Done
     print('Done...')
