@@ -347,7 +347,6 @@ def install(pkgname, options=list()):
             mytar = tarfile.open(localpacketname)
 
             # Get the filelist from tarfile
-            # TODO: Test it
             for tarinfo in mytar:
                 normpath = os.path.normpath(tarinfo.name)
                 if normpath.startswith(dirname):
