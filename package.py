@@ -118,6 +118,7 @@ class BaboonStackPackage:
 # Load default
 package = BaboonStackPackage()
 
+
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion(packagename=''):
     # Download Filelist
@@ -161,6 +162,7 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return False
 
+
 # Run system specified script
 def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
@@ -198,6 +200,7 @@ def runScript(pkginfo, scriptoption):
 
         if isinstance(script, str):
             lxtools.run(script)
+
 
 # Main
 def main():
