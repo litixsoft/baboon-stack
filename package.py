@@ -341,9 +341,23 @@ def install(pkgname, options=list()):
         # Unix specified
         if sys.platform == 'linux' or sys.platform == 'darwin':
             # Extract files
-            tar = tarfile.open(localpacketname)
-            tar.extractall(lxtools.getBaboonStackDirectory())
-            tar.close()
+            mytar = tarfile.open(localpacketname)
+
+            # Get the filelist from tarfile
+            # TODO: Test it
+            for tarinfo in mytar:
+                normpath = os.path.normpath(tarinfo.name)
+                if normpath.startswith(dirname):
+                    archive_filelist.append(normpath[len(dirname):])
+
+            # Extract files
+            try:
+                mytar.extractall(lxtools.getBaboonStackDirectory())
+            except BaseException as e:
+                print('Error in TAR, see error below.')
+                print(e)
+
+            mytar.close()
 
         # Windows specified
         if sys.platform == 'win32':
@@ -442,13 +456,15 @@ def remove(pkgname, options=list()):
 
     # Script options
     scriptoption = ['remove']
+    saferemove = pkginfo.get('saferemove') is True
 
     # Ask for remove databases, cfg if saferemove TRUE
-    if pkginfo.get('saferemove') is True:
+    if saferemove:
         key = lxtools.readkey('Would you like to keep their databases, configuration files?')
 
         if key != 'y':
             scriptoption.append('all')
+            saferemove = False
 
     print('Remove package "' + pkgname + '"...')
 
@@ -484,9 +500,14 @@ def remove(pkgname, options=list()):
             fullpath = os.path.join(basedir, filename)
             if os.path.exists(fullpath):
                 if os.path.isdir(fullpath):
+                    # Add dir to list, will be removed later
                     dirlist.append(fullpath)
                 else:
-                    os.remove(fullpath)
+                    # Remove file
+                    try:
+                        os.remove(fullpath)
+                    except BaseException as e:
+                        print(e)
             else:
                 print('ERROR', filename)
 
@@ -500,7 +521,7 @@ def remove(pkgname, options=list()):
         os.rmdir(basedir)
     else:
         # Remove directory with all files if not safe remove
-        if not pkginfo.get('saferemove') is True:
+        if not saferemove is True:
             lxtools.rmDirectory(basedir)
 
     # Done
