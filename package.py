@@ -28,8 +28,16 @@ import lxtools
 
 class BaboonStackPackage:
 
-    def __init__(self):
-        self.__packagename = os.path.join(lxtools.getBaboonStackDirectory(), version.lxPackage)
+    def __init__(self, filename=None):
+        if filename is not None:
+            # Check if 'filename' absoulte path e.g. /opt/litixsoft/... or C:\litixsoft\...
+            if not os.path.isabs(filename):
+                filename = os.path.join(lxtools.getBaboonStackDirectory(), filename)
+
+            self.__packagename = filename
+        else:
+            self.__packagename = os.path.join(lxtools.getBaboonStackDirectory(), version.lxPackage)
+
         self.__packagedata = {}
 
         self.loadpackage(self.__packagename)
