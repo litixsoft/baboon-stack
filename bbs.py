@@ -205,6 +205,10 @@ def bbsUpdate():
 
 # Default
 def main():
+    # First! Check if package update required and perform it when required
+    if package.update():
+        return True
+
     moduleName = args.get().lower()
 
     # Node.JS Module

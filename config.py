@@ -13,6 +13,7 @@ import sys
 lxVersion = '1.3.0'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
+lxPrevPackage = 'baboonstack.previous.package.conf'
 
 lxInfo = {
     'linux': {
@@ -108,7 +109,7 @@ lxOptions = {
         'long': '--remove-all'
     },
     'alwaysyes': {
-        'short': '-y',
+        'short': '-yes',
         'long': '--always-yes'
     },
     'ask': {

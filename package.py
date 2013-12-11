@@ -13,6 +13,7 @@ import json
 import re as regex
 import sys
 import os
+from distutils.version import StrictVersion
 
 # Platform specified modules
 if sys.platform == 'linux' or sys.platform == 'darwin':
@@ -28,57 +29,32 @@ import lxtools
 
 class BaboonStackPackage:
 
-    def __init__(self, filename=None):
-        if filename is not None:
-            # Check if 'filename' absoulte path e.g. /opt/litixsoft/... or C:\litixsoft\...
-            if not os.path.isabs(filename):
-                filename = os.path.join(lxtools.getBaboonStackDirectory(), filename)
-
-            self.__packagename = filename
-        else:
-            self.__packagename = os.path.join(lxtools.getBaboonStackDirectory(), config.lxPackage)
-
-        self.__packagedata = {}
-
-        self.loadpackage(self.__packagename)
-        pass
-
-    def loadpackage(self, filename):
+    @staticmethod
+    def loadPackage(filename, reporterror=True):
         try:
             cfgfile = open(filename, mode='r')
             data = cfgfile.read()
             cfgfile.close()
         except BaseException as e:
-            print('>> ERROR: Unable to open package catalog...')
-            print('>>', e)
-            return False
+            if reporterror:
+                print('>> ERROR: Unable to open package catalog...')
+                print('>>', e)
+            return {}
 
         try:
-            self.__packagedata = json.loads(data)
+            return json.loads(data)
         except BaseException as e:
-            print('>> JSON ERROR: Unable to parse package catalog...')
-            print('>>', e)
-            return False
+            if reporterror:
+                print('>> JSON ERROR: Unable to parse package catalog...')
+                print('>>', e)
+            return {}
 
-        return True
-
-    def getpackageversion(self):
-        return self.__packagedata.get('version', '<unknow>')
-
-    def getpackagelist(self):
-        pkglist = []
-        if 'packages' in self.__packagedata:
-            for packagename in self.__packagedata['packages']:
-                pkglist.append(packagename)
-
-        return pkglist
-
-    def getpackagesinfo(self):
-        pkglist = []
+    def __buildPackageList(self):
+        self.__packagelist = []
         rootdir = lxtools.getBaboonStackDirectory()
 
-        for packagename in self.getpackagelist():
-            pkgdata = self.__packagedata['packages'][packagename]
+        for packagename in self.__packagedata.get('packages', {}):
+            pkgdata = self.__packagedata['packages'].get(packagename, None)
 
             # If pkgdata
             if not isinstance(pkgdata, dict):
@@ -116,16 +92,62 @@ class BaboonStackPackage:
                 if pkgexists:
                     pkginfo['installed'] = 'Installed'
 
+                    # Check if update available
+                    prevpackages = self.__previousdata.get('packages', {})
+
+                    if packagename in prevpackages:
+                        prevpackage = prevpackages.get(packagename, {})
+                        prev_package_version = prevpackage.get('version', '0.0.0')
+                        now_package_version = pkgdata.get('version', '0.0.0')
+
+                        if StrictVersion(now_package_version) > StrictVersion(prev_package_version):
+                            # Mark package as update available and report global
+                            self.__updaterequired = True
+                            pkginfo['previous'] = prevpackage
+
             # Add package info to list
-            pkglist.append(pkginfo)
+            self.__packagelist.append(pkginfo)
 
-        # Return list
-        return pkglist
+    def __init__(self, packagefilename=config.lxPackage, previouspackagefilename=config.lxPrevPackage):
+        self.__previouspackagefilename = os.path.join(lxtools.getBaboonStackDirectory(), previouspackagefilename)
+        self.__packagedata = self.loadPackage(os.path.join(lxtools.getBaboonStackDirectory(), packagefilename))
+        self.__previousdata = self.loadPackage(self.__previouspackagefilename, False)
+        self.__updaterequired = False
+        self.__packagelist = []
 
+
+        # Check, if really prev version
+        if len(self.__previousdata) > 0:
+            ver_now = self.__packagedata.get('version', '0.0.0')
+            ver_prev = self.__previousdata.get('version', '0.0.0')
+
+            if StrictVersion(ver_now) <= StrictVersion(ver_prev):
+                # Ignore Update
+                self.__previousdata = {}
+
+        self.refresh()
+
+    def getPackageVersion(self):
+        return self.__packagedata.get('version', '<unknow>')
+
+    def getPackagesInfoList(self):
+        return self.__packagelist
+
+    def getIfUpdateRequired(self):
+        return self.__updaterequired
+
+    def refresh(self):
+        self.__buildPackageList()
+
+    def removePreviousPackageFile(self):
+        if os.path.exists(self.__previouspackagefilename):
+            os.remove(self.__previouspackagefilename)
+            return True
+
+        return False
 
 # Load default
 package = BaboonStackPackage()
-
 
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion(packagename=''):
@@ -212,7 +234,7 @@ def runScript(pkginfo, scriptoption):
 
 # Main
 def main():
-    for pkg in package.getpackagesinfo():
+    for pkg in package.getPackagesInfoList():
         print(' ' + pkg.get('name', '').ljust(20, ' '),
               'v' + pkg.get('version', 'x.x').ljust(10, ' '),
               pkg.get('installed', 'Not installed'))
@@ -243,7 +265,7 @@ def install(pkgname, options=list()):
             options.append('ask')
 
         pkgname = []
-        for pkg in package.getpackagesinfo():
+        for pkg in package.getPackagesInfoList():
             pkgname.append(pkg.get('name', None))
 
         # Rerun
@@ -255,7 +277,7 @@ def install(pkgname, options=list()):
 
     # Get package info
     pkginfo = None
-    for pkg in package.getpackagesinfo():
+    for pkg in package.getPackagesInfoList():
         if pkg.get('name') == pkgname:
             pkginfo = pkg
             break
@@ -437,7 +459,7 @@ def remove(pkgname, options=list()):
 
     # Get package info
     pkginfo = None
-    for pkg in package.getpackagesinfo():
+    for pkg in package.getPackagesInfoList():
         if pkg.get('name') == pkgname:
             pkginfo = pkg
             break
@@ -469,7 +491,7 @@ def remove(pkgname, options=list()):
     saferemove = pkginfo.get('saferemove') is True
 
     # Ask for remove databases, cfg if saferemove TRUE
-    if saferemove:
+    if saferemove and 'alwaysyes' not in options:
         key = lxtools.readkey('Would you like to keep their databases, configuration files?')
 
         if key != 'y':
@@ -535,5 +557,75 @@ def remove(pkgname, options=list()):
 
     # Done
     print('Done...')
+
+    return True
+
+
+def update():
+    if not package.getIfUpdateRequired():
+        return False
+
+    packagelist = []
+
+    print('Following package(s) required a update:\n')
+
+    # List packages
+    for packagedata in package.getPackagesInfoList():
+        prevpackagedata = packagedata.get('previous', None)
+
+        if prevpackagedata is None:
+            continue
+
+        info = {
+            'name': packagedata.get('name', '<unnamed>'),
+            'from_version': prevpackagedata.get('version', '?.?.?'),
+            'to_version': packagedata.get('version', '?.?.?')
+        }
+
+        print(' ' + info.get('name').ljust(20, ' '),
+              'v' + info.get('from_version').ljust(10, ' '),
+              '=> v', info.get('to_version'))
+
+        packagelist.append(info)
+
+    print('')
+
+    # Get if is Admin
+    if not lxtools.getIfAdmin():
+        print(config.getMessage('REQUIREADMIN'))
+        return True
+
+    key = lxtools.readkey('Start package update?')
+
+    # User abort operation
+    if key == 'n':
+        print('Abort!')
+        return True
+
+    # Perform update
+    iserror = False
+    for packagedata in packagelist:
+        packagename = packagedata.get('name')
+
+        # Remove
+        if not remove(packagename, ['alwaysyes']):
+            iserror = True
+            break
+
+        # Update Package list
+        package.refresh()
+
+        # Install
+        if not install(packagename, ['alwaysyes']):
+            iserror = True
+            break
+
+    # Error occured, abort!
+    if iserror:
+        return True
+
+    # All Updates taken, remove old package file
+    if not package.removePreviousPackageFile():
+        print('Error: Previous catalog file could not be deleted.')
 
     return True

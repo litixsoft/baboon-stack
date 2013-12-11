@@ -64,6 +64,9 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return ''
 
+def doPackagesUpdate():
+    pass
+
 # Check for Update
 def doUpdate():
     # Get latest Version on Server
