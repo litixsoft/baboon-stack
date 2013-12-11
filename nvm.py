@@ -20,7 +20,7 @@ if sys.platform == 'linux' or sys.platform == 'darwin':
     import tarfile
 
 # Baboonstack modules
-import version
+import config
 import lxtools
 
 # Global
@@ -37,7 +37,7 @@ if sys.platform == 'win32':
     lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
 else:
     # Unix Systems are below
-    lxBinPath = os.path.join(version.getConfigKey('node.links.node.target'), 'node')
+    lxBinPath = os.path.join(config.getConfigKey('node.links.node.target'), 'node')
 
 # CleanUp
 def cleanUp():
@@ -98,7 +98,7 @@ def getRemoteNodeVersionList(filter = ''):
 def getRemoteNodeVersion(nodeversion):
     # Check if admin
     if not lxtools.getIfAdmin():
-        print(version.getMessage('REQUIREADMIN'))
+        print(config.getMessage('REQUIREADMIN'))
         return
 
     # Check if version available on remote server
@@ -126,7 +126,7 @@ def getRemoteNodeVersion(nodeversion):
         return
 
     # Get the Os specified Node Remote Package
-    remoteFilename = version.lxConfig['node']['package'][lxtools.getOsArchitecture()].format(nodeversion)
+    remoteFilename = config.lxConfig['node']['package'][lxtools.getOsArchitecture()].format(nodeversion)
 
     # Get Checksumlist from remote Server
     print('Retrieve Checksum list...')
@@ -247,7 +247,7 @@ def getLocalNodeVersionList(filter = ''):
 def resetNode():
     # If User Admin?
     if not lxtools.getIfAdmin():
-        print(version.getMessage('REQUIREADMIN'))
+        print(config.getMessage('REQUIREADMIN'))
         return False
 
     # Windows
@@ -270,7 +270,7 @@ def resetNode():
 
     # Unix
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        links = version.getConfigKey('node.links')
+        links = config.getConfigKey('node.links')
 
         # Unlink old version
         for names in links:
@@ -336,7 +336,7 @@ def setLocalNodeVersion(nodeversion):
 
     # If User Admin?
     if not lxtools.getIfAdmin():
-        print(version.getMessage('REQUIREADMIN'))
+        print(config.getMessage('REQUIREADMIN'))
         return False
 
     # Windows
@@ -355,7 +355,7 @@ def setLocalNodeVersion(nodeversion):
 
     # Unix
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        links = version.getConfigKey('node.links')
+        links = config.getConfigKey('node.links')
 
         # check if all required source directories exits
         pathexists = True
@@ -421,7 +421,7 @@ def getIfNodeVersionActive(nodeversion):
 def rmLocalNodeVersion(nodeversion):
     # Check if admin
     if not lxtools.getIfAdmin():
-        print(version.getMessage('REQUIREADMIN'))
+        print(config.getMessage('REQUIREADMIN'))
         return
 
     # Check if syntax correct

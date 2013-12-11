@@ -22,7 +22,7 @@ if sys.platform == 'win32':
     import zipfile
 
 # lxManager modules
-import version
+import config
 import lxtools
 
 
@@ -36,7 +36,7 @@ class BaboonStackPackage:
 
             self.__packagename = filename
         else:
-            self.__packagename = os.path.join(lxtools.getBaboonStackDirectory(), version.lxPackage)
+            self.__packagename = os.path.join(lxtools.getBaboonStackDirectory(), config.lxPackage)
 
         self.__packagedata = {}
 
@@ -130,7 +130,7 @@ package = BaboonStackPackage()
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion(packagename=''):
     # Download Filelist
-    data = lxtools.getRemoteData(version.lxServer + '/')
+    data = lxtools.getRemoteData(config.lxServer + '/')
 
     # If Exception occured
     if data == -1:
@@ -151,7 +151,7 @@ def getLatestRemoteVersion(packagename=''):
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
     # Download from URL
-    data = lxtools.getRemoteData(version.lxServer + '/SHASUMS.txt')
+    data = lxtools.getRemoteData(config.lxServer + '/SHASUMS.txt')
 
     # Exception or Abort
     if data == -1:
@@ -176,7 +176,7 @@ def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
         return
 
-    scriptfile = version.lxConfig.get('scriptfile', None)
+    scriptfile = config.lxConfig.get('scriptfile', None)
 
     # Is script file set
     if not scriptfile is None:
@@ -272,7 +272,7 @@ def install(pkgname, options=list()):
 
     # Check if admin
     if not lxtools.getIfAdmin():
-        print(version.getMessage('REQUIREADMIN'))
+        print(config.getMessage('REQUIREADMIN'))
         return False
 
     # Ask
@@ -300,7 +300,7 @@ def install(pkgname, options=list()):
         return True
 
     # create full package name
-    fullpackagename = str(version.getConfigKey('package')).format(
+    fullpackagename = str(config.getConfigKey('package')).format(
         pkginfo.get('name'),
         pkginfo.get('version'),
         lxtools.getOsArchitecture()
@@ -315,7 +315,7 @@ def install(pkgname, options=list()):
     packagechecksum = getRemoteChecksum(fullpackagename)
 
     # Build
-    url = version.lxServer + '/' + fullpackagename
+    url = config.lxServer + '/' + fullpackagename
     localpacketname = os.path.join(tempfile.gettempdir(), fullpackagename)
 
     # Download Packet with Progressbar
@@ -454,7 +454,7 @@ def remove(pkgname, options=list()):
 
     # Check if admin
     if not lxtools.getIfAdmin():
-        print(version.getMessage('REQUIREADMIN'))
+        print(config.getMessage('REQUIREADMIN'))
         return
 
     # Ask
