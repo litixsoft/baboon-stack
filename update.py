@@ -129,12 +129,12 @@ def doUpdate():
 
     # Under Unix we must do all stuff
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        tempUpdateDir = os.path.join(tempfile.gettempdir(), localPacket.rstrip('.tar.gz'))
+        tempupdatedir = os.path.join(tempfile.gettempdir(), localPacket.rstrip('.tar.gz'))
 
         # Extract TAR Package
         try:
             tar = tarfile.open(localPacket)
-            tar.extractall(tempUpdateDir)
+            tar.extractall(tempupdatedir)
             tar.close()
         except BaseException as e:
             lxtools.cleanUpTemporaryFiles()
@@ -145,7 +145,7 @@ def doUpdate():
         lxtools.cleanUpTemporaryFiles()
 
         # Clean up temporary update files
-        lxtools.rmDirectory(tempUpdateDir)
+        lxtools.rmDirectory(tempupdatedir)
 
         return True
 
