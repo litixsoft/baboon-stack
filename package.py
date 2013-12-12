@@ -115,7 +115,6 @@ class BaboonStackPackage:
         self.__updaterequired = False
         self.__packagelist = []
 
-
         # Check, if really prev version
         if len(self.__previousdata) > 0:
             ver_now = self.__packagedata.get('version', '0.0.0')
@@ -260,13 +259,19 @@ def install(pkgname, options=list()):
         return True
 
     # Install ALL packages?
-    if pkgname == '':
+    if pkgname == '*':
         if 'ask' not in options:
             options.append('ask')
 
         pkgname = []
         for pkg in package.getPackagesInfoList():
-            pkgname.append(pkg.get('name', None))
+            # Only install if not installed locally
+            if pkg.get('installed', None) is None:
+                pkgname.append(pkg.get('name', None))
+
+        if len(pkgname) == 0:
+            print('Sorry, no packages available to install.')
+            return False
 
         # Rerun
         return install(pkgname, options)

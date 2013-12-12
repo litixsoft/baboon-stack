@@ -16,6 +16,7 @@ import os
 # Platform specified modules
 if sys.platform == 'linux' or sys.platform == 'darwin':
     import tarfile
+    import subprocess
 
 # lxManager Modules
 import config
@@ -141,12 +142,19 @@ def doUpdate():
             print('ERROR:', e)
             return False
 
-        # Clean up temporary internet files
-        lxtools.cleanUpTemporaryFiles()
+        updatescriptfile = os.path.join(tempupdatedir, 'lxupdate.sh')
+        if os.path.exists(updatescriptfile):
+            print('Execute Update...')
+            subprocess.Popen([updatescriptfile, tempupdatedir, lxtools.getBaboonStackDirectory()], shell=True)
+            sys.exit(23)
+        else:
+            # Clean up temporary internet files
+            lxtools.cleanUpTemporaryFiles()
 
-        # Clean up temporary update files
-        lxtools.rmDirectory(tempupdatedir)
+            # Clean up temporary update files
+            lxtools.rmDirectory(tempupdatedir)
 
         return True
 
+    # No Update method found for that system
     return False

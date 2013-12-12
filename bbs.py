@@ -189,12 +189,12 @@ def bbsPackage():
     command = args.get().lower()
 
     # Install
-    if command == 'install':
-        return package.install(args.get(count=0), args.getoptions())
+    if command == 'install' and args.count() != 0:
+        return package.install(args.get(), args.getoptions())
 
     # Remove
-    if command == 'remove':
-        return package.remove(args.get(count=0), args.getoptions())
+    if command == 'remove' and args.count() != 0:
+        return package.remove(args.get(), args.getoptions())
 
     return bbsPackageHelp()
 
