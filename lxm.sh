@@ -485,7 +485,7 @@ nodeSwitch() {
     mkdir "$LXLIBPATH/node_modules"
   fi
   
-  ln -s "$nodedir/lib/node_modules/npm/" "$LXLIBPATH/node_modules/npm"
+  ln -s "$nodedir/lib/node_modules/npm" "$LXLIBPATH/node_modules/npm"
 }
 
 # Run specified Node.js Version
