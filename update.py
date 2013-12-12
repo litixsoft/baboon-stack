@@ -144,6 +144,14 @@ def doUpdate():
 
         updatescriptfile = os.path.join(tempupdatedir, 'lxupdate.sh')
         if os.path.exists(updatescriptfile):
+            # Rename package catalog file
+            if os.path.exists(config.lxPackage):
+                os.rename(
+                    os.path.join(lxtools.getBaboonStackDirectory(), config.lxPackage),
+                    os.path.join(lxtools.getBaboonStackDirectory(), config.lxPrevPackage)
+                )
+
+            # Execute Update script
             print('Execute Update...')
             subprocess.Popen([updatescriptfile, tempupdatedir, lxtools.getBaboonStackDirectory()], shell=True)
             sys.exit(23)
