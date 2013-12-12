@@ -16,7 +16,7 @@ import sys
 import os
 
 # Baboonstack modules
-import version
+import config
 
 
 class Arguments:
@@ -41,8 +41,8 @@ class Arguments:
             else:
                 fieldname = 'long'
 
-            for optname in version.lxOptions:
-                if version.lxOptions[optname].get(fieldname, '').lower() == opt:
+            for optname in config.lxOptions:
+                if config.lxOptions[optname].get(fieldname, '').lower() == opt:
                     self.__options.append(optname)
                     break
 
@@ -241,8 +241,8 @@ def getBaboonStackDirectory():
             return os.environ['LXPATH']
 
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        if os.path.exists(version.lxConfig['basedir']):
-            return version.lxConfig['basedir']
+        if os.path.exists(config.lxConfig['basedir']):
+            return config.lxConfig['basedir']
 
     return os.path.dirname(os.getcwd())
 

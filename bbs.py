@@ -12,7 +12,7 @@
 import package
 import lxtools
 import service
-import version
+import config
 import update
 import sys
 import nvm
@@ -48,13 +48,13 @@ def bbsHelp():
 #        print('    bbs redis                         Redis Module Controls')
 
     print('')
-    print('    Some operations required "{0}" rights.'.format(version.getMessage('ADMINNAME')))
+    print('    Some operations required "{0}" rights.'.format(config.getMessage('ADMINNAME')))
     pass
 
 
 # Prints Baboonstack Version
 def bbsVersion():
-    print('Version {0}\n'.format(version.lxConfig['version']))
+    print('Version {0}\n'.format(config.lxConfig['version']))
 
 # Node Operations
 
@@ -205,6 +205,10 @@ def bbsUpdate():
 
 # Default
 def main():
+    # First! Check if package update required and perform it when required
+    if package.update():
+        return True
+
     moduleName = args.get().lower()
 
     # Node.JS Module

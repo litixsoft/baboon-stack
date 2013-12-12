@@ -18,20 +18,20 @@ if sys.platform == 'linux' or sys.platform == 'darwin':
     import tarfile
 
 # lxManager Modules
-import version
+import config
 import lxtools
 
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion():
     # Download Filelist
-    data = lxtools.getRemoteData(version.lxServer + '/')
+    data = lxtools.getRemoteData(config.lxServer + '/')
 
     # If Exception occured
     if data == -1:
         return ''
 
     # Get the available BaboonStack Packages for this OS
-    packageName = str(version.getConfigKey('package', '')).format(lxtools.getOsArchitecture())
+    packageName = str(config.getConfigKey('package', '')).format(lxtools.getOsArchitecture())
     versionList = regex.findall('">(' + packageName + ')<\/a', data)
     versionList.sort()
 
@@ -45,7 +45,7 @@ def getLatestRemoteVersion():
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
     # Download from URL
-    data = lxtools.getRemoteData(version.lxServer + '/SHASUMS.txt')
+    data = lxtools.getRemoteData(config.lxServer + '/SHASUMS.txt')
 
     # Exception or Abort
     if data == -1:
@@ -64,6 +64,9 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return ''
 
+def doPackagesUpdate():
+    pass
+
 # Check for Update
 def doUpdate():
     # Get latest Version on Server
@@ -76,8 +79,8 @@ def doUpdate():
         return False
 
     # Get local version
-    packageName = str(version.getConfigKey('update', '')).replace('{0}', '{1}').replace('.*', 'v{0}')
-    versionLocal = packageName.format(version.lxVersion, lxtools.getOsArchitecture())
+    packageName = str(config.getConfigKey('update', '')).replace('{0}', '{1}').replace('.*', 'v{0}')
+    versionLocal = packageName.format(config.lxVersion, lxtools.getOsArchitecture())
 
     # Update required?
     if not versionRemote.lower() > versionLocal.lower():
@@ -89,7 +92,7 @@ def doUpdate():
     print('Update {0} => {1}...'.format(versionLocal, versionRemote))
 
     # Build
-    url = version.lxServer + '/' + versionRemote
+    url = config.lxServer + '/' + versionRemote
     localPacket = os.path.join(tempfile.gettempdir(), versionRemote)
 
     # Download Packet with Progressbar
@@ -126,12 +129,12 @@ def doUpdate():
 
     # Under Unix we must do all stuff
     if sys.platform == 'linux' or sys.platform == 'darwin':
-        tempUpdateDir = os.path.join(tempfile.gettempdir(), localPacket.rstrip('.tar.gz'))
+        tempupdatedir = os.path.join(tempfile.gettempdir(), localPacket.rstrip('.tar.gz'))
 
         # Extract TAR Package
         try:
             tar = tarfile.open(localPacket)
-            tar.extractall(tempUpdateDir)
+            tar.extractall(tempupdatedir)
             tar.close()
         except BaseException as e:
             lxtools.cleanUpTemporaryFiles()
@@ -142,7 +145,7 @@ def doUpdate():
         lxtools.cleanUpTemporaryFiles()
 
         # Clean up temporary update files
-        lxtools.rmDirectory(tempUpdateDir)
+        lxtools.rmDirectory(tempupdatedir)
 
         return True
 
