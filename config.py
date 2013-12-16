@@ -108,9 +108,9 @@ lxOptions = {
         'short': '-r',
         'long': '--remove-all'
     },
-    'alwaysyes': {
-        'short': '-yes',
-        'long': '--always-yes'
+    'force': {
+        'short': '-f',
+        'long': '--force'
     },
     'ask': {
         'short': '-ask',

@@ -259,8 +259,8 @@ def install(pkgname, options=list()):
         return True
 
     # Install ALL packages?
-    if pkgname == '*':
-        if 'ask' not in options:
+    if pkgname == '':
+        if 'force' not in options and 'ask' not in options:
             options.append('ask')
 
         pkgname = []
@@ -452,15 +452,47 @@ def remove(pkgname, options=list()):
 
     # if pkgname is list, then remove multiple
     if isinstance(pkgname, list):
+
+        if 'force' not in options and 'ask' not in options:
+            options.append('ask')
+
         pkgcnt = 0
         for name in pkgname:
-            print('Remove package "' + name + '"...')
-            if remove(name):
+            if 'ask' in options:
+                key = lxtools.readkey('Remove package "' + name + '"...', 'yNa')
+
+                # User selected no, keep package
+                if key == 'n':
+                    continue
+
+                # User selected abort, stop all
+                if key == 'a':
+                    print(' Abort!!!')
+                    break
+            else:
+                print('Remove package "' + name + '"...')
+
+            if remove(name, options):
                 pkgcnt += 1
             print('')
 
         print(' {0} of {1} packages successfully removed'.format(str(pkgcnt), str(len(pkgname))))
         return True
+
+    # Removes ALL packages?
+    if pkgname == '':
+        pkgname = []
+        for pkg in package.getPackagesInfoList():
+            # Only remove if installed locally
+            if pkg.get('installed', None) is not None:
+                pkgname.append(pkg.get('name', None))
+
+        if len(pkgname) == 0:
+            print('Sorry, no packages available to remove.')
+            return False
+
+        # Rerun
+        return remove(pkgname, options)
 
     # Get package info
     pkginfo = None
@@ -496,7 +528,7 @@ def remove(pkgname, options=list()):
     saferemove = pkginfo.get('saferemove') is True
 
     # Ask for remove databases, cfg if saferemove TRUE
-    if saferemove and 'alwaysyes' not in options:
+    if saferemove and 'force' not in options:
         key = lxtools.readkey('Would you like to keep their databases, configuration files?')
 
         if key != 'y':
@@ -613,7 +645,7 @@ def update():
         packagename = packagedata.get('name')
 
         # Remove
-        if not remove(packagename, ['alwaysyes']):
+        if not remove(packagename, ['force']):
             iserror = True
             break
 
@@ -621,7 +653,7 @@ def update():
         package.refresh()
 
         # Install
-        if not install(packagename, ['alwaysyes']):
+        if not install(packagename, ['force']):
             iserror = True
             break
 

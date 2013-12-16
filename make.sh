@@ -1,5 +1,6 @@
 #!/bin/bash
 if [ -d "build" ]; then
+ echo "Remove Build Folder..."
  rm -R build
 fi
 
