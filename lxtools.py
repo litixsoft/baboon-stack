@@ -124,15 +124,18 @@ def rmDirectory(directory):
 # Returns the SHA1 Checksum of specified File
 def getSHAChecksum(filename):
     sha = hashlib.sha1()
-    tmpFile = open(filename, 'rb')
+    tmpfile = open(filename, 'rb')
     while True:
-        datFile = tmpFile.read(8192)
+        shadata = tmpfile.read(8192)
 
         # End of File
-        if not datFile:
+        if not shadata:
             break
 
-        sha.update(datFile)
+        sha.update(shadata)
+
+    # Close File
+    tmpfile.close()
 
     # Returns Digest
     return sha.hexdigest()
