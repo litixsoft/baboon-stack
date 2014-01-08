@@ -6,7 +6,7 @@
 #
 # Created:     31.07.2013
 # Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Licence:     MIT
 #-------------------------------------------------------------------------------
 # Litixsoft Modules
 import package
@@ -20,9 +20,11 @@ import nvm
 # Command Line
 args = lxtools.Arguments()
 
+
 # Header, the only one
 def bbsHeader():
     print('\nlxManager for BaboonStack - Litixsoft GmbH 2013\n')
+
 
 # Prints the lxManager Version
 def bbsHelp():
@@ -58,6 +60,7 @@ def bbsVersion():
 
 # Node Operations
 
+
 def bbsNodeHelp():
     print('Usage:\n')
     print('    bbs node install [version]       Install a specific version number')
@@ -74,6 +77,7 @@ def bbsNodeHelp():
     print('    bbs node ls                      Lists all locally available 0.10 releases')
     print('    bbs node ls remote 0.10          Lists all remote available 0.10 releases\n')
     pass
+
 
 def bbsNode():
     if args.count() == 0:
@@ -136,6 +140,7 @@ def bbsNode():
 
 # Service Operations
 
+
 def bbsServiceHelp():
     print('Usage:\n')
     print('    bbs service install [name] [version] [app] Install a Node.JS Service')
@@ -146,6 +151,7 @@ def bbsServiceHelp():
     print('    bbs service install lxappd 0.10.12 c:\\projects\\web\\app.js')
     print('    bbs service remove lxappd\n')
     pass
+
 
 def bbsService():
     if args.count() == 0:
@@ -174,6 +180,7 @@ def bbsService():
     # No Command found, show Help
     bbsServiceHelp()
 
+
 # Show package help
 def bbsPackageHelp():
     print('Usage:\n')
@@ -182,6 +189,7 @@ def bbsPackageHelp():
     print('')
     print('Packages:\n')
     return package.main()
+
 
 # Packages
 def bbsPackage():
@@ -202,6 +210,7 @@ def bbsPackage():
 # Update Operations
 def bbsUpdate():
     return update.doUpdate()
+
 
 # Default
 def main():

@@ -10,7 +10,7 @@
 #-------------------------------------------------------------------------------
 import platform
 import hashlib
-import urllib.request as urlrequest
+import urllib.request as UrlRequest
 import ctypes
 import sys
 import os
@@ -84,12 +84,14 @@ class Arguments:
     def isoption(self, name):
         return name in self.__options
 
+
 # Returns if x86 or x64
 def getOsArchitecture():
     if platform.machine().endswith('64'):
         return 'x64'
     else:
         return 'x86'
+
 
 # Returns if User an Admin
 def getIfAdmin():
@@ -100,6 +102,7 @@ def getIfAdmin():
         return os.geteuid() == 0
 
     return False
+
 
 # Removes a Directory from System with all files
 def rmDirectory(directory):
@@ -121,6 +124,7 @@ def rmDirectory(directory):
     except IOError as e:
         print("Remove Directory error. I/O error({0}): {1}".format(e.errno, e.strerror))
 
+
 # Returns the SHA1 Checksum of specified File
 def getSHAChecksum(filename):
     sha = hashlib.sha1()
@@ -139,6 +143,7 @@ def getSHAChecksum(filename):
 
     # Returns Digest
     return sha.hexdigest()
+
 
 # Creates a symbolic link of Directory
 def setDirectoryLink(lpSymlinkName, lpTargetName):
@@ -163,6 +168,7 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
 
     raise Exception('ERROR: No API for setDirectoryLink.')
 
+
 # Returns if lpFilename a Directory AND Reparse Point (Symbolic Link)
 # FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_REPARSE_POINT
 def getIfSymbolicLink(lpFilename):
@@ -174,10 +180,12 @@ def getIfSymbolicLink(lpFilename):
 
     raise Exception('ERROR: No API for getIfSymbolicLink.')
 
+
 # Displays a Progress bar
 def showProgress(amtDone):
     sys.stdout.write("\rProgress: [{0:50s}] {1:.1f}% ".format('#' * int(amtDone * 50), amtDone * 100))
     sys.stdout.flush()
+
 
 # Callback for urlretrieve (Downloadprogress)
 def reporthook(blocknum, blocksize, filesize):
@@ -188,12 +196,13 @@ def reporthook(blocknum, blocksize, filesize):
 
     showProgress(percent)
 
+
 # Download a Remote File to a temporary File and returns the filename
 # Displays a Progress Bar during Download
 def getRemoteFile(url, tempfile=''):
     showProgress(0)
     try:
-        local_filename, headers = urlrequest.urlretrieve(url, tempfile, reporthook=reporthook)
+        local_filename, headers = UrlRequest.urlretrieve(url, tempfile, reporthook=reporthook)
         showProgress(1)
         print('Done!')
     except KeyboardInterrupt:
@@ -211,15 +220,17 @@ def getRemoteFile(url, tempfile=''):
 
     return local_filename
 
+
 # Clear temporary internet files
 def cleanUpTemporaryFiles():
-    urlrequest.urlcleanup()
+    UrlRequest.urlcleanup()
+
 
 # Downloads a Remote File to a temporary File and returns the data
 def getRemoteData(url):
     # Download from URL
     try:
-        local_filename, headers = urlrequest.urlretrieve(url)
+        local_filename, headers = UrlRequest.urlretrieve(url)
     except IOError as e:
         print('IO Error! Abort!\n')
         print(e)
@@ -234,8 +245,9 @@ def getRemoteData(url):
     html.close()
 
     # Delete temporary Internet File
-    urlrequest.urlcleanup()
+    UrlRequest.urlcleanup()
     return data
+
 
 # Returns the HOMEPATH of Baboonstack
 def getBaboonStackDirectory():
@@ -249,20 +261,28 @@ def getBaboonStackDirectory():
 
     return os.path.dirname(os.getcwd())
 
+
 # Returns if NODE.JS Module (NVM/SERVICE) enabled
 # Checks only if %LXPATH%\node exits
 def getIfNodeModuleEnabled():
     nodePath = os.path.join(getBaboonStackDirectory(), 'node')
     return os.path.exists(nodePath)
 
+
+# Returns if Mongo installed, Checks path only
 def getIfMongoModuleEnabled():
     mongoPath = os.path.join(getBaboonStackDirectory(), 'mongo')
     return os.path.exists(mongoPath)
 
+
+# Returns if Redis installed, Checks path only
 def getIfRedisModuleEnabled():
     redisPath = os.path.join(getBaboonStackDirectory(), 'redisio')
     return os.path.exists(redisPath)
 
+
+# Ready a single char from input
+# Allowed Char in key, Upper Case Char for default (Return)
 def readkey(prompt, keys='Yn'):
     keymap = []
     defaultkey = None
@@ -290,6 +310,7 @@ def readkey(prompt, keys='Yn'):
                 return inp[0]
 
 
+# Execute a shell command and return True/False
 def run(command):
     result = os.system(command)
 
