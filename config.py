@@ -86,7 +86,7 @@ lxInfo = {
     },
     'win32': {
         'osname': 'windows',
-        'version': lxVersion,
+        'version': '1.2.0',
         'update': 'baboonstack-.*-windows-{0}.exe',
         'package': '{0}-v{1}-windows-{2}.zip',
         'scriptfile': 'lxScript.cmd',

@@ -34,7 +34,7 @@ lxBasePath = lxtools.getBaboonStackDirectory()
 lxNodePath = os.path.join(lxBasePath, 'node')
 
 if sys.platform == 'win32':
-    lxBinPath = os.path.join(lxBasePath, 'lxm', 'Node')
+    lxBinPath = os.path.join(lxBasePath, 'bbs', 'Node')
 else:
     # Unix Systems are below
     lxBinPath = os.path.join(config.getConfigKey('node.links.node.target'), 'node')
