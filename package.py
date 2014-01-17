@@ -16,7 +16,7 @@ import os
 from distutils.version import StrictVersion
 
 # Platform specified modules
-if sys.platform == 'linux' or sys.platform == 'darwin':
+if sys.platform.startswith('linux') or sys.platform == 'darwin':
     import tarfile
 
 if sys.platform == 'win32':
@@ -377,7 +377,7 @@ def install(pkgname, options=list()):
         archive_filelist = []
 
         # Unix specified
-        if sys.platform == 'linux' or sys.platform == 'darwin':
+        if sys.platform.startswith('linux') or sys.platform == 'darwin':
             # Extract files
             mytar = tarfile.open(localpacketname)
 

@@ -125,10 +125,11 @@ lxOptions = {
 # Returns Program Information for the current Operation System
 # Returns empty object, if no Information available
 def getConfig():
-    if sys.platform in lxInfo:
-        return lxInfo[sys.platform]
-    else:
-        return {}
+    for item in lxInfo:
+        if sys.platform.startswith(item):
+            return lxInfo[item]
+
+    return {}
 
 # Programconfiguration
 lxConfig = getConfig()

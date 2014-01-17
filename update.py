@@ -14,7 +14,7 @@ import sys
 import os
 
 # Platform specified modules
-if sys.platform == 'linux' or sys.platform == 'darwin':
+if sys.platform.startswith('linux') or sys.platform == 'darwin':
     import tarfile
     import subprocess
 
@@ -129,7 +129,7 @@ def doUpdate():
         return True
 
     # Under Unix we must do all stuff
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         tempupdatedir = os.path.join(tempfile.gettempdir(), localPacket.rstrip('.tar.gz'))
 
         # Extract TAR Package

@@ -98,7 +98,7 @@ def getIfAdmin():
     if sys.platform == 'win32':
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
 
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         return os.geteuid() == 0
 
     return False
@@ -158,7 +158,7 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
 
         return CreateSymbolicLink(lpSymlinkName, lpTargetName, 1)
 
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         try:
             os.symlink(lpTargetName, lpSymlinkName)
             return True
@@ -175,7 +175,7 @@ def getIfSymbolicLink(lpFilename):
     if sys.platform == 'win32':
         return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040) == 1040
 
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         return os.path.islink(lpFilename)
 
     raise Exception('ERROR: No API for getIfSymbolicLink.')
@@ -255,7 +255,7 @@ def getBaboonStackDirectory():
         if 'LXPATH' in os.environ:
             return os.environ['LXPATH']
 
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         if os.path.exists(config.lxConfig['basedir']):
             return config.lxConfig['basedir']
 

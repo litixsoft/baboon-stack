@@ -16,7 +16,7 @@ import sys
 import os
 
 # Platform specified modules
-if sys.platform == 'linux' or sys.platform == 'darwin':
+if sys.platform.startswith('linux') or sys.platform == 'darwin':
     import tarfile
 
 # Baboonstack modules
@@ -198,7 +198,7 @@ def getRemoteNodeVersion(nodeversion):
             return False
 
     # Unix specified stuff
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         moveNodeDir = os.path.join(tempNodeDir, remoteFilename.rstrip('.tar.gz'))
 
         # Extract TAR Package
@@ -269,7 +269,7 @@ def resetNode():
         return True
 
     # Unix
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         links = config.getConfigKey('node.links')
 
         # Unlink old version
@@ -354,7 +354,7 @@ def setLocalNodeVersion(nodeversion):
         return True
 
     # Unix
-    if sys.platform == 'linux' or sys.platform == 'darwin':
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
         links = config.getConfigKey('node.links')
 
         # check if all required source directories exits
