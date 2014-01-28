@@ -10,7 +10,7 @@
 #-------------------------------------------------------------------------------
 import sys
 
-lxVersion = '1.3.0'
+lxVersion = '1.2.0'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
 lxPrevPackage = 'baboonstack.previous.package.conf'
@@ -22,11 +22,10 @@ lxInfo = {
         'basedir': '/opt/litixsoft/baboonstack',
         'update': 'baboonstack-.*-linux-{0}.tar.gz',
         'package': '{0}-v{1}-linux-{2}.tar.gz',
-        'scriptfile': 'lxScript.sh',
+        'scriptfile': 'lxscript.sh',
         'node': {
             'package': {
                 'x32': 'node-v{0}-linux-x86.tar.gz',
-                'x86': 'node-v{0}-linux-x86.tar.gz',
                 'x64': 'node-v{0}-linux-x64.tar.gz'
             },
             'links': {
@@ -56,11 +55,10 @@ lxInfo = {
         'basedir': '/usr/share/litixsoft/baboonstack',
         'update': 'baboonstack-.*-darwin-{0}.tar.gz',
         'package': '{0}-v{1}-darwin-{2}.tar.gz',
-        'scriptfile': 'lxScript.sh',
+        'scriptfile': 'lxscript.sh',
         'node': {
             'package': {
                 'x32': 'node-v{0}-darwin-x86.tar.gz',
-                'x86': 'node-v{0}-darwin-x86.tar.gz',
                 'x64': 'node-v{0}-darwin-x64.tar.gz'
             },
             'links': {
@@ -86,14 +84,13 @@ lxInfo = {
     },
     'win32': {
         'osname': 'windows',
-        'version': '1.2.0',
+        'version': lxVersion,
         'update': 'baboonstack-.*-windows-{0}.exe',
         'package': '{0}-v{1}-windows-{2}.zip',
         'scriptfile': 'lxScript.cmd',
         'node': {
             'package': {
                 'x32': 'node-v{0}-x86.msi',
-                'x86': 'node-v{0}-x86.msi',
                 'x64': 'x64/node-v{0}-x64.msi'
             },
             'links': {

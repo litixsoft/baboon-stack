@@ -22,20 +22,21 @@ if [ -d "build" ]; then
 fi
 
 echo "Build..."
-python3 build.py bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress
+#python3 build.py bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress
+cxfreeze bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress
 
 echo "Change permissions..."
 chmod 644 build/*
 chmod +x build/bbs
 
-echo "Build Baboonstack Package..."
-mkdir bbs-package
+#echo "Build Baboonstack Package..."
+#mkdir bbs-package
 
-cp scripts/macos/ bbs-package/.
-rem Copy Script
-rem Copy package.conf
-cd bbs-package
-rem tar
-cd ...
+#cp scripts/macos/ bbs-package/.
+#Copy Script
+#rem Copy package.conf
+#cd bbs-package
+#rem tar
+#cd ..
 
 echo "Done..."
