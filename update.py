@@ -32,7 +32,7 @@ def getLatestRemoteVersion():
         return ''
 
     # Get the available BaboonStack Packages for this OS
-    packageName = str(config.getConfigKey('package', '')).format(lxtools.getOsArchitecture())
+    packageName = str(config.getConfigKey('update', '')).format(lxtools.getOsArchitecture())
     versionList = regex.findall('">(' + packageName + ')<\/a', data)
     versionList.sort()
 
