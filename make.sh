@@ -22,8 +22,10 @@ if [ -d "build" ]; then
 fi
 
 echo "Build..."
-#python3 build.py bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress
-cxfreeze bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress
+case "$LXOS" in
+  "darwin" ) python3 build.py bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress ;;
+  "linux" ) cxfreeze bbs.py --target-dir "build" --icon "ressources/baboonstack.ico" --compress ;;
+esac
 
 echo "Change permissions..."
 chmod 644 build/*
