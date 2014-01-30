@@ -25,7 +25,7 @@ lxInfo = {
         'scriptfile': 'lxscript.sh',
         'node': {
             'package': {
-                'x32': 'node-v{0}-linux-x86.tar.gz',
+                'x86': 'node-v{0}-linux-x86.tar.gz',
                 'x64': 'node-v{0}-linux-x64.tar.gz'
             },
             'links': {
@@ -58,7 +58,7 @@ lxInfo = {
         'scriptfile': 'lxscript.sh',
         'node': {
             'package': {
-                'x32': 'node-v{0}-darwin-x86.tar.gz',
+                'x86': 'node-v{0}-darwin-x86.tar.gz',
                 'x64': 'node-v{0}-darwin-x64.tar.gz'
             },
             'links': {
@@ -90,7 +90,7 @@ lxInfo = {
         'scriptfile': 'lxScript.cmd',
         'node': {
             'package': {
-                'x32': 'node-v{0}-x86.msi',
+                'x86': 'node-v{0}-x86.msi',
                 'x64': 'x64/node-v{0}-x64.msi'
             },
             'links': {
