@@ -15,8 +15,11 @@ function request {
 }
 
 # Some variables
-bshome=$(dirname $(readlink -f $0))
-bsmode=""
+LXHOMEPATH="$(pwd)"
+LXBINPATH="/usr/bin"
+LXLIBPATH="/usr/lib"
+LXMODE=""
+
 
 # Make sure only root can run our script
 if [[ $EUID -ne 0 ]]; then
@@ -25,12 +28,14 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+echo "HINT: All installed packages are also removed!"
+
 if ( request "Remove Databases, Configuration files, etc?" ) then
-  bsmode="all"
+  LXMODE="all"
 fi
 
 # Execute every lxscript.sh
-files=`find "$bshome" -maxdepth 2 -type f -name "lxscript.sh"`
+files=`find "$LXHOMEPATH" -maxdepth 2 -type f -name "lxscript.sh"`
 for scriptfile in $files; do
   if [ -x "$scriptfile" ]; then
     if [ $(head -n 1 "$scriptfile") = "#!/bin/bash" ]; then
@@ -42,30 +47,31 @@ for scriptfile in $files; do
 done
 
 # Remove Node.JS
-if [ -d "$bshome/node" ]; then
+if [ -d "$LXHOMEPATH/node" ]; then
   # Remove Symlink
   echo "Remove Node.JS"
-  rm /bin/node
-  rm /bin/npm
-  rm -rf "$bshome/node"
-fi
+  rm "$LXBINPATH/node"
+  rm "$LXBINPATH/npm"
 
-if [ -e "/etc/npmrc" ]; then
-  echo "Remove global 'npmrc' configuration file..."
-  rm -f "/etc/npmrc"
+  # Remove symbolic link for npm
+  if [ -h "$LXLIBPATH/node_modules/npm" ]; then
+    rm "$LXLIBPATH/node_modules/npm"
+  fi
+
+  rm -rf "$LXHOMEPATH/node"
 fi
 
 # Remove lxManager
-if [ -d "$bshome/lxm" ]; then
+if [ -d "$LXHOMEPATH/bbs" ]; then
   # Remove Symlink
   echo "Remove lxManager"
-  rm /bin/lxm
-  rm -rf "$bshome/lxm"
+  rm "$LXBINPATH/bbs"
+  rm -rf "$LXHOMEPATH/bbs"
 fi
 
-if [ bsmode = "all" ]; then
-  echo "Remove $bshome"
-  rm -rf "$bshome"
+if [ "$LXMODE" = "all" ]; then
+  echo "Remove $LXHOMEPATH"
+  rm -rf "$LXHOMEPATH"
 fi
 
 echo "Done! Bye..."
