@@ -80,6 +80,11 @@ if [ -h "$LXBINPATH/node" ]; then
   rm -f "$LXBINPATH/node"
 fi
 
+# Create /usr/lib/node_modules if not exist
+if [ ! -d "$LXLIBPATH/node_modules" ]; then
+  mkdir "$LXLIBPATH/node_modules"
+fi
+
 # Check if /usr/lib/node_modules/npm exists, then remove
 if [ -d "$LXLIBPATH/node_modules/npm" ]; then
   rm -rf "$LXLIBPATH/node_modules/npm"
