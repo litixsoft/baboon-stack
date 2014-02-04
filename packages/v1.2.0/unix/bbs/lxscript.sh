@@ -24,7 +24,7 @@ case "$LXOS" in
     LXCURRPATH="$( dirname "$(readlink -f $0)" )"
     LXHOMEPATH="$( cd "$LXCURRPATH" ; cd .. ; pwd )"
     LXBINPATH="/bin"
-    LXLIBPATH="/lib"
+    LXLIBPATH="/usr/lib"
   ;;
 
   darwin )
