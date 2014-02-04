@@ -80,9 +80,9 @@ if [ -h "$LXBINPATH/node" ]; then
   rm -f "$LXBINPATH/node"
 fi
 
-# Check if /usr/lib/node_modules exists
-if [ -d "$LXLIBPATH/node_modules" ]; then
-  echo -e "\033[33mWARNING: Please move your ´$LXLIBPATH/node_modules´ directory or Node Version Manager will not work correctly.\033[0m"
+# Check if /usr/lib/node_modules/npm exists, then remove
+if [ -d "$LXLIBPATH/node_modules/npm" ]; then
+  rm -rf "$LXLIBPATH/node_modules/npm"
 fi
 
 # Link bbs
@@ -102,5 +102,4 @@ if [ -f "$LXHOMEPATH/bbs/$LXCATALOG" ]; then
 fi
 
 # Done
-echo "!!! Enter ´bbs´ for package updates !!!"
-echo "Done..."
+echo -e "\033[32mSUCCESS: Enter ´bbs´ for package updates.\033[0m"
