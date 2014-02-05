@@ -4,9 +4,9 @@ a Suite with NodeJS, MongoDB, RedisIO and a system-wide Node Version Manager for
 
 **Feel free to build your own Baboon Stack or just simply use our installer.**
 
-For Linux and MacOS, run this command on your Terminal.
+For Linux and MacOS, run this command in your Terminal.
 
-	curl http://packages.litixsoft.de/installer.sh | sudo sh
+	curl http://packages.litixsoft.de/installer.sh | sh
 
 Windows Users follow this link to download the installation file.
 
@@ -15,9 +15,9 @@ http://www.litixsoft.de/products-baboonstack
 #### Baboonstack Directory Structure
 
     └───BABOONSTACK
-        ├── LXM
+        ├── BBS
         │   ├── NODE - Windows only. The target of the link of the current node version.
-        │   └── [Place lxManager here]
+        │   └── [Place lxBaboon Manager here]
         ├── REDISIO
         │   ├── BIN - Binaryfolder
         │   ├── LOG - Logfolder
@@ -29,44 +29,34 @@ http://www.litixsoft.de/products-baboonstack
         │   ├── DB  - Databasefolder
         │   └── lxScript.sh/lxScript.cmd
         └── NODE
-            └── x.xx.xx - NodeJS Version x.xx.xx Installation
+            └── x.xx.xx - NodeJS version x.xx.xx installation
 
-## lxManager
+## Baboon Manager
 
 A powerful tool with a integrated **Node Version Manager** and **Node Service Manager**.
+Pure Python client for windows/linux/macos.
 
-### File and Directory Overview
-
-	└───YOUR DIRECTORY
-        ├── lxm.sh - lxManager for Unix systems
-        └── installer.sh - Online/Offline installer for Unix systems
-            ├── LINUX - Contains scripts for Linux system
-            ├── MACOS - Contains scripts for MacOS system
-            └── WIN   - Contains lxManager for Windows system
-                ├── TOOLS - Contains tools for Windows
-                └── RESSOURCES - BaboonStack icon
-
-## Build Linux/MacOS Client
+## Build Client
 
 **Requirements:**
-* Shell
-
-#### Build Instructions
-
-Just copy lxm.sh to your **baboonstack/lxm** folder.
-
-## Build Windows Client
-
-**Requirements:**
-* Python 3.3_x86 Runtime (see http://www.python.org/)
+* Python 3.3 Runtime (see http://www.python.org/)
 * cxFreeze for Python 3.3 (see http://cx-freeze.sourceforge.net/)
-* Microsoft Visual C++ 2010 x86 Redistributable Package Service Pack 1
+* Windows: Microsoft Visual C++ 2010 x86 Redistributable Package Service Pack 1
+
+*Note*
+
+On Linux x64 system you need the 64bit Runtime of Python 3.3. Or just install **ia32libs**.
 
 #### Build Instructions
 
 Be sure that the dependencies have been installed correctly. Then start the build scripts.
 
-	cd win
-    build.cmd
+On Windows systems
 
-Copy all content from **win\build** to your **baboonstack\lxm** folder include the files from **win\tools**
+    make.cmd
+
+On Unix systems
+
+	make.sh
+
+Copy all content from **build/** to your **/baboonstack/bbs** folder. Include the files from **packages/[version]/[os]/**
