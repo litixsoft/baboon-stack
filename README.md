@@ -29,11 +29,12 @@ http://www.litixsoft.de/products-baboonstack
         │   ├── DB  - Databasefolder
         │   └── lxScript.sh/lxScript.cmd
         └── NODE
-            └── x.xx.xx - NodeJS Version x.xx.xx Installation
+            └── x.xx.xx - NodeJS version x.xx.xx installation
 
 ## Baboon Manager
 
 A powerful tool with a integrated **Node Version Manager** and **Node Service Manager**.
+Pure Python client for windows/linux/macos.
 
 ## Build Client
 
