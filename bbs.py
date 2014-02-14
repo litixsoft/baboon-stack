@@ -185,9 +185,13 @@ def bbsService():
 def bbsPackageHelp():
     print('Usage:\n')
     print('    bbs package install [packagename]          Install packages')
+    print('    bbs package update [packagename]           Updates packages')
+    #print('    bbs package search [packagename]           Updates packages')
     print('    bbs package remove [packagename]           Removes packages')
+    print('    bbs package list [packagename]             Lists available packages')
+
     print('')
-    print('Packages:\n')
+    print('Installed Packages:\n')
     return package.main()
 
 
@@ -199,6 +203,10 @@ def bbsPackage():
     # Install
     if command == 'install' and args.count() != 0:
         return package.install(args.get(count=-1), args.getoptions())
+
+    # Remote File List
+    if command == 'list':
+        return package.remotelist(args.get(count=-1), args.getoptions())
 
     # Remove
     if command == 'remove' and args.count() != 0:

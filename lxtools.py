@@ -12,6 +12,7 @@ import platform
 import hashlib
 import urllib.request as UrlRequest
 import ctypes
+import json
 import sys
 import os
 
@@ -319,3 +320,24 @@ def run(command):
         print('Exitcode ' + str(result) + '\n')
 
     return result == 0
+
+
+# Loads a json file
+def loadjson(filename, reporterror=True):
+    try:
+        cfgfile = open(filename, mode='r')
+        data = cfgfile.read()
+        cfgfile.close()
+    except BaseException as e:
+        if reporterror:
+            print('>> ERROR: Unable to open file...')
+            print('>>', e)
+        return {}
+
+    try:
+        return json.loads(data)
+    except BaseException as e:
+        if reporterror:
+            print('>> JSON ERROR: Unable to parse package catalog...')
+            print('>>', e)
+        return {}
