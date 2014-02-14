@@ -21,8 +21,8 @@ lxInfo = {
         'version': lxVersion,
         'basedir': '/opt/litixsoft/baboonstack',
         'update': 'baboonstack-.*-linux-{0}.tar.gz',
-        #'package': '{0}-v{1}-linux-{2}.tar.gz',
-        'package': '[A-Za-z0-9]*-v.*-linux-{0}.tar.gz',
+        'package': '{0}-v{1}-linux-{2}.tar.gz',
+        'packagemask': '[A-Za-z0-9]*-v.*-linux-{0}.tar.gz',
         'scriptfile': 'lxscript.sh',
         'node': {
             'package': {
@@ -55,8 +55,8 @@ lxInfo = {
         'version': lxVersion,
         'basedir': '/usr/share/litixsoft/baboonstack',
         'update': 'baboonstack-.*-darwin-{0}.tar.gz',
-#        'package': '{0}-v{1}-darwin-{2}.tar.gz',
-        'package': '[A-Za-z0-9]*-v.*-darwin-{0}.tar.gz',
+        'package': '{0}-v{1}-darwin-{2}.tar.gz',
+        'packagemask': '[A-Za-z0-9]*-v.*-darwin-{0}.tar.gz',
         'scriptfile': 'lxscript.sh',
         'node': {
             'package': {
@@ -88,8 +88,8 @@ lxInfo = {
         'osname': 'windows',
         'version': lxVersion,
         'update': 'baboonstack-.*-windows-{0}.exe',
-#        'package': '{0}-v{1}-windows-{2}.zip',
-        'package': '[A-Za-z0-9]*-v.*-windows-{0}.zip',
+        'package': '{0}-v{1}-windows-{2}.zip',
+        'packagemask': '[A-Za-z0-9]*-v.*-windows-{0}.zip',
         'scriptfile': 'lxScript.cmd',
         'node': {
             'package': {

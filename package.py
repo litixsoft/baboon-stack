@@ -25,6 +25,7 @@ if sys.platform == 'win32':
 import config
 import lxtools
 
+
 class BaboonStackPackage:
 
     def __init__(self, packagedata={}):
@@ -90,30 +91,6 @@ class BaboonStackPackage:
                             break
 
 
-# Returns a list, with all avaible package on server for this os
-def getServerFileList():
-    # Download Filelist
-    data = lxtools.getRemoteData(config.lxServer + '/')
-
-    # If Exception occured
-    if data == -1:
-        return []
-
-    # Gets the Package Name Mask for this OS
-    packagenamemask = str(
-        config.getConfigKey('package')
-    ).format(
-        lxtools.getOsArchitecture()
-    )
-
-    # Get the available packages for this OS
-    filelist = regex.findall('">(' + packagenamemask + ')<\/a', data)
-    filelist.sort()
-
-    # Returns the LAST entry
-    return filelist
-
-
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
     # Download from URL
@@ -139,15 +116,34 @@ def getRemoteChecksum(filename):
 
 # Returns the Remote Package Catalog
 def getRemoteCatalog():
-    filelist = getServerFileList()
+    # Download Filelist
+    data = lxtools.getRemoteData(config.lxServer + '/')
+
+    # If Exception occured
+    if data == -1:
+        return []
+
+    # Gets the Package Name Mask for this OS
+    packagenamemask = str(
+        config.getConfigKey('packagemask')
+    ).format(
+        lxtools.getOsArchitecture()
+    )
+
+    # Get the available packages for this OS
+    filelist = regex.findall('">(' + packagenamemask + ')<\/a', data)
+    filelist.sort()
     catalog = dict()
 
+    # Add all versions
     for entry in filelist:
         a = os.path.splitext(entry)[0].split('-')
 
         if a[0] not in catalog:
             catalog[a[0]] = {
-                'version': [a[1][1:]]
+                'version': [a[1][1:]],
+                'filename': entry,
+                'source': 'server'
             }
         else:
             catalog[a[0]]['version'].append(a[1][1:])
@@ -155,6 +151,7 @@ def getRemoteCatalog():
     return catalog
 
 
+# Reads local Catalog
 def getLocalCatalog():
     rootdir = lxtools.getBaboonStackDirectory()
     catalog = dict()
@@ -257,7 +254,7 @@ def runScript(pkginfo, scriptoption):
         if isinstance(script, str):
             lxtools.run(script)
 
-
+# Collect Data
 localcatalog = getLocalCatalog()
 remotecatalog = getRemoteCatalog()
 updatelist = getAvailableUpdates(localcatalog, remotecatalog)
@@ -267,6 +264,9 @@ updatelist = getAvailableUpdates(localcatalog, remotecatalog)
 def main():
     for packagename in localcatalog:
         package = localcatalog.get(packagename)
+
+        if not package.getIfInstalled():
+            continue
 
         if packagename in updatelist:
             updatehintstring = '=> v' + updatelist.get(packagename, {}).get('remote', '?.?.?')
@@ -322,9 +322,9 @@ def install(pkgname, options=list()):
             options.append('ask')
 
         pkgname = []
-        for pkg in package.getPackagesInfoList():
+        for pkg in localcatalog:
             # Only install if not installed locally
-            if pkg.get('installed', None) is None:
+            if not localcatalog[pkg].getIfInstalled():
                 pkgname.append(pkg.get('name', None))
 
         if len(pkgname) == 0:
@@ -339,21 +339,33 @@ def install(pkgname, options=list()):
     #
 
     # Get package info
-    pkginfo = None
-    for pkg in package.getPackagesInfoList():
-        if pkg.get('name') == pkgname:
-            pkginfo = pkg
-            break
+    # pkginfo = remotecatalog[pkgname]
+    # for pkg in package.getPackagesInfoList():
+    #     if pkg.get('name') == pkgname:
+    #         pkginfo = pkg
+    #         break
 
     # Check, if package available
-    if not pkginfo:
+    if pkgname not in remotecatalog:
         print('Unknow Package "' + pkgname + '"...')
         return False
 
-    # Check, if package already installed
-    if pkginfo.get('installed'):
-        print('Package "' + pkgname + '" already installed locally...')
-        return False
+    pkginfo = {}
+
+    # Collect pkginfo and if package already installed
+    if pkgname in localcatalog:
+        if localcatalog[pkgname].getIfInstalled():
+            print('Package "' + pkgname + '" already installed locally...')
+            return False
+
+        pkginfo = localcatalog[pkgname].getPackageInfo()
+        fullpackagename = str(config.getConfigKey('package')).format(
+            pkginfo.get('name'),
+            pkginfo.get('version'),
+            lxtools.getOsArchitecture()
+        )
+    else:
+        fullpackagename = remotecatalog[pkgname].get('filename', None)
 
     # Check if admin
     if not lxtools.getIfAdmin():
@@ -384,18 +396,10 @@ def install(pkgname, options=list()):
         print('Done...')
         return True
 
-    # create full package name
-    # TODO: Change this
-    fullpackagename = str(config.getConfigKey('package')).format(
-        pkginfo.get('name'),
-        pkginfo.get('version'),
-        lxtools.getOsArchitecture()
-    )
-
-    # Download Filelist
-    if not getLatestRemoteVersion(fullpackagename):
-        print('SERVER ERROR: Package not found on server...')
-        return False
+    # # Download Filelist
+    # if not getLatestRemoteVersion(fullpackagename):
+    #     print('SERVER ERROR: Package not found on server...')
+    #     return False
 
     # Retrieve package checksum
     packagechecksum = getRemoteChecksum(fullpackagename)
