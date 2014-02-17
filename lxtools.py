@@ -8,6 +8,7 @@
 # Copyright:   (c) Thomas Scheibe 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
+import subprocess
 import platform
 import hashlib
 import urllib.request as UrlRequest
@@ -312,8 +313,9 @@ def readkey(prompt, keys='Yn'):
 
 
 # Execute a shell command and return True/False
-def run(command):
-    result = os.system(command)
+def run(command, cwd=None):
+    result = subprocess.call(command, shell=True, cwd=cwd)
+    # result = os.system(command)
 
     if result != 0:
         print('\nError while execute "' + command + '"...')

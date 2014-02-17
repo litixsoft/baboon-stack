@@ -208,6 +208,10 @@ def bbsPackage():
     if command == 'list':
         return package.remotelist(args.get(count=-1), args.getoptions())
 
+    # Update packages
+    if command == 'update':
+        return package.update(args.get(count=-1), args.getoptions())
+
     # Remove
     if command == 'remove' and args.count() != 0:
         return package.remove(args.get(count=-1), args.getoptions())
@@ -222,9 +226,9 @@ def bbsUpdate():
 
 # Default
 def main():
-    # First! Check if package update required and perform it when required
-    if package.update():
-        return True
+    # # First! Check if package update required and perform it when required
+    # if package.bbsupdate():
+    #     return True
 
     moduleName = args.get().lower()
 

@@ -24,6 +24,7 @@ lxInfo = {
         'package': '{0}-v{1}-linux-{2}.tar.gz',
         'packagemask': '[A-Za-z0-9]*-v.*-linux-{0}.tar.gz',
         'scriptfile': 'lxscript.sh',
+        'configfile': 'package.bbs.conf',
         'node': {
             'package': {
                 'x86': 'node-v{0}-linux-x86.tar.gz',
@@ -58,6 +59,7 @@ lxInfo = {
         'package': '{0}-v{1}-darwin-{2}.tar.gz',
         'packagemask': '[A-Za-z0-9]*-v.*-darwin-{0}.tar.gz',
         'scriptfile': 'lxscript.sh',
+        'configfile': 'package.bbs.conf',
         'node': {
             'package': {
                 'x86': 'node-v{0}-darwin-x86.tar.gz',
@@ -91,6 +93,7 @@ lxInfo = {
         'package': '{0}-v{1}-windows-{2}.zip',
         'packagemask': '[A-Za-z0-9]*-v.*-windows-{0}.zip',
         'scriptfile': 'lxScript.cmd',
+        'configfile': 'package.bbs.conf',
         'node': {
             'package': {
                 'x86': 'node-v{0}-x86.msi',
@@ -122,6 +125,14 @@ lxOptions = {
     'noheader': {
         'short': '-nh',
         'long': '--noheader'
+    },
+    'local': {
+        'short': '-l',
+        'longo': '-local'
+    },
+    'safe': {
+        'short': '-s',
+        'long': '--safe'
     }
 }
 

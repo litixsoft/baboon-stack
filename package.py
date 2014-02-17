@@ -53,7 +53,7 @@ class BaboonStackPackage:
             'name': self.__name,
             'version': self.getVersion(),
             'dirname': self.__packagedata.get('dirname', self.__name),
-            'saferemove': self.__packagedata.get('saferemove', False),
+            'saferemove': self.__packagedata.get('saferemove', True),
             'nodownload': self.__packagedata.get('nodownload', False),
             'script': self.__packagedata.get('script', {}),
             'dependencies': self.__packagedata.get('dependencies', False)
@@ -141,12 +141,12 @@ def getRemoteCatalog():
 
         if a[0] not in catalog:
             catalog[a[0]] = {
-                'version': [a[1][1:]],
-                'filename': entry,
+                'version': [],
                 'source': 'server'
             }
-        else:
-            catalog[a[0]]['version'].append(a[1][1:])
+
+        catalog[a[0]]['version'].append(a[1][1:])
+        catalog[a[0]]['filename'] = entry
 
     return catalog
 
@@ -222,24 +222,20 @@ def runScript(pkginfo, scriptoption):
         return
 
     scriptfile = config.lxConfig.get('scriptfile', None)
+    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
 
     # Is script file set
-    if not scriptfile is None:
-        packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
-
+    if scriptfile is not None:
         if os.path.isfile(os.path.join(packagedirectory, scriptfile)):
-            # Get current working directory
-            last_wd = os.getcwd()
             try:
                 # Change working directory to script location
-                os.chdir(packagedirectory)
-                lxtools.run(os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))))
+                lxtools.run(
+                    os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))),
+                    packagedirectory
+                )
             except BaseException as e:
                 print('ERROR while executing script!')
                 print(e)
-
-            # Back to previous working directory
-            os.chdir(last_wd)
 
     # Has script sektion, then execute
     script = pkginfo.get('script', None)
@@ -249,10 +245,12 @@ def runScript(pkginfo, scriptoption):
 
         if isinstance(script, list):
             for item in script:
-                lxtools.run(item)
+                lxtools.run(item, packagedirectory)
 
         if isinstance(script, str):
-            lxtools.run(script)
+            lxtools.run(script, packagedirectory)
+
+    return
 
 # Collect Data
 localcatalog = getLocalCatalog()
@@ -299,7 +297,7 @@ def remotelist(pkgname, options=list()):
     return True
 
 
-# Install a package
+# Installs a package
 def install(pkgname, options=list()):
     if pkgname is None:
         return False
@@ -337,13 +335,6 @@ def install(pkgname, options=list()):
     #
     # Start install single package
     #
-
-    # Get package info
-    # pkginfo = remotecatalog[pkgname]
-    # for pkg in package.getPackagesInfoList():
-    #     if pkg.get('name') == pkgname:
-    #         pkginfo = pkg
-    #         break
 
     # Check, if package available
     if pkgname not in remotecatalog:
@@ -436,13 +427,33 @@ def install(pkgname, options=list()):
     # Extract Archive Package
     try:
         print('Extracting...')
-        dirname = os.path.join(pkginfo.get('dirname'), '')
+        tempdirectory = tempfile.mkdtemp()
         archive_filelist = []
 
         # Unix specified
         if sys.platform.startswith('linux') or sys.platform == 'darwin':
             # Extract files
             mytar = tarfile.open(localpacketname)
+
+            # Find and Read package description file, if exists
+            for tarinfo in mytar:
+                if os.path.basename(tarinfo.name) == config.getConfigKey('configfile', 'package.bbs.conf'):
+                    print('Read package description file...')
+                    try:
+                        # Extract file
+                        mytar.extract(tarinfo.name, tempdirectory)
+
+                        # Read package
+                        pkginfo = lxtools.loadjson(os.path.join(tempdirectory, tarinfo.name), False)
+                    except BaseException as e:
+                        print(e)
+                        return False
+
+                    # Exit
+                    break
+
+            # Get dirname
+            dirname = os.path.join(pkginfo.get('dirname'), '')
 
             # Get the filelist from tarfile
             for tarinfo in mytar:
@@ -464,6 +475,26 @@ def install(pkgname, options=list()):
             if zipfile.is_zipfile(localpacketname):
                 myzip = zipfile.ZipFile(localpacketname, 'r')
 
+                # Find and Read package description file, if exists
+                for filename in myzip.namelist():
+                    if os.path.basename(filename) == config.getConfigKey('configfile', 'package.bbs.conf'):
+                        print('Read package description file...')
+                        try:
+                            # Extract file
+                            myzip.extract(filename, tempdirectory)
+
+                            # Read package
+                            pkginfo = lxtools.loadjson(os.path.join(tempdirectory, filename), False)
+                        except BaseException as e:
+                            print(e)
+                            return False
+
+                        # Exit
+                        break
+
+                # Get dirname
+                dirname = os.path.join(pkginfo.get('dirname'), '')
+
                 # Get the filelist from zipfile
                 for filename in myzip.namelist():
                     normpath = os.path.normpath(filename)
@@ -481,6 +512,45 @@ def install(pkgname, options=list()):
             else:
                 print('ERROR: Archive is not a ZIP File.')
                 return False
+
+        # Remove temporary directory
+        lxtools.rmDirectory(tempdirectory)
+
+        if not dirname:
+            print('ERROR: No ´dirname´ in description file...')
+            return False
+
+        # Some file and directories will be include or exclude for removing
+        files_rules = pkginfo.get('files', None)
+        if files_rules is not None:
+            files_includes = files_rules.get('include', [])
+            files_excludes = files_rules.get('exclude', [])
+
+            # Include files or directory
+            if files_includes:
+                # If single string, then build array
+                if isinstance(files_includes, str):
+                    files_includes = [files_includes]
+
+                if isinstance(files_includes, list):
+                    for fileentry in files_includes:
+                        archive_filelist.append(os.path.normpath(fileentry))
+
+            # Exclude files or directory
+            if files_excludes:
+                # If single string, then build array
+                if isinstance(files_excludes, str):
+                    files_excludes = [files_excludes]
+
+                if isinstance(files_excludes, list):
+                    for fileentry in files_excludes:
+                        fullname = os.path.normpath(fileentry)
+
+                        # Remove every item
+                        tmpfilelist = archive_filelist.copy()
+                        for archiveentry in tmpfilelist:
+                            if str(archiveentry).startswith(fullname):
+                                archive_filelist.remove(archiveentry)
 
         # Save filelist into program directory for remove
         if len(archive_filelist) != 0:
@@ -545,10 +615,10 @@ def remove(pkgname, options=list()):
     # Removes ALL packages?
     if pkgname == '':
         pkgname = []
-        for pkg in package.getPackagesInfoList():
+        for pkg in localcatalog:
             # Only remove if installed locally
-            if pkg.get('installed', None) is not None:
-                pkgname.append(pkg.get('name', None))
+            if not localcatalog[pkg].getIfInstalled():
+                pkgname.append(pkg)
 
         if len(pkgname) == 0:
             print('Sorry, no packages available to remove.')
@@ -559,19 +629,18 @@ def remove(pkgname, options=list()):
 
     # Get package info
     pkginfo = None
-    for pkg in package.getPackagesInfoList():
-        if pkg.get('name') == pkgname:
-            pkginfo = pkg
-            break
+
+    if pkgname in localcatalog:
+        # Check, if package already installed
+        if not localcatalog[pkgname].getIfInstalled():
+            print('Package "' + pkgname + '" NOT installed locally...')
+            return False
+
+        pkginfo = localcatalog[pkgname].getPackageInfo()
 
     # Check, if package available
     if not pkginfo:
         print('Unknow Package "' + pkgname + '"...')
-        return False
-
-    # Check, if package already installed
-    if not pkginfo.get('installed'):
-        print('Package "' + pkgname + '" NOT installed locally...')
         return False
 
     # Check if admin
@@ -590,13 +659,23 @@ def remove(pkgname, options=list()):
     scriptoption = ['remove']
     saferemove = pkginfo.get('saferemove') is True
 
-    # Ask for remove databases, cfg if saferemove TRUE
-    if saferemove and 'force' not in options:
-        key = lxtools.readkey('Would you like to keep their databases, configuration files?')
-
-        if key != 'y':
-            scriptoption.append('all')
+    # If saferemove option overwritten?
+    if 'force' in options or 'safe' in options:
+        if 'force' in options:
             saferemove = False
+
+        if 'safe' in options:
+            saferemove = True
+    else:
+        # Ask for remove databases, cfg if saferemove TRUE
+        if saferemove:
+            key = lxtools.readkey('Would you like to keep their databases, configuration files?')
+
+            if key != 'y':
+                saferemove = False
+
+    if not saferemove:
+        scriptoption.append('all')
 
     print('Remove package "' + pkgname + '"...')
 
@@ -660,8 +739,75 @@ def remove(pkgname, options=list()):
 
     return True
 
+
+# Removes a package
+def update(pkgname, options=list()):
+    if pkgname is None:
+        return False
+
+    # Update all packages, if available
+    if pkgname == '':
+        if not updatelist:
+            print('No package updates available.')
+            return True
+        else:
+            # Ask, if update
+            if 'force' not in options:
+                for itemname in updatelist:
+                    package = updatelist.get(itemname, {})
+                    print(
+                        ' ',
+                        package.get('fullname', itemname).ljust(30, ' '),
+                        'v' + package.get('local', '0.0.0').ljust(10, ' '),
+                        '=>',
+                        'v' + package.get('remote', '0.0.0').ljust(10, ' ')
+                    )
+
+                    key = lxtools.readkey('\nWould you like to update this packages?')
+
+                    if key == 'n':
+                        return False
+
+            pkgname = []
+            for itemname in updatelist:
+                pkgname.append(itemname)
+
+            return update(pkgname, options)
+
+    # Update multiple
+    if isinstance(pkgname, list):
+        pkgcnt = 0
+        for name in pkgname:
+            print('Update package "' + name + '"...\n')
+
+            if update(name, options):
+                pkgcnt += 1
+            print('')
+
+        print(' {0} of {1} packages successfully updated'.format(str(pkgcnt), str(len(pkgname))))
+        return True
+
+    # Update single package
+    if pkgname not in updatelist:
+        print('No update for ´' + pkgname + '´ available.')
+        return False
+
+    # Remove
+    if not remove(pkgname, ['safe']):
+        return False
+
+    # Update Package list
+    del localcatalog[pkgname]
+
+    # Install
+    if not install(pkgname, ['safe']):
+        return False
+
+    return True
+
+
 # TODO: Change this
-def update():
+def bbsupdate():
     return False
     if not package.getIfUpdateRequired():
         return False
@@ -709,7 +855,7 @@ def update():
         packagename = packagedata.get('name')
 
         # Remove
-        if not remove(packagename, ['force']):
+        if not remove(packagename, ['safe']):
             iserror = True
             break
 
@@ -717,7 +863,7 @@ def update():
         package.refresh()
 
         # Install
-        if not install(packagename, ['force']):
+        if not install(packagename, ['safe']):
             iserror = True
             break
 
