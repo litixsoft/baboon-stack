@@ -115,7 +115,23 @@ def getRemoteChecksum(filename):
 
 
 # Returns the Remote Package Catalog
-def getRemoteCatalog():
+def getRemoteCatalog(localcatalogonly=False):
+    catalog = dict()
+    bbscatalogfile = os.path.join(lxtools.getBaboonStackDirectory(), 'baboonstack.package.conf')
+
+    # First, try to read local package file if not exists then
+    if os.path.exists(bbscatalogfile):
+        catalogdata = lxtools.loadjson(bbscatalogfile)
+        packages = catalogdata.get('packages', {})
+        for pkgname in packages:
+            catalog[pkgname] = {
+                'version': [packages[pkgname].get('version')],
+                'source': 'catalog'
+            }
+
+        if localcatalogonly:
+            return catalog
+
     # Download Filelist
     data = lxtools.getRemoteData(config.lxServer + '/')
 
@@ -133,7 +149,6 @@ def getRemoteCatalog():
     # Get the available packages for this OS
     filelist = regex.findall('">(' + packagenamemask + ')<\/a', data)
     filelist.sort()
-    catalog = dict()
 
     # Add all versions
     for entry in filelist:
@@ -152,7 +167,7 @@ def getRemoteCatalog():
 
 
 # Reads local Catalog
-def getLocalCatalog():
+def getLocalCatalog(scanfolders=True):
     rootdir = lxtools.getBaboonStackDirectory()
     catalog = dict()
     files = os.listdir(rootdir)
@@ -168,23 +183,24 @@ def getLocalCatalog():
 
             catalog[pkgname] = BaboonStackPackage(pkginfo)
 
-    for entry in files:
-        fullpath = os.path.join(rootdir, entry)
+    if scanfolders:
+        for entry in files:
+            fullpath = os.path.join(rootdir, entry)
 
-        if not os.path.isdir(fullpath):
-            continue
-
-        packagefile = os.path.join(fullpath, 'package.bbs.conf')
-
-        if os.path.isfile(packagefile):
-            pkgdata = BaboonStackPackage()
-            pkgdata.loadPackage(packagefile)
-            packagename = pkgdata.getPackageName()
-
-            if packagename is None or not pkgdata.getIfInstalled():
+            if not os.path.isdir(fullpath):
                 continue
 
-            catalog[packagename] = pkgdata
+            packagefile = os.path.join(fullpath, 'package.bbs.conf')
+
+            if os.path.isfile(packagefile):
+                pkgdata = BaboonStackPackage()
+                pkgdata.loadPackage(packagefile)
+                packagename = pkgdata.getPackageName()
+
+                if packagename is None or not pkgdata.getIfInstalled():
+                    continue
+
+                catalog[packagename] = pkgdata
 
     return catalog
 
@@ -397,6 +413,7 @@ def install(pkgname, options=list()):
 
     # Build
     url = config.lxServer + '/' + fullpackagename
+    dirname = None
     localpacketname = os.path.join(tempfile.gettempdir(), fullpackagename)
 
     # Download Packet with Progressbar
