@@ -253,7 +253,7 @@ def getAvailableUpdates(local, remote):
     updatelist = dict()
 
     for packagename in local:
-        if packagename in remote:
+        if local[packagename].getIfInstalled() and packagename in remote:
             localversion = local[packagename].getVersion()
             remoteversion = getLastVersion(remote[packagename])
 
@@ -830,10 +830,10 @@ def update(pkgname, options=list()):
                         'v' + package.get('remote', '0.0.0').ljust(10, ' ')
                     )
 
-                    key = lxtools.readkey('\nWould you like to update this packages?')
+                key = lxtools.readkey('\nWould you like to update this packages?')
 
-                    if key == 'n':
-                        return False
+                if key == 'n':
+                    return False
 
             pkgname = []
             for itemname in updatelist:
