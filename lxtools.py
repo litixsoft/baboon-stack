@@ -358,3 +358,14 @@ def savejson(filename, data, reporterror=True):
         return False
 
     return True
+
+
+# returns Platformname
+def getPlatformName():
+    platforms = ['win32', 'darwin', 'linux']
+
+    for osname in platforms:
+        if sys.platform.startswith(osname):
+            return osname
+
+    return 'unknow'

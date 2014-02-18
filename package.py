@@ -180,6 +180,9 @@ def getRemoteCatalog(localcatalogonly=False):
     for entry in filelist:
         a = os.path.splitext(entry)[0].split('-')
 
+        if a[0] == 'baboonstack':
+            continue
+
         if a[0] not in catalog:
             catalog[a[0]] = {
                 'version': [],
@@ -290,12 +293,17 @@ def runScript(pkginfo, scriptoption):
 
     if isinstance(script, dict) and len(scriptoption) > 0:
         script = script.get(scriptoption[0], None)
+        osname = lxtools.getPlatformName()
 
+        # Get platform specified script section, if available
+        if isinstance(script, list) and osname in script:
+            script = script[osname]
+
+        # Now execute the script line or lines
         if isinstance(script, list):
             for item in script:
                 lxtools.run(item, packagedirectory)
-
-        if isinstance(script, str):
+        elif isinstance(script, str):
             lxtools.run(script, packagedirectory)
 
     return
