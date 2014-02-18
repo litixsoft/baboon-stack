@@ -185,10 +185,10 @@ def bbsService():
 def bbsPackageHelp():
     print('Usage:\n')
     print('    bbs package install [packagename]          Install packages')
-    print('    bbs package update [packagename]           Updates packages')
+    print('    bbs package update [packagename]           Update a single packages')
     #print('    bbs package search [packagename]           Updates packages')
     print('    bbs package remove [packagename]           Removes packages')
-    print('    bbs package list [packagename]             Lists available packages')
+    print('    bbs package list                           Lists available packages')
 
     print('')
     print('Installed Packages:\n')
@@ -197,24 +197,34 @@ def bbsPackageHelp():
 
 # Packages
 def bbsPackage():
+    # Perform a catalog upgrade if required
+    if package.upgrade():
+        return True
+
     # Get First Command
     command = args.get().lower()
+    options = args.getoptions()
+
+    # Use local catalog for installation/updates
+    if 'local' in options:
+        package.remotecatalog = package.getRemoteCatalog(True)
+        package.updatelist = package.getAvailableUpdates(package.localcatalog, package.remotecatalog)
 
     # Install
     if command == 'install' and args.count() != 0:
-        return package.install(args.get(count=-1), args.getoptions())
+        return package.install(args.get(count=-1), options)
 
     # Remote File List
     if command == 'list':
-        return package.remotelist(args.get(count=-1), args.getoptions())
+        return package.remotelist(args.get(count=-1), options)
 
     # Update packages
     if command == 'update':
-        return package.update(args.get(count=-1), args.getoptions())
+        return package.update(args.get(count=-1), options)
 
     # Remove
     if command == 'remove' and args.count() != 0:
-        return package.remove(args.get(count=-1), args.getoptions())
+        return package.remove(args.get(count=-1), options)
 
     return bbsPackageHelp()
 

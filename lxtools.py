@@ -327,9 +327,9 @@ def run(command, cwd=None):
 # Loads a json file
 def loadjson(filename, reporterror=True):
     try:
-        cfgfile = open(filename, mode='r')
-        data = cfgfile.read()
-        cfgfile.close()
+        file = open(filename, mode='r')
+        data = file.read()
+        file.close()
     except BaseException as e:
         if reporterror:
             print('>> ERROR: Unable to open file...')
@@ -343,3 +343,18 @@ def loadjson(filename, reporterror=True):
             print('>> JSON ERROR: Unable to parse package catalog...')
             print('>>', e)
         return {}
+
+
+# Saves a json file
+def savejson(filename, data, reporterror=True):
+    try:
+        file = open(filename, mode='w')
+        file.write(json.dumps(data, sort_keys=True, indent=4))
+        file.close()
+    except BaseException as e:
+        if reporterror:
+            print('>> ERROR: Unable to write file...')
+            print('>>', e)
+        return False
+
+    return True

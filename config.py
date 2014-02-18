@@ -13,7 +13,7 @@ import sys
 lxVersion = '1.3.0'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
-lxPrevPackage = 'baboonstack.previous.package.conf'
+lxPreviousPackage = 'baboonstack.previous.package.conf'
 
 lxInfo = {
     'linux': {
@@ -128,7 +128,7 @@ lxOptions = {
     },
     'local': {
         'short': '-l',
-        'longo': '-local'
+        'long': '--local'
     },
     'safe': {
         'short': '-s',

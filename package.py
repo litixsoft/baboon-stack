@@ -91,6 +91,31 @@ class BaboonStackPackage:
                             break
 
 
+def getIfPackageInstalled(pkginfo):
+    rootdir = lxtools.getBaboonStackDirectory()
+    dirname = pkginfo.get('dirname', None)
+    result = (dirname and os.path.exists(os.path.join(rootdir, dirname)))
+
+    # If package locally installed
+    if result:
+        binlist = pkginfo.get('binary', False)
+
+        # Check if binarys exists
+        if binlist:
+            dirname = os.path.join(rootdir, dirname)
+
+            if isinstance(binlist, str):
+                binlist = [binlist]
+
+            if isinstance(binlist, list):
+                for binname in binlist:
+                    if not os.path.exists(os.path.join(dirname, binname)):
+                        result = False
+                        break
+
+    # Return result
+    return result
+
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
     # Download from URL
@@ -126,7 +151,8 @@ def getRemoteCatalog(localcatalogonly=False):
         for pkgname in packages:
             catalog[pkgname] = {
                 'version': [packages[pkgname].get('version')],
-                'source': 'catalog'
+                'source': 'catalog',
+                'info': packages[pkgname]
             }
 
         if localcatalogonly:
@@ -161,7 +187,7 @@ def getRemoteCatalog(localcatalogonly=False):
             }
 
         catalog[a[0]]['version'].append(a[1][1:])
-        catalog[a[0]]['filename'] = entry
+        catalog[a[0]]['source'] = 'server'
 
     return catalog
 
@@ -207,11 +233,17 @@ def getLocalCatalog(scanfolders=True):
 
 def getLastVersion(pkgdata):
     versionlist = pkgdata.get('version', []).copy()
+    versionlist.sort()
 
     if len(versionlist) == 0 or not isinstance(versionlist, list):
         return ''
 
-    return versionlist.pop()
+    result = versionlist[0]
+    for version in versionlist:
+        if StrictVersion(result) < StrictVersion(version):
+            result = version
+
+    return result
 
 
 def getAvailableUpdates(local, remote):
@@ -301,14 +333,21 @@ def main():
 # Show available Packages
 def remotelist(pkgname, options=list()):
     print('Remote available Packages:\n')
+    cnt = 0
     for packagename in remotecatalog:
-        if packagename not in localcatalog:
+        if packagename not in localcatalog or not localcatalog[packagename].getIfInstalled():
             package = remotecatalog.get(packagename, {})
             print(
                 ' ',
                 packagename.ljust(20, ' '),
-                'v' + getLastVersion(package)
+                str('v' + getLastVersion(package)).ljust(12),
+                package.get('source', 'server')
             )
+
+            cnt += 1
+
+    if cnt == 0:
+        print('No packages available on server.')
 
     return True
 
@@ -365,14 +404,17 @@ def install(pkgname, options=list()):
             print('Package "' + pkgname + '" already installed locally...')
             return False
 
-        pkginfo = localcatalog[pkgname].getPackageInfo()
-        fullpackagename = str(config.getConfigKey('package')).format(
-            pkginfo.get('name'),
-            pkginfo.get('version'),
-            lxtools.getOsArchitecture()
-        )
-    else:
-        fullpackagename = remotecatalog[pkgname].get('filename', None)
+    pkgdata = remotecatalog[pkgname]
+    latestversion = getLastVersion(pkgdata)
+    fullpackagename = str(config.getConfigKey('package')).format(
+        pkgname,
+        latestversion,
+        lxtools.getOsArchitecture()
+    )
+
+    # Get catalog info
+    if pkgdata['source'] == 'catalog':
+        pkginfo = pkgdata.get('info', {})
 
     # Check if admin
     if not lxtools.getIfAdmin():
@@ -822,74 +864,31 @@ def update(pkgname, options=list()):
 
     return True
 
+# Upgrade local catalog file
+def upgrade():
+    rootdir = lxtools.getBaboonStackDirectory()
+    prev_catalogfilename = os.path.join(rootdir, config.lxPreviousPackage)
 
-# TODO: Change this
-def bbsupdate():
-    return False
-    if not package.getIfUpdateRequired():
+    # No Upgrade required
+    if not os.path.isfile(prev_catalogfilename):
         return False
 
-    packagelist = []
+    catalogdata = lxtools.loadjson(prev_catalogfilename, False)
+    pkgdata = catalogdata.get('packages', {})
 
-    print('Following package(s) required a update:\n')
+    for pkgname in pkgdata:
+        if getIfPackageInstalled(pkgdata[pkgname]):
+            pkgfilename = os.path.join(rootdir, pkgdata[pkgname].get('dirname'), config.getConfigKey('configfile'))
+            if not os.path.isfile(pkgfilename):
+                pkginfo = pkgdata[pkgname].copy()
 
-    # List packages
-    for packagedata in package.getPackagesInfoList():
-        prevpackagedata = packagedata.get('previous', None)
+                # Add some informations
+                pkginfo['name'] = pkgname
+                pkginfo['bbsversion'] = catalogdata.get('version', '0.0.0')
 
-        if prevpackagedata is None:
-            continue
+                if not lxtools.savejson(pkgfilename, pkginfo):
+                    print('Upgrade failure...')
+                    return False
 
-        info = {
-            'name': packagedata.get('name', '<unnamed>'),
-            'from_version': prevpackagedata.get('version', '?.?.?'),
-            'to_version': packagedata.get('version', '?.?.?')
-        }
-
-        print(' ' + info.get('name').ljust(20, ' '),
-              'v' + info.get('from_version').ljust(10, ' '),
-              '=> v', info.get('to_version'))
-
-        packagelist.append(info)
-
-    print('')
-
-    # Get if is Admin
-    if not lxtools.getIfAdmin():
-        print(config.getMessage('REQUIREADMIN'))
-        return True
-
-    key = lxtools.readkey('Start package update?')
-
-    # User abort operation
-    if key == 'n':
-        print('Abort!')
-        return True
-
-    # Perform update
-    iserror = False
-    for packagedata in packagelist:
-        packagename = packagedata.get('name')
-
-        # Remove
-        if not remove(packagename, ['safe']):
-            iserror = True
-            break
-
-        # Update Package list
-        package.refresh()
-
-        # Install
-        if not install(packagename, ['safe']):
-            iserror = True
-            break
-
-    # Error occured, abort!
-    if iserror:
-        return True
-
-    # All Updates taken, remove old package file
-    if not package.removePreviousPackageFile():
-        print('Error: Previous catalog file could not be deleted.')
-
+    print('Upgrade successfull...')
     return True
