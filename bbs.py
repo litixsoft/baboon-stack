@@ -56,7 +56,7 @@ def bbsHelp():
 
 # Prints Baboonstack Version
 def bbsVersion():
-    print('Version {0}\n'.format(config.lxConfig['version']))
+    print('Version {0}'.format(config.lxConfig['version']))
 
 # Node Operations
 
