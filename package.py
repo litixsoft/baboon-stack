@@ -116,6 +116,27 @@ def getIfPackageInstalled(pkginfo):
     # Return result
     return result
 
+
+# Returns if dependencies installed
+def getIfDependenciesInstalled(pkginfo):
+    # Check dependencies, if set
+    pkgdependencies = pkginfo.get('dependencies', None)
+
+    if pkgdependencies and isinstance(pkgdependencies, dict):
+        deplist = []
+        for item in pkgdependencies:
+            if item not in localcatalog or not localcatalog[item].getIfInstalled():
+                deplist.append(item)
+
+        if deplist:
+            print('\nFollow dependencies are required, please install first:\n')
+            print(' ', str(', ').join(deplist))
+            print('\nAbort!')
+            return False
+
+    return True
+
+
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
     # Download from URL
@@ -234,6 +255,7 @@ def getLocalCatalog(scanfolders=True):
     return catalog
 
 
+# Returns latest version in list
 def getLastVersion(pkgdata):
     versionlist = pkgdata.get('version', []).copy()
     versionlist.sort()
@@ -420,6 +442,8 @@ def install(pkgname, options=list()):
         lxtools.getOsArchitecture()
     )
 
+    # print('Source:', pkgdata.get('source', '<unknow>'))
+
     # Get catalog info
     if pkgdata['source'] == 'catalog':
         pkginfo = pkgdata.get('info', {})
@@ -464,6 +488,7 @@ def install(pkgname, options=list()):
     # Build
     url = config.lxServer + '/' + fullpackagename
     dirname = None
+    iserror = False
     localpacketname = os.path.join(tempfile.gettempdir(), fullpackagename)
 
     # Download Packet with Progressbar
@@ -511,7 +536,7 @@ def install(pkgname, options=list()):
                         mytar.extract(tarinfo.name, tempdirectory)
 
                         # Read package
-                        pkginfo = lxtools.loadjson(os.path.join(tempdirectory, tarinfo.name), False)
+                        pkginfo = lxtools.loadjson(os.path.join(tempdirectory, tarinfo.name), True)
                     except BaseException as e:
                         print(e)
                         return False
@@ -522,18 +547,22 @@ def install(pkgname, options=list()):
             # Get dirname
             dirname = os.path.join(pkginfo.get('dirname'), '')
 
-            # Get the filelist from tarfile
-            for tarinfo in mytar:
-                normpath = os.path.normpath(tarinfo.name)
-                if normpath.startswith(dirname):
-                    archive_filelist.append(normpath[len(dirname):])
+            # Check dependencies, if set
+            if getIfDependenciesInstalled(pkginfo):
+                # Get the filelist from tarfile
+                for tarinfo in mytar:
+                    normpath = os.path.normpath(tarinfo.name)
+                    if normpath.startswith(dirname):
+                        archive_filelist.append(normpath[len(dirname):])
 
-            # Extract files
-            try:
-                mytar.extractall(lxtools.getBaboonStackDirectory())
-            except BaseException as e:
-                print('Error in TAR, see error below.')
-                print(e)
+                # Extract files
+                try:
+                    mytar.extractall(lxtools.getBaboonStackDirectory())
+                except BaseException as e:
+                    print('Error in TAR, see error below.')
+                    print(e)
+            else:
+                iserror = True
 
             mytar.close()
 
@@ -551,7 +580,7 @@ def install(pkgname, options=list()):
                             myzip.extract(filename, tempdirectory)
 
                             # Read package
-                            pkginfo = lxtools.loadjson(os.path.join(tempdirectory, filename), False)
+                            pkginfo = lxtools.loadjson(os.path.join(tempdirectory, filename), True)
                         except BaseException as e:
                             print(e)
                             return False
@@ -562,18 +591,22 @@ def install(pkgname, options=list()):
                 # Get dirname
                 dirname = os.path.join(pkginfo.get('dirname'), '')
 
-                # Get the filelist from zipfile
-                for filename in myzip.namelist():
-                    normpath = os.path.normpath(filename)
-                    if normpath.startswith(dirname):
-                        archive_filelist.append(normpath[len(dirname):])
+                # Check dependencies, if set
+                if getIfDependenciesInstalled(pkginfo):
+                    # Get the filelist from zipfile
+                    for filename in myzip.namelist():
+                        normpath = os.path.normpath(filename)
+                        if normpath.startswith(dirname):
+                            archive_filelist.append(normpath[len(dirname):])
 
-                # Extract files
-                try:
-                    myzip.extractall(lxtools.getBaboonStackDirectory())
-                except BaseException as e:
-                    print('Error in ZIP, see error below.')
-                    print(e)
+                    # Extract files
+                    try:
+                        myzip.extractall(lxtools.getBaboonStackDirectory())
+                    except BaseException as e:
+                        print('Error in ZIP, see error below.')
+                        print(e)
+                else:
+                    iserror = True
 
                 myzip.close()
             else:
@@ -583,6 +616,11 @@ def install(pkgname, options=list()):
         # Remove temporary directory
         lxtools.rmDirectory(tempdirectory)
 
+        # If error occured
+        if iserror:
+            return False
+
+        # Has dirname
         if not dirname:
             print('ERROR: No ´dirname´ in description file...')
             return False
@@ -881,6 +919,11 @@ def upgrade():
     if not os.path.isfile(prev_catalogfilename):
         return False
 
+    # Check if admin
+    if not lxtools.getIfAdmin():
+        print('Catalog Upgrade required!', config.getMessage('REQUIREADMIN'))
+        return True
+
     catalogdata = lxtools.loadjson(prev_catalogfilename, False)
     pkgdata = catalogdata.get('packages', {})
 
@@ -898,5 +941,6 @@ def upgrade():
                     print('Upgrade failure...')
                     return False
 
+    os.remove(prev_catalogfilename)
     print('Upgrade successfull...')
     return True
