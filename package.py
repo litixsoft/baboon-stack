@@ -119,6 +119,15 @@ def getIfPackageInstalled(pkginfo):
 
 # Returns if dependencies installed
 def getIfDependenciesInstalled(pkginfo):
+    if not pkginfo:
+        print('ERROR: No package description found...')
+        return False
+
+    # Check if dirname exists
+    if pkginfo.get('dirname') is None:
+        print('ERROR: No ´dirname´ in description file...')
+        return False
+
     # Check dependencies, if set
     pkgdependencies = pkginfo.get('dependencies', None)
 
