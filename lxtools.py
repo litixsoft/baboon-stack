@@ -369,3 +369,27 @@ def getPlatformName():
             return osname
 
     return 'unknow'
+
+
+# returns if binary exists
+def getIfBinaryExists(binary):
+    if sys.platform == 'win32':
+        return False
+
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
+        try:
+            process = subprocess.Popen(['whereis', binary], stdout=subprocess.PIPE)
+            result = process.communicate()
+        except FileNotFoundError as e:
+            return False
+        else:
+            for line in result:
+                if line is None or not line:
+                    continue
+
+                filename = str(line, 'utf-8').strip()
+                return os.path.isfile(filename)
+
+        return False
+
+    raise Exception('ERROR: getIfBinaryExists failed.')

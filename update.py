@@ -79,6 +79,11 @@ def doUpdate():
         print('No Baboonstack Update available...')
         return False
 
+    # Check if admin
+    if not lxtools.getIfAdmin():
+        print(config.getMessage('REQUIREADMIN'))
+        return False
+
     # Get local version
     packageName = str(config.getConfigKey('update', '')).replace('{0}', '{1}').replace('.*', 'v{0}')
     versionLocal = packageName.format(config.lxVersion, lxtools.getOsArchitecture())
@@ -153,7 +158,7 @@ def doUpdate():
 
             # Execute Update script
             print('Execute Update...')
-            subprocess.Popen([updatescriptfile, tempupdatedir, lxtools.getBaboonStackDirectory()], shell=True)
+            subprocess.Popen([updatescriptfile, tempupdatedir, lxtools.getBaboonStackDirectory()])
             sys.exit(23)
         else:
             # Clean up temporary internet files
