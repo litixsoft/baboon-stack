@@ -25,6 +25,9 @@ if sys.platform == 'win32':
 import config
 import lxtools
 
+version_symbols = '~<>=-|'
+version_numbers = '.0123456789'
+
 
 class BaboonStackPackage:
 
@@ -117,6 +120,28 @@ def getIfPackageInstalled(pkginfo):
     return result
 
 
+#
+def getIfVersionString(version):
+    for char in version:
+        if char not in str(version_numbers + version_symbols):
+            return False
+
+    return True
+
+
+#
+def getVersionString(version):
+    result = ''
+    for char in version:
+        if char in str(version_numbers):
+            result += char
+
+        if char == ' ':
+            break
+
+    return result
+
+
 # Returns if dependencies installed
 def getIfDependenciesInstalled(pkginfo):
     if not pkginfo:
@@ -132,14 +157,39 @@ def getIfDependenciesInstalled(pkginfo):
     pkgdependencies = pkginfo.get('dependencies', None)
 
     if pkgdependencies and isinstance(pkgdependencies, dict):
-        deplist = []
-        for item in pkgdependencies:
-            if item not in localcatalog or not localcatalog[item].getIfInstalled():
-                deplist.append(item)
+        bbs_deplist = []
+        thirdparty_deplist = []
 
-        if deplist:
-            print('\nFollow dependencies are required, please install first:\n')
-            print(' ', str(', ').join(deplist))
+        for itemname in pkgdependencies:
+            # if array, then is binary dependencie
+            if isinstance(pkgdependencies[itemname], list):
+                for subitem in pkgdependencies[itemname]:
+                    if not lxtools.getIfBinaryExists(subitem):
+                        thirdparty_deplist.append(itemname)
+
+                        break
+                continue
+
+            # if version string, also bbs package
+            if not getIfVersionString(pkgdependencies[itemname]):
+                # check if binary exists
+                if not lxtools.getIfBinaryExists(pkgdependencies[itemname]):
+                    thirdparty_deplist.append(itemname)
+            else:
+                # Check bbs package if installed
+                if itemname not in localcatalog or not localcatalog[itemname].getIfInstalled():
+                    bbs_deplist.append(itemname)
+
+        # Show deplist
+        if bbs_deplist or thirdparty_deplist:
+            if bbs_deplist:
+                print('\nFollow baboonstack dependencies are required, please install first:\n')
+                print(' ' + str(', ').join(bbs_deplist))
+
+            if thirdparty_deplist:
+                print('\nFollow THIRD PARTY dependencies are required, please install first:\n')
+                print(' ' + str(', ').join(thirdparty_deplist))
+
             print('\nAbort!')
             return False
 
