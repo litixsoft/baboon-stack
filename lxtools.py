@@ -373,9 +373,18 @@ def getPlatformName():
 
 # returns if binary exists
 def getIfBinaryExists(binary):
+    # WIN32: Detect binary in environment variable ´path´
     if sys.platform == 'win32':
+        if 'PATH' in os.environ:
+            for path in str(os.environ['PATH']).split(';'):
+                fullname = os.path.join(path, binary)
+
+                if os.path.isfile(fullname):
+                    return True
+
         return False
 
+    # UNIX: Detect binary with ´whereis´
     if sys.platform.startswith('linux') or sys.platform == 'darwin':
         try:
             process = subprocess.Popen(['whereis', binary], stdout=subprocess.PIPE)
