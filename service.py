@@ -17,7 +17,7 @@ import nvm
 
 # Some global variables
 lxBasePath = lxtools.getBaboonStackDirectory()
-lxMgrPath = os.path.join(lxBasePath, 'lxm')
+lxMgrPath = os.path.join(lxBasePath, 'bbs')
 lxServiceBinary = os.path.join(lxMgrPath, 'lxservice.exe')
 
 def getIfServiceBinaryExits():
