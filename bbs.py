@@ -230,6 +230,8 @@ def bbsPackage(command):
         elif 'all' in options:
             return package.remove('', options)
 
+    # Show Help
+    bbsHelp()
     return False
 
 
@@ -263,11 +265,7 @@ def main():
         return bbsUpdate()
 
     # Package operations
-    if bbsPackage(moduleName):
-        return True
-
-    # Show Help
-    bbsHelp()
+    return bbsPackage(moduleName)
 
 # lxManager Main
 if __name__ == '__main__':
