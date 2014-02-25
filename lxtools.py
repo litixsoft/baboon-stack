@@ -32,7 +32,7 @@ class Arguments:
 
         # Remove options
         optlist = []
-        for opt in self.__args:
+        for opt in self.__args.copy():
             if opt[0] == '-':
                 optlist.append(opt.lower())
                 self.__args.remove(opt)
@@ -111,15 +111,15 @@ def rmDirectory(directory):
     nodes = os.listdir(directory)
 
     for item in nodes:
-        itemName = os.path.join(directory, item)
+        itemname = os.path.join(directory, item)
 
-        if os.path.isfile(itemName):
+        if os.path.isfile(itemname) or os.path.islink(itemname):
             try:
-                os.remove(itemName)
+                os.remove(itemname)
             except IOError as e:
                 print("Remove File error. I/O error({0}): {1}".format(e.errno, e.strerror))
-        elif os.path.isdir(itemName):
-            rmDirectory(itemName)
+        elif os.path.isdir(itemname):
+            rmDirectory(itemname)
 
     try:
         os.rmdir(directory)
@@ -402,3 +402,43 @@ def getIfBinaryExists(binary):
         return False
 
     raise Exception('ERROR: getIfBinaryExists failed.')
+
+
+# Change owner:group under Unix operation system
+def chown(path, uid, gid):
+    if getPlatformName() == 'win32' or not os.path.isdir(path):
+        return False
+
+    # Get dir Stat
+    pathstat = os.stat(path)
+
+    # Change owner:group if needed
+    if not pathstat.st_uid == uid or not pathstat.st_gid == gid:
+        try:
+            os.lchown(path, uid, gid)
+        except BaseException as e:
+            print(e)
+            return False
+
+    result = True
+    # For every file/dir
+    for itemname in os.listdir(path):
+        fullitemname = os.path.join(path, itemname)
+
+        # If file or directory
+        if os.path.isdir(fullitemname):
+            chown(fullitemname, uid, gid)
+        elif os.path.isfile(fullitemname):
+            filestat = os.stat(fullitemname)
+
+            # Change owner:group if needed
+            if not filestat.st_uid == uid or not filestat.st_gid == gid:
+                try:
+                    os.chown(fullitemname, uid, gid)
+                except BaseException as e:
+                    print(e)
+                    result = False
+        else:
+            print('Unknow', itemname)
+
+    return result

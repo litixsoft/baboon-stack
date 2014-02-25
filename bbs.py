@@ -31,8 +31,12 @@ def bbsHelp():
     print('Usage:\n')
 
     print('    bbs version                       Displays the version number')
-    print('    bbs update                        Search and Install BaboonStack Updates')
-    print('    bbs package                       Manages Baboobstack Components')
+    print('    bbs upgrade                       Search and Install BaboonStack Updates')
+    print('    bbs install [packagename]         Install packages')
+    print('    bbs update [packagename]          Update a single packages')
+    #print('    bbs search [packagename]          Updates packages')
+    print('    bbs remove [packagename]          Removes packages')
+    print('    bbs ls                            Lists available packages')
     #print('    bbs uninstall                     Uninstall Baboonstack')
     print('')
 
@@ -68,14 +72,16 @@ def bbsNodeHelp():
     print('    bbs node use [version]           Switch to Version')
     print('    bbs node run <version> [<args>]  Run <version> with <args> as arguments')
     print('    bbs node reset                   De-Register Node.js/npm')
-    print('    bbs node ls                      View available version\n')
+    print('    bbs node ls                      View available version')
+    print('    bbs node cachefix                Fix NPM cache permissions\n')
     print('Example:\n')
-    print('    bbs node install 0.10.12         Install 0.10.12 release')
+    print('    bbs node install 0.10.12         Install 0.10.12 and switch')
+    print('    bbs node install 0.10.12 -ns     Install 0.10.12 and dont switch')
     print('    bbs node install 0.10            Install the latest available 0.10 release')
     print('    bbs node use 0.10                Use the latest available 0.10 release')
     print('    bbs node remove 0.10.12          Removes a specific version from System')
-    print('    bbs node ls                      Lists all locally available 0.10 releases')
-    print('    bbs node ls remote 0.10          Lists all remote available 0.10 releases\n')
+    print('    bbs node ls 0.10                 Lists all locally available 0.10 releases')
+    print('    bbs node ls 0.10 --remote        Lists all remote available 0.10 releases\n')
     pass
 
 
@@ -86,10 +92,11 @@ def bbsNode():
 
     # Get First Command
     command = args.get().lower()
+    options = args.getoptions()
 
     # Download a specified Version from Node.JS remote Server and activated it locally
     if command == 'install' and args.count() != 0:
-        return nvm.getRemoteNodeVersion(args.get().lower())
+        return nvm.getRemoteNodeVersion(args.get().lower(), options)
 
     # Switch to a local available Node.JS version
     if command == 'use' and args.count() != 0:
@@ -119,7 +126,7 @@ def bbsNode():
         curr = nvm.getLocalNodeVersion()
 
         # show remote available Version?
-        if args.find('remote'):
+        if 'remote' in options:
             print('Remote available Node.JS Versions:\n')
             nodelist = nvm.getRemoteNodeVersionList(args.get() + '.*')
         else:
@@ -134,6 +141,9 @@ def bbsNode():
                 print('   {0}'.format(entry))
 
         return True
+
+    if command == 'cachefix':
+        return nvm.runCacheFix()
 
     # No Command found, show Help
     bbsNodeHelp()
@@ -181,29 +191,17 @@ def bbsService():
     bbsServiceHelp()
 
 
-# Show package help
-def bbsPackageHelp():
-    print('Usage:\n')
-    print('    bbs package install [packagename]          Install packages')
-    print('    bbs package update [packagename]           Update a single packages')
-    #print('    bbs package search [packagename]           Updates packages')
-    print('    bbs package remove [packagename]           Removes packages')
-    print('    bbs package list                           Lists available packages')
-
-    print('')
-    print('Installed Packages:\n')
-    return package.main()
-
-
 # Packages
-def bbsPackage():
+def bbsPackage(command):
+    options = args.getoptions()
+
     # Perform a catalog upgrade if required
     if package.upgrade():
         return True
 
-    # Get First Command
-    command = args.get().lower()
-    options = args.getoptions()
+    # Do nothing, only for perform package upgrade
+    if command == 'package':
+        return True
 
     # Use local catalog for installation/updates
     if 'local' in options:
@@ -215,18 +213,24 @@ def bbsPackage():
         return package.install(args.get(count=-1), options)
 
     # Remote File List
-    if command == 'list':
-        return package.remotelist(args.get(count=-1), options)
+    if command == 'ls':
+        if 'remote' in options:
+            return package.remotelist(args.get(count=-1), options)
+        else:
+            return package.localist(args.get(count=-1), options)
 
     # Update packages
     if command == 'update':
         return package.update(args.get(count=-1), options)
 
     # Remove
-    if command == 'remove' and args.count() != 0:
-        return package.remove(args.get(count=-1), options)
+    if command == 'remove':
+        if args.count() != 0:
+            return package.remove(args.get(count=-1), options)
+        elif 'all' in options:
+            return package.remove('', options)
 
-    return bbsPackageHelp()
+    return False
 
 
 # Update Operations
@@ -250,16 +254,17 @@ def main():
     if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():
         return bbsService()
 
-    if moduleName == 'package':
-        return bbsPackage()
-
     # Prints the Baboonstack Version
     if moduleName == 'version':
         return bbsVersion()
 
     # Check if update on remote Server
-    if moduleName == 'update':
+    if moduleName == 'upgrade':
         return bbsUpdate()
+
+    # Package operations
+    if bbsPackage(moduleName):
+        return True
 
     # Show Help
     bbsHelp()

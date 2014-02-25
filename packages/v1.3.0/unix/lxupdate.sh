@@ -92,4 +92,5 @@ if [[ -e "$TARGETPATH/bbs/$LXCATALOG" ]]; then
 	cp "$TARGETPATH/bbs/$LXCATALOG" "$TARGETPATH/$LXCATALOG"
 fi
 
-echo -e "\033[32mSUCCESS: Enter ´bbs package´ for package updates.\033[0m"
+bbs package
+echo -e "\033[32mSUCCESS: Enter ´bbs´ for more informations.\033[0m"

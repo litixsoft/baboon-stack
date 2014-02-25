@@ -36,8 +36,9 @@ lxInfo = {
                     'target': '/usr/bin'
                 },
                 'npm': {
-                    'source': 'bin',
-                    'target': '/usr/bin'
+                    'source': '/usr/lib/node_modules/npm/bin/npm-cli.js',
+                    'target': '/usr/bin',
+                    'options': ['absolute_source', 'no_source_check']
                 },
                 'node_modules': {
                     'source': 'lib',
@@ -71,8 +72,9 @@ lxInfo = {
                     'target': '/usr/bin'
                 },
                 'npm': {
-                    'source': 'bin',
-                    'target': '/usr/bin'
+                    'source': '/usr/lib/node_modules/npm/bin/npm-cli.js',
+                    'target': '/usr/bin',
+                    'options': ['absolute_source', 'no_source_check']
                 },
                 'node_modules/npm': {
                     'source': 'lib',
@@ -133,6 +135,18 @@ lxOptions = {
     'safe': {
         'short': '-s',
         'long': '--safe'
+    },
+    'remote': {
+        'short': '-r',
+        'long': '--remote'
+    },
+    'noswitch': {
+        'short': '-ns',
+        'long': '--noswitch'
+    },
+    'all': {
+        'short': '-all',
+        'long': '--all'
     }
 }
 
