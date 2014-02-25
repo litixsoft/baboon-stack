@@ -17,7 +17,7 @@ import nvm
 
 # Some global variables
 lxBasePath = lxtools.getBaboonStackDirectory()
-lxMgrPath = os.path.join(lxBasePath, 'lxm')
+lxMgrPath = os.path.join(lxBasePath, 'bbs')
 lxServiceBinary = os.path.join(lxMgrPath, 'lxservice.exe')
 
 def getIfServiceBinaryExits():
@@ -72,7 +72,7 @@ def installService(servicename, nodeversion, app):
         return False
 
     # Show help
-    print('\nEnter "lxm service start {0}" to start service...'.format(servicename))
+    print('\nEnter "bbs service start {0}" to start service...'.format(servicename))
     return True
 
 # Unregister the service from registry
