@@ -395,8 +395,9 @@ remotecatalog = getRemoteCatalog()
 updatelist = getAvailableUpdates(localcatalog, remotecatalog)
 
 
-# Main
-def main():
+# localist
+def localist(pkgname, options=list):
+    print('Installed Packages:\n')
     for packagename in localcatalog:
         package = localcatalog.get(packagename)
 
@@ -420,7 +421,7 @@ def main():
 
 
 # Show available Packages
-def remotelist(pkgname, options=list()):
+def remotelist(pkgname, options=list):
     print('Remote available Packages:\n')
     cnt = 0
     for packagename in remotecatalog:
@@ -781,7 +782,7 @@ def remove(pkgname, options=list()):
         pkgname = []
         for pkg in localcatalog:
             # Only remove if installed locally
-            if not localcatalog[pkg].getIfInstalled():
+            if localcatalog[pkg].getIfInstalled():
                 pkgname.append(pkg)
 
         if len(pkgname) == 0:
