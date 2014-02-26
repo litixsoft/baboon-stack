@@ -1,62 +1,72 @@
-#BABOONSTACK
+# BABOONSTACK
+a Suite with Node.JS, MongoDB, RedisIO and a system-wide Node Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
 
-a Suite with NodeJS, MongoDB, RedisIO and a system-wide Node Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
+* Web site: http://www.litixsoft.de/products-baboonstack.html
+* Unix Installer: http://www.litixsoft.de/products-baboonstack.html#installwindows
+* Windows Installer: http://www.litixsoft.de/products-baboonstack.html#installunix
 
-**Feel free to build your own Baboon Stack or just simply use our installer.**
+#Install
+Download the build releases for windows, macos or linux based operation systems, or just build your own baboonstack manager client (see Build).
 
-For Linux and MacOS, run this command in your Terminal.
+##System requirements
 
-	curl http://packages.litixsoft.de/installer.sh | sh
+* Windows Visa/Seven/8
+* Linux
+* MacOs X
 
-Windows Users follow this link to download the installation file.
-
-http://www.litixsoft.de/products-baboonstack
-
-#### Baboonstack Directory Structure
-
-    └───BABOONSTACK
-        ├── BBS
-        │   ├── NODE - Windows only. The target of the link of the current node version.
-        │   └── [Place lxBaboon Manager here]
-        ├── REDISIO
-        │   ├── BIN - Binaryfolder
-        │   ├── LOG - Logfolder
-        │   ├── DB  - Databasefolder
-        │   └── lxScript.sh/lxScript.cmd
-        ├── MONGO
-        │   ├── BIN - Binaryfolder
-        │   ├── LOG - Logfolder
-        │   ├── DB  - Databasefolder
-        │   └── lxScript.sh/lxScript.cmd
-        └── NODE
-            └── x.xx.xx - NodeJS version x.xx.xx installation
-
-## Baboon Manager
-
-A powerful tool with a integrated **Node Version Manager** and **Node Service Manager**.
-Pure Python client for windows/linux/macos.
-
-## Build Client
-
-**Requirements:**
-* Python 3.3 Runtime (see http://www.python.org/)
-* cxFreeze for Python 3.3 (see http://cx-freeze.sourceforge.net/)
+#Build Baboon Manager
+##Requirements:
+* Python 3.3.x Runtime (see http://www.python.org/)
+* cxFreeze for Python 3.3.x (see http://cx-freeze.sourceforge.net/)
 * Windows: Microsoft Visual C++ 2010 x86 Redistributable Package Service Pack 1
 
-*Note*
+##Hints and Notes
 
-On Linux x64 system you need the 64bit Runtime of Python 3.3. Or just install **ia32libs**.
+######Python under Linux x64
 
-#### Build Instructions
+On Linux x64 system you need the **ia32libs** or the 64bit Runtime of Python 3.3.x.
+
+######How to Install Python 3.3 on Ubuntu 13.04, 12.10 and 12.04
+
+see http://linuxg.net/how-to-install-python-3-3-on-ubuntu-13-04-12-10-and-12-04/
+
+##Build Instructions
 
 Be sure that the dependencies have been installed correctly. Then start the build scripts.
 
 On Windows systems
 
+    git clone https://github.com/litixsoft/baboon-stack.git
     make.cmd
 
 On Unix systems
 
-	make.sh
+	git clone https://github.com/litixsoft/baboon-stack.git
+	./make.sh
 
 Copy all content from **build/** to your **/baboonstack/bbs** folder. Include the files from **packages/[version]/[os]/**
+
+# Author
+[Litixsoft GmbH](http://www.litixsoft.de)
+
+#License
+Copyright (C) 2013 Litixsoft GmbH <info@litixsoft.de>
+Licensed under the MIT license.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. DEALINGS IN THE SOFTWARE.

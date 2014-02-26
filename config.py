@@ -10,10 +10,10 @@
 #-------------------------------------------------------------------------------
 import sys
 
-lxVersion = '1.2.0'
+lxVersion = '1.3.0'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
-lxPrevPackage = 'baboonstack.previous.package.conf'
+lxPreviousPackage = 'baboonstack.previous.package.conf'
 
 lxInfo = {
     'linux': {
@@ -22,7 +22,9 @@ lxInfo = {
         'basedir': '/opt/litixsoft/baboonstack',
         'update': 'baboonstack-.*-linux-{0}.tar.gz',
         'package': '{0}-v{1}-linux-{2}.tar.gz',
+        'packagemask': '[A-Za-z0-9]*-v.*-linux-{0}.tar.gz',
         'scriptfile': 'lxscript.sh',
+        'configfile': 'package.bbs.conf',
         'node': {
             'package': {
                 'x86': 'node-v{0}-linux-x86.tar.gz',
@@ -34,8 +36,9 @@ lxInfo = {
                     'target': '/usr/bin'
                 },
                 'npm': {
-                    'source': 'bin',
-                    'target': '/usr/bin'
+                    'source': '/usr/lib/node_modules/npm/bin/npm-cli.js',
+                    'target': '/usr/bin',
+                    'options': ['absolute_source', 'no_source_check']
                 },
                 'node_modules': {
                     'source': 'lib',
@@ -55,7 +58,9 @@ lxInfo = {
         'basedir': '/usr/share/litixsoft/baboonstack',
         'update': 'baboonstack-.*-darwin-{0}.tar.gz',
         'package': '{0}-v{1}-darwin-{2}.tar.gz',
+        'packagemask': '[A-Za-z0-9]*-v.*-darwin-{0}.tar.gz',
         'scriptfile': 'lxscript.sh',
+        'configfile': 'package.bbs.conf',
         'node': {
             'package': {
                 'x86': 'node-v{0}-darwin-x86.tar.gz',
@@ -67,8 +72,9 @@ lxInfo = {
                     'target': '/usr/bin'
                 },
                 'npm': {
-                    'source': 'bin',
-                    'target': '/usr/bin'
+                    'source': '/usr/lib/node_modules/npm/bin/npm-cli.js',
+                    'target': '/usr/bin',
+                    'options': ['absolute_source', 'no_source_check']
                 },
                 'node_modules/npm': {
                     'source': 'lib',
@@ -87,7 +93,9 @@ lxInfo = {
         'version': lxVersion,
         'update': 'baboonstack-.*-windows-{0}.exe',
         'package': '{0}-v{1}-windows-{2}.zip',
+        'packagemask': '[A-Za-z0-9]*-v.*-windows-{0}.zip',
         'scriptfile': 'lxScript.cmd',
+        'configfile': 'package.bbs.conf',
         'node': {
             'package': {
                 'x86': 'node-v{0}-x86.msi',
@@ -119,6 +127,26 @@ lxOptions = {
     'noheader': {
         'short': '-nh',
         'long': '--noheader'
+    },
+    'local': {
+        'short': '-l',
+        'long': '--local'
+    },
+    'safe': {
+        'short': '-s',
+        'long': '--safe'
+    },
+    'remote': {
+        'short': '-r',
+        'long': '--remote'
+    },
+    'noswitch': {
+        'short': '-ns',
+        'long': '--noswitch'
+    },
+    'all': {
+        'short': '-all',
+        'long': '--all'
     }
 }
 
