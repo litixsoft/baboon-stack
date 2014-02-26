@@ -95,7 +95,7 @@ def getRemoteNodeVersionList(filter = ''):
     return versionList
 
 # Returns, if remote Node Version for Windows available
-def getRemoteNodeVersion(nodeversion):
+def getRemoteNodeVersion(nodeversion, options):
     # Check if admin
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
@@ -223,7 +223,11 @@ def getRemoteNodeVersion(nodeversion):
     # Deletes the shit of temporary files
     print('Clean up...')
     cleanUp()
-    return setLocalNodeVersion(nodeversion)
+
+    if not 'noswitch' in options:
+        return setLocalNodeVersion(nodeversion)
+    else:
+        return True
 
 # Retrives local available Node Versions
 def getLocalNodeVersionList(filter = ''):
@@ -360,10 +364,16 @@ def setLocalNodeVersion(nodeversion):
         # check if all required source directories exits
         pathexists = True
         for names in links:
-            fullname = os.path.join(nodeDir, links[names]['source'], names)
+            linkoptions = links[names].get('options', [])
 
+            if 'absolute_source' in linkoptions:
+                fullname = links[names]['source']
+            else:
+                fullname = os.path.join(nodeDir, links[names]['source'], names)
+
+            # absolute_source
             # Check, if required source not found
-            if not os.path.isfile(fullname) and not os.path.isdir(fullname):
+            if 'no_source_check' not in linkoptions and not os.path.isfile(fullname) and not os.path.isdir(fullname):
                 print('ERROR: Required Element "' +
                       os.path.join(links[names]['source'], names) +
                       '" in "' +
@@ -381,14 +391,27 @@ def setLocalNodeVersion(nodeversion):
 
         # link new version
         for names in links:
+            linkoptions = links[names].get('options', [])
+
+            if 'absolute_source' in linkoptions:
+                source = links[names]['source']
+            else:
+                source = os.path.join(nodeDir, links[names]['source'], names)
+
             target = os.path.join(links[names]['target'], names)
-            source = os.path.join(nodeDir, links[names]['source'], names)
+            #source = os.path.join(nodeDir, links[names]['source'], names)
 
             # Link
             if not lxtools.setDirectoryLink(target, source):
                 raise Exception('Link creation failed!\n' + source + ' => ' + target)
 
-        print('Switched to Node v{0}...'.format(nodeversion))
+        # run Cache fix
+        runCacheFix()
+
+        # show hint
+        print('Note: Force a ´npm update -g´ to update global modules...')
+        print('\nSwitched to Node v{0}...'.format(nodeversion))
+
         return True
 
     return False
@@ -488,5 +511,28 @@ def runSpecifiedNodeVersion(nodeversion, app, arg=''):
         subprocess.call('"{0}" "{1}"'.format(exeName, app), shell=True)
     except KeyboardInterrupt:
         print('Abort!')
+
+    return True
+
+# Change the permission of npm cache
+def runCacheFix():
+    # Under windows os, not needed
+    if lxtools.getPlatformName() == 'win32':
+        return True
+
+    # Check if admin
+    if not lxtools.getIfAdmin():
+        print(config.getMessage('REQUIREADMIN'))
+        return False
+
+    # Get User home dir and .npm cache
+    homedir = os.path.expanduser('~')
+    npmcachedir = os.path.join(homedir, '.npm')
+
+    if os.path.isdir(npmcachedir):
+        homedir_stat = os.stat(homedir)
+
+        print('Fix ´.npm´ cache permissions...')
+        return lxtools.chown(npmcachedir, homedir_stat.st_uid, homedir_stat.st_gid)
 
     return True

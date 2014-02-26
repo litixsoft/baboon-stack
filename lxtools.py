@@ -8,10 +8,12 @@
 # Copyright:   (c) Thomas Scheibe 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
+import subprocess
 import platform
 import hashlib
 import urllib.request as UrlRequest
 import ctypes
+import json
 import sys
 import os
 
@@ -30,7 +32,7 @@ class Arguments:
 
         # Remove options
         optlist = []
-        for opt in self.__args:
+        for opt in self.__args.copy():
             if opt[0] == '-':
                 optlist.append(opt.lower())
                 self.__args.remove(opt)
@@ -109,15 +111,15 @@ def rmDirectory(directory):
     nodes = os.listdir(directory)
 
     for item in nodes:
-        itemName = os.path.join(directory, item)
+        itemname = os.path.join(directory, item)
 
-        if os.path.isfile(itemName):
+        if os.path.isfile(itemname) or os.path.islink(itemname):
             try:
-                os.remove(itemName)
+                os.remove(itemname)
             except IOError as e:
                 print("Remove File error. I/O error({0}): {1}".format(e.errno, e.strerror))
-        elif os.path.isdir(itemName):
-            rmDirectory(itemName)
+        elif os.path.isdir(itemname):
+            rmDirectory(itemname)
 
     try:
         os.rmdir(directory)
@@ -311,11 +313,132 @@ def readkey(prompt, keys='Yn'):
 
 
 # Execute a shell command and return True/False
-def run(command):
-    result = os.system(command)
+def run(command, cwd=None):
+    result = subprocess.call(command, shell=True, cwd=cwd)
+    # result = os.system(command)
 
     if result != 0:
         print('\nError while execute "' + command + '"...')
         print('Exitcode ' + str(result) + '\n')
 
     return result == 0
+
+
+# Loads a json file
+def loadjson(filename, reporterror=True):
+    try:
+        file = open(filename, mode='r')
+        data = file.read()
+        file.close()
+    except BaseException as e:
+        if reporterror:
+            print('>> ERROR: Unable to open file...')
+            print('>>', e)
+        return {}
+
+    try:
+        return json.loads(data)
+    except BaseException as e:
+        if reporterror:
+            print('>> JSON ERROR: Unable to parse package catalog...')
+            print('>>', e)
+        return {}
+
+
+# Saves a json file
+def savejson(filename, data, reporterror=True):
+    try:
+        file = open(filename, mode='w')
+        file.write(json.dumps(data, sort_keys=True, indent=4))
+        file.close()
+    except BaseException as e:
+        if reporterror:
+            print('>> ERROR: Unable to write file...')
+            print('>>', e)
+        return False
+
+    return True
+
+
+# returns Platformname
+def getPlatformName():
+    platforms = ['win32', 'darwin', 'linux']
+
+    for osname in platforms:
+        if sys.platform.startswith(osname):
+            return osname
+
+    return 'unknow'
+
+
+# returns if binary exists
+def getIfBinaryExists(binary):
+    # WIN32: Detect binary in environment variable ´path´
+    if sys.platform == 'win32':
+        if 'PATH' in os.environ:
+            for path in str(os.environ['PATH']).split(';'):
+                fullname = os.path.join(path, binary)
+
+                if os.path.isfile(fullname):
+                    return True
+
+        return False
+
+    # UNIX: Detect binary with ´whereis´
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
+        try:
+            process = subprocess.Popen(['whereis', binary], stdout=subprocess.PIPE)
+            result = process.communicate()
+        except FileNotFoundError as e:
+            return False
+        else:
+            for line in result:
+                if line is None or not line:
+                    continue
+
+                filename = str(line, 'utf-8').strip()
+                return os.path.isfile(filename)
+
+        return False
+
+    raise Exception('ERROR: getIfBinaryExists failed.')
+
+
+# Change owner:group under Unix operation system
+def chown(path, uid, gid):
+    if getPlatformName() == 'win32' or not os.path.isdir(path):
+        return False
+
+    # Get dir Stat
+    pathstat = os.stat(path)
+
+    # Change owner:group if needed
+    if not pathstat.st_uid == uid or not pathstat.st_gid == gid:
+        try:
+            os.lchown(path, uid, gid)
+        except BaseException as e:
+            print(e)
+            return False
+
+    result = True
+    # For every file/dir
+    for itemname in os.listdir(path):
+        fullitemname = os.path.join(path, itemname)
+
+        # If file or directory
+        if os.path.isdir(fullitemname):
+            chown(fullitemname, uid, gid)
+        elif os.path.isfile(fullitemname):
+            filestat = os.stat(fullitemname)
+
+            # Change owner:group if needed
+            if not filestat.st_uid == uid or not filestat.st_gid == gid:
+                try:
+                    os.chown(fullitemname, uid, gid)
+                except BaseException as e:
+                    print(e)
+                    result = False
+        else:
+            print('Unknow', itemname)
+
+    return result

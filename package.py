@@ -9,7 +9,6 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 import tempfile
-import json
 import re as regex
 import sys
 import os
@@ -26,147 +25,175 @@ if sys.platform == 'win32':
 import config
 import lxtools
 
+version_symbols = '~<>=-|'
+version_numbers = '.0123456789'
+
 
 class BaboonStackPackage:
 
-    @staticmethod
-    def loadPackage(filename, reporterror=True):
-        try:
-            cfgfile = open(filename, mode='r')
-            data = cfgfile.read()
-            cfgfile.close()
-        except BaseException as e:
-            if reporterror:
-                print('>> ERROR: Unable to open package catalog...')
-                print('>>', e)
-            return {}
-
-        try:
-            return json.loads(data)
-        except BaseException as e:
-            if reporterror:
-                print('>> JSON ERROR: Unable to parse package catalog...')
-                print('>>', e)
-            return {}
-
-    def __buildPackageList(self):
-        self.__packagelist = []
-        rootdir = lxtools.getBaboonStackDirectory()
-
-        for packagename in self.__packagedata.get('packages', {}):
-            pkgdata = self.__packagedata['packages'].get(packagename, None)
-
-            # If pkgdata
-            if not isinstance(pkgdata, dict):
-                continue
-
-            # Info
-            pkginfo = {
-                'name': packagename,
-                'version': pkgdata.get('version', ''),
-                'dirname': pkgdata.get('dirname', packagename),
-                'saferemove': pkgdata.get('saferemove', False),
-                'nodownload': pkgdata.get('nodownload', False),
-                'script': pkgdata.get('script', {})
-            }
-
-            # If package locally installed
-            if os.path.exists(os.path.join(rootdir, pkgdata.get('dirname', 'none'))):
-                binlist = pkgdata.get('binary', False)
-                pkgexists = True
-
-                # Check if binarys exists
-                if binlist:
-                    dirname = os.path.join(rootdir, pkgdata.get('dirname'))
-
-                    if isinstance(binlist, str):
-                        binlist = [binlist]
-
-                    if isinstance(binlist, list):
-                        for binname in binlist:
-                            if not os.path.exists(os.path.join(dirname, binname)):
-                                pkgexists = False
-                                break
-
-                # if installed
-                if pkgexists:
-                    pkginfo['installed'] = 'Installed'
-
-                    # Check if update available
-                    prevpackages = self.__previousdata.get('packages', {})
-
-                    if packagename in prevpackages:
-                        prevpackage = prevpackages.get(packagename, {})
-                        prev_package_version = prevpackage.get('version', '0.0.0')
-                        now_package_version = pkgdata.get('version', '0.0.0')
-
-                        if StrictVersion(now_package_version) > StrictVersion(prev_package_version):
-                            # Mark package as update available and report global
-                            self.__updaterequired = True
-                            pkginfo['previous'] = prevpackage
-
-            # Add package info to list
-            self.__packagelist.append(pkginfo)
-
-    def __init__(self, packagefilename=config.lxPackage, previouspackagefilename=config.lxPrevPackage):
-        self.__previouspackagefilename = os.path.join(lxtools.getBaboonStackDirectory(), previouspackagefilename)
-        self.__packagedata = self.loadPackage(os.path.join(lxtools.getBaboonStackDirectory(), packagefilename))
-        self.__previousdata = self.loadPackage(self.__previouspackagefilename, False)
-        self.__updaterequired = False
-        self.__packagelist = []
-
-        # Check, if really prev version
-        if len(self.__previousdata) > 0:
-            ver_now = self.__packagedata.get('version', '0.0.0')
-            ver_prev = self.__previousdata.get('version', '0.0.0')
-
-            if StrictVersion(ver_now) <= StrictVersion(ver_prev):
-                # Ignore Update
-                self.__previousdata = {}
+    def __init__(self, packagedata={}):
+        self.__name = None
+        self.__fullname = None
+        self.__installed = False
+        self.__packagedata = packagedata.copy()
 
         self.refresh()
 
-    def getPackageVersion(self):
-        return self.__packagedata.get('version', '<unknow>')
+    def getIfInstalled(self):
+        return self.__installed
 
-    def getPackagesInfoList(self):
-        return self.__packagelist
+    def getVersion(self):
+        return self.__packagedata.get('version', '0.0.0')
 
-    def getIfUpdateRequired(self):
-        return self.__updaterequired
+    def getPackageName(self):
+        return self.__name
+
+    def getFullname(self):
+        return self.__fullname
+
+    def getPackageInfo(self):
+        return {
+            'name': self.__name,
+            'version': self.getVersion(),
+            'dirname': self.__packagedata.get('dirname', self.__name),
+            'saferemove': self.__packagedata.get('saferemove', True),
+            'nodownload': self.__packagedata.get('nodownload', False),
+            'script': self.__packagedata.get('script', {}),
+            'dependencies': self.__packagedata.get('dependencies', False)
+        }
+
+    def loadPackage(self, filename):
+            if os.path.isfile(filename):
+                self.__packagedata = lxtools.loadjson(filename)
+                self.refresh()
 
     def refresh(self):
-        self.__buildPackageList()
+        rootdir = lxtools.getBaboonStackDirectory()
+        dirname = self.__packagedata.get('dirname', None)
 
-    def removePreviousPackageFile(self):
-        if os.path.exists(self.__previouspackagefilename):
-            os.remove(self.__previouspackagefilename)
-            return True
+        self.__name = self.__packagedata.get('packagename', self.__packagedata.get('name', '(unknow)'))
+        self.__fullname = self.__packagedata.get('fullname', self.__name)
+        self.__installed = False
 
+        # If package locally installed
+        if dirname and os.path.exists(os.path.join(rootdir, dirname)):
+            binlist = self.__packagedata.get('binary', False)
+            self.__installed = True
+
+            # Check if binarys exists
+            if binlist:
+                dirname = os.path.join(rootdir, dirname)
+
+                if isinstance(binlist, str):
+                    binlist = [binlist]
+
+                if isinstance(binlist, list):
+                    for binname in binlist:
+                        if not os.path.exists(os.path.join(dirname, binname)):
+                            self.__installed = False
+                            break
+
+
+def getIfPackageInstalled(pkginfo):
+    rootdir = lxtools.getBaboonStackDirectory()
+    dirname = pkginfo.get('dirname', None)
+    result = (dirname and os.path.exists(os.path.join(rootdir, dirname)))
+
+    # If package locally installed
+    if result:
+        binlist = pkginfo.get('binary', False)
+
+        # Check if binarys exists
+        if binlist:
+            dirname = os.path.join(rootdir, dirname)
+
+            if isinstance(binlist, str):
+                binlist = [binlist]
+
+            if isinstance(binlist, list):
+                for binname in binlist:
+                    if not os.path.exists(os.path.join(dirname, binname)):
+                        result = False
+                        break
+
+    # Return result
+    return result
+
+
+#
+def getIfVersionString(version):
+    for char in version:
+        if char not in str(version_numbers + version_symbols):
+            return False
+
+    return True
+
+
+#
+def getVersionString(version):
+    result = ''
+    for char in version:
+        if char in str(version_numbers):
+            result += char
+
+        if char == ' ':
+            break
+
+    return result
+
+
+# Returns if dependencies installed
+def getIfDependenciesInstalled(pkginfo):
+    if not pkginfo:
+        print('ERROR: No package description found...')
         return False
 
-# Load default
-package = BaboonStackPackage()
-
-# Returns the LATEST available Version on Server
-def getLatestRemoteVersion(packagename=''):
-    # Download Filelist
-    data = lxtools.getRemoteData(config.lxServer + '/')
-
-    # If Exception occured
-    if data == -1:
-        return ''
-
-    # Get the available packages for this OS
-    versionlist = regex.findall('">(' + packagename + ')<\/a', data)
-    versionlist.sort()
-
-    # If list empty?
-    if len(versionlist) == 0:
+    # Check if dirname exists
+    if pkginfo.get('dirname') is None:
+        print('ERROR: No ´dirname´ in description file...')
         return False
 
-    # Returns the LAST entry
-    return versionlist.pop()
+    # Check dependencies, if set
+    pkgdependencies = pkginfo.get('dependencies', None)
+
+    if pkgdependencies and isinstance(pkgdependencies, dict):
+        bbs_deplist = []
+        thirdparty_deplist = []
+
+        for itemname in pkgdependencies:
+            # if array, then is binary dependencie
+            if isinstance(pkgdependencies[itemname], list):
+                for subitem in pkgdependencies[itemname]:
+                    if not lxtools.getIfBinaryExists(subitem):
+                        thirdparty_deplist.append(itemname)
+
+                        break
+                continue
+
+            # if version string, also bbs package
+            if not getIfVersionString(pkgdependencies[itemname]):
+                # check if binary exists
+                if not lxtools.getIfBinaryExists(pkgdependencies[itemname]):
+                    thirdparty_deplist.append(itemname)
+            else:
+                # Check bbs package if installed
+                if itemname not in localcatalog or not localcatalog[itemname].getIfInstalled():
+                    bbs_deplist.append(itemname)
+
+        # Show deplist
+        if bbs_deplist or thirdparty_deplist:
+            if bbs_deplist:
+                print('\nFollow baboonstack dependencies are required, please install first:\n')
+                print(' ' + str(', ').join(bbs_deplist))
+
+            if thirdparty_deplist:
+                print('\nFollow THIRD PARTY dependencies are required, please install first:\n')
+                print(' ' + str(', ').join(thirdparty_deplist))
+
+            print('\nAbort!')
+            return False
+
+    return True
 
 
 # Returns Checksum for specified file from Remote Checksumlist
@@ -192,56 +219,230 @@ def getRemoteChecksum(filename):
     return False
 
 
+# Returns the Remote Package Catalog
+def getRemoteCatalog(localcatalogonly=False):
+    catalog = dict()
+    bbscatalogfile = os.path.join(lxtools.getBaboonStackDirectory(), 'baboonstack.package.conf')
+
+    # First, try to read local package file if not exists then
+    if os.path.exists(bbscatalogfile):
+        catalogdata = lxtools.loadjson(bbscatalogfile)
+        packages = catalogdata.get('packages', {})
+        for pkgname in packages:
+            catalog[pkgname] = {
+                'version': [packages[pkgname].get('version')],
+                'source': 'catalog',
+                'info': packages[pkgname]
+            }
+
+        if localcatalogonly:
+            return catalog
+
+    # Download Filelist
+    data = lxtools.getRemoteData(config.lxServer + '/')
+
+    # If Exception occured
+    if data == -1:
+        return []
+
+    # Gets the Package Name Mask for this OS
+    packagenamemask = str(
+        config.getConfigKey('packagemask')
+    ).format(
+        lxtools.getOsArchitecture()
+    )
+
+    # Get the available packages for this OS
+    filelist = regex.findall('">(' + packagenamemask + ')<\/a', data)
+    filelist.sort()
+
+    # Add all versions
+    for entry in filelist:
+        a = os.path.splitext(entry)[0].split('-')
+
+        if a[0] == 'baboonstack':
+            continue
+
+        if a[0] not in catalog:
+            catalog[a[0]] = {
+                'version': [],
+                'source': 'server'
+            }
+
+        catalog[a[0]]['version'].append(a[1][1:])
+        catalog[a[0]]['source'] = 'server'
+
+    return catalog
+
+
+# Reads local Catalog
+def getLocalCatalog(scanfolders=True):
+    rootdir = lxtools.getBaboonStackDirectory()
+    catalog = dict()
+    files = os.listdir(rootdir)
+
+    # First, try to read local package file if not exists then
+    if os.path.exists(os.path.join(rootdir, 'baboonstack.package.conf')):
+        catalogdata = lxtools.loadjson(os.path.join(rootdir, 'baboonstack.package.conf'))
+        pkgdata = catalogdata.get('packages', {})
+
+        for pkgname in pkgdata:
+            pkginfo = pkgdata.get(pkgname, {})
+            pkginfo['name'] = pkgname
+
+            catalog[pkgname] = BaboonStackPackage(pkginfo)
+
+    if scanfolders:
+        for entry in files:
+            fullpath = os.path.join(rootdir, entry)
+
+            if not os.path.isdir(fullpath):
+                continue
+
+            packagefile = os.path.join(fullpath, 'package.bbs.conf')
+
+            if os.path.isfile(packagefile):
+                pkgdata = BaboonStackPackage()
+                pkgdata.loadPackage(packagefile)
+                packagename = pkgdata.getPackageName()
+
+                if packagename is None or not pkgdata.getIfInstalled():
+                    continue
+
+                catalog[packagename] = pkgdata
+
+    return catalog
+
+
+# Returns latest version in list
+def getLastVersion(pkgdata):
+    versionlist = pkgdata.get('version', []).copy()
+    versionlist.sort()
+
+    if len(versionlist) == 0 or not isinstance(versionlist, list):
+        return ''
+
+    result = versionlist[0]
+    for version in versionlist:
+        if StrictVersion(result) < StrictVersion(version):
+            result = version
+
+    return result
+
+
+def getAvailableUpdates(local, remote):
+    updatelist = dict()
+
+    for packagename in local:
+        if local[packagename].getIfInstalled() and packagename in remote:
+            localversion = local[packagename].getVersion()
+            remoteversion = getLastVersion(remote[packagename])
+
+            if StrictVersion(localversion) < StrictVersion(remoteversion):
+                updatelist[packagename] = {
+                    'fullname': local[packagename].getFullname(),
+                    'local': localversion,
+                    'remote': remoteversion
+                }
+
+    return updatelist
+
+
 # Run system specified script
 def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
         return
 
     scriptfile = config.lxConfig.get('scriptfile', None)
+    packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
 
     # Is script file set
-    if not scriptfile is None:
-        packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
-
+    if scriptfile is not None:
         if os.path.isfile(os.path.join(packagedirectory, scriptfile)):
-            # Get current working directory
-            last_wd = os.getcwd()
             try:
                 # Change working directory to script location
-                os.chdir(packagedirectory)
-                lxtools.run(os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))))
+                lxtools.run(
+                    os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))),
+                    packagedirectory
+                )
             except BaseException as e:
                 print('ERROR while executing script!')
                 print(e)
-
-            # Back to previous working directory
-            os.chdir(last_wd)
 
     # Has script sektion, then execute
     script = pkginfo.get('script', None)
 
     if isinstance(script, dict) and len(scriptoption) > 0:
         script = script.get(scriptoption[0], None)
+        osname = lxtools.getPlatformName()
 
+        # Get platform specified script section, if available
+        if isinstance(script, list) and osname in script:
+            script = script[osname]
+
+        # Now execute the script line or lines
         if isinstance(script, list):
             for item in script:
-                lxtools.run(item)
+                lxtools.run(item, packagedirectory)
+        elif isinstance(script, str):
+            lxtools.run(script, packagedirectory)
 
-        if isinstance(script, str):
-            lxtools.run(script)
+    return
+
+# Collect Data
+localcatalog = getLocalCatalog()
+remotecatalog = getRemoteCatalog()
+updatelist = getAvailableUpdates(localcatalog, remotecatalog)
 
 
-# Main
-def main():
-    for pkg in package.getPackagesInfoList():
-        print(' ' + pkg.get('name', '').ljust(20, ' '),
-              'v' + pkg.get('version', 'x.x').ljust(10, ' '),
-              pkg.get('installed', 'Not installed'))
+# localist
+def localist(pkgname, options=list):
+    print('Installed Packages:\n')
+    for packagename in localcatalog:
+        package = localcatalog.get(packagename)
+
+        if not package.getIfInstalled():
+            continue
+
+        if packagename in updatelist:
+            updatehintstring = '=> v' + updatelist.get(packagename, {}).get('remote', '?.?.?')
+        else:
+            updatehintstring = ''
+
+        print(
+            ' ',
+            package.getFullname().ljust(30, ' '),
+            str('(' + packagename + ')').ljust(15),
+            'v' + package.getVersion().ljust(10),
+            updatehintstring
+        )
 
     return True
 
 
-# Install a package
+# Show available Packages
+def remotelist(pkgname, options=list):
+    print('Remote available Packages:\n')
+    cnt = 0
+    for packagename in remotecatalog:
+        if packagename not in localcatalog or not localcatalog[packagename].getIfInstalled():
+            package = remotecatalog.get(packagename, {})
+            print(
+                ' ',
+                packagename.ljust(20, ' '),
+                str('v' + getLastVersion(package)).ljust(12),
+                package.get('source', 'server')
+            )
+
+            cnt += 1
+
+    if cnt == 0:
+        print('No packages available on server.')
+
+    return True
+
+
+# Installs a package
 def install(pkgname, options=list()):
     if pkgname is None:
         return False
@@ -264,9 +465,9 @@ def install(pkgname, options=list()):
             options.append('ask')
 
         pkgname = []
-        for pkg in package.getPackagesInfoList():
+        for pkg in localcatalog:
             # Only install if not installed locally
-            if pkg.get('installed', None) is None:
+            if not localcatalog[pkg].getIfInstalled():
                 pkgname.append(pkg.get('name', None))
 
         if len(pkgname) == 0:
@@ -280,22 +481,32 @@ def install(pkgname, options=list()):
     # Start install single package
     #
 
-    # Get package info
-    pkginfo = None
-    for pkg in package.getPackagesInfoList():
-        if pkg.get('name') == pkgname:
-            pkginfo = pkg
-            break
-
     # Check, if package available
-    if not pkginfo:
+    if pkgname not in remotecatalog:
         print('Unknow Package "' + pkgname + '"...')
         return False
 
-    # Check, if package already installed
-    if pkginfo.get('installed'):
-        print('Package "' + pkgname + '" already installed locally...')
-        return False
+    pkginfo = {}
+
+    # Collect pkginfo and if package already installed
+    if pkgname in localcatalog:
+        if localcatalog[pkgname].getIfInstalled():
+            print('Package "' + pkgname + '" already installed locally...')
+            return False
+
+    pkgdata = remotecatalog[pkgname]
+    latestversion = getLastVersion(pkgdata)
+    fullpackagename = str(config.getConfigKey('package')).format(
+        pkgname,
+        latestversion,
+        lxtools.getOsArchitecture()
+    )
+
+    # print('Source:', pkgdata.get('source', '<unknow>'))
+
+    # Get catalog info
+    if pkgdata['source'] == 'catalog':
+        pkginfo = pkgdata.get('info', {})
 
     # Check if admin
     if not lxtools.getIfAdmin():
@@ -326,23 +537,18 @@ def install(pkgname, options=list()):
         print('Done...')
         return True
 
-    # create full package name
-    fullpackagename = str(config.getConfigKey('package')).format(
-        pkginfo.get('name'),
-        pkginfo.get('version'),
-        lxtools.getOsArchitecture()
-    )
-
-    # Download Filelist
-    if not getLatestRemoteVersion(fullpackagename):
-        print('SERVER ERROR: Package not found on server...')
-        return False
+    # # Download Filelist
+    # if not getLatestRemoteVersion(fullpackagename):
+    #     print('SERVER ERROR: Package not found on server...')
+    #     return False
 
     # Retrieve package checksum
     packagechecksum = getRemoteChecksum(fullpackagename)
 
     # Build
     url = config.lxServer + '/' + fullpackagename
+    dirname = None
+    iserror = False
     localpacketname = os.path.join(tempfile.gettempdir(), fullpackagename)
 
     # Download Packet with Progressbar
@@ -373,7 +579,7 @@ def install(pkgname, options=list()):
     # Extract Archive Package
     try:
         print('Extracting...')
-        dirname = os.path.join(pkginfo.get('dirname'), '')
+        tempdirectory = tempfile.mkdtemp()
         archive_filelist = []
 
         # Unix specified
@@ -381,18 +587,42 @@ def install(pkgname, options=list()):
             # Extract files
             mytar = tarfile.open(localpacketname)
 
-            # Get the filelist from tarfile
+            # Find and Read package description file, if exists
             for tarinfo in mytar:
-                normpath = os.path.normpath(tarinfo.name)
-                if normpath.startswith(dirname):
-                    archive_filelist.append(normpath[len(dirname):])
+                if os.path.basename(tarinfo.name) == config.getConfigKey('configfile', 'package.bbs.conf'):
+                    print('Read package description file...')
+                    try:
+                        # Extract file
+                        mytar.extract(tarinfo.name, tempdirectory)
 
-            # Extract files
-            try:
-                mytar.extractall(lxtools.getBaboonStackDirectory())
-            except BaseException as e:
-                print('Error in TAR, see error below.')
-                print(e)
+                        # Read package
+                        pkginfo = lxtools.loadjson(os.path.join(tempdirectory, tarinfo.name), True)
+                    except BaseException as e:
+                        print(e)
+                        return False
+
+                    # Exit
+                    break
+
+            # Get dirname
+            dirname = os.path.join(pkginfo.get('dirname'), '')
+
+            # Check dependencies, if set
+            if getIfDependenciesInstalled(pkginfo):
+                # Get the filelist from tarfile
+                for tarinfo in mytar:
+                    normpath = os.path.normpath(tarinfo.name)
+                    if normpath.startswith(dirname):
+                        archive_filelist.append(normpath[len(dirname):])
+
+                # Extract files
+                try:
+                    mytar.extractall(lxtools.getBaboonStackDirectory())
+                except BaseException as e:
+                    print('Error in TAR, see error below.')
+                    print(e)
+            else:
+                iserror = True
 
             mytar.close()
 
@@ -401,23 +631,91 @@ def install(pkgname, options=list()):
             if zipfile.is_zipfile(localpacketname):
                 myzip = zipfile.ZipFile(localpacketname, 'r')
 
-                # Get the filelist from zipfile
+                # Find and Read package description file, if exists
                 for filename in myzip.namelist():
-                    normpath = os.path.normpath(filename)
-                    if normpath.startswith(dirname):
-                        archive_filelist.append(normpath[len(dirname):])
+                    if os.path.basename(filename) == config.getConfigKey('configfile', 'package.bbs.conf'):
+                        print('Read package description file...')
+                        try:
+                            # Extract file
+                            myzip.extract(filename, tempdirectory)
 
-                # Extract files
-                try:
-                    myzip.extractall(lxtools.getBaboonStackDirectory())
-                except BaseException as e:
-                    print('Error in ZIP, see error below.')
-                    print(e)
+                            # Read package
+                            pkginfo = lxtools.loadjson(os.path.join(tempdirectory, filename), True)
+                        except BaseException as e:
+                            print(e)
+                            return False
+
+                        # Exit
+                        break
+
+                # Get dirname
+                dirname = os.path.join(pkginfo.get('dirname'), '')
+
+                # Check dependencies, if set
+                if getIfDependenciesInstalled(pkginfo):
+                    # Get the filelist from zipfile
+                    for filename in myzip.namelist():
+                        normpath = os.path.normpath(filename)
+                        if normpath.startswith(dirname):
+                            archive_filelist.append(normpath[len(dirname):])
+
+                    # Extract files
+                    try:
+                        myzip.extractall(lxtools.getBaboonStackDirectory())
+                    except BaseException as e:
+                        print('Error in ZIP, see error below.')
+                        print(e)
+                else:
+                    iserror = True
 
                 myzip.close()
             else:
                 print('ERROR: Archive is not a ZIP File.')
                 return False
+
+        # Remove temporary directory
+        lxtools.rmDirectory(tempdirectory)
+
+        # If error occured
+        if iserror:
+            return False
+
+        # Has dirname
+        if not dirname:
+            print('ERROR: No ´dirname´ in description file...')
+            return False
+
+        # Some file and directories will be include or exclude for removing
+        files_rules = pkginfo.get('files', None)
+        if files_rules is not None:
+            files_includes = files_rules.get('include', [])
+            files_excludes = files_rules.get('exclude', [])
+
+            # Include files or directory
+            if files_includes:
+                # If single string, then build array
+                if isinstance(files_includes, str):
+                    files_includes = [files_includes]
+
+                if isinstance(files_includes, list):
+                    for fileentry in files_includes:
+                        archive_filelist.append(os.path.normpath(fileentry))
+
+            # Exclude files or directory
+            if files_excludes:
+                # If single string, then build array
+                if isinstance(files_excludes, str):
+                    files_excludes = [files_excludes]
+
+                if isinstance(files_excludes, list):
+                    for fileentry in files_excludes:
+                        fullname = os.path.normpath(fileentry)
+
+                        # Remove every item
+                        tmpfilelist = archive_filelist.copy()
+                        for archiveentry in tmpfilelist:
+                            if str(archiveentry).startswith(fullname):
+                                archive_filelist.remove(archiveentry)
 
         # Save filelist into program directory for remove
         if len(archive_filelist) != 0:
@@ -482,10 +780,10 @@ def remove(pkgname, options=list()):
     # Removes ALL packages?
     if pkgname == '':
         pkgname = []
-        for pkg in package.getPackagesInfoList():
+        for pkg in localcatalog:
             # Only remove if installed locally
-            if pkg.get('installed', None) is not None:
-                pkgname.append(pkg.get('name', None))
+            if localcatalog[pkg].getIfInstalled():
+                pkgname.append(pkg)
 
         if len(pkgname) == 0:
             print('Sorry, no packages available to remove.')
@@ -496,19 +794,18 @@ def remove(pkgname, options=list()):
 
     # Get package info
     pkginfo = None
-    for pkg in package.getPackagesInfoList():
-        if pkg.get('name') == pkgname:
-            pkginfo = pkg
-            break
+
+    if pkgname in localcatalog:
+        # Check, if package already installed
+        if not localcatalog[pkgname].getIfInstalled():
+            print('Package "' + pkgname + '" NOT installed locally...')
+            return False
+
+        pkginfo = localcatalog[pkgname].getPackageInfo()
 
     # Check, if package available
     if not pkginfo:
         print('Unknow Package "' + pkgname + '"...')
-        return False
-
-    # Check, if package already installed
-    if not pkginfo.get('installed'):
-        print('Package "' + pkgname + '" NOT installed locally...')
         return False
 
     # Check if admin
@@ -527,13 +824,23 @@ def remove(pkgname, options=list()):
     scriptoption = ['remove']
     saferemove = pkginfo.get('saferemove') is True
 
-    # Ask for remove databases, cfg if saferemove TRUE
-    if saferemove and 'force' not in options:
-        key = lxtools.readkey('Would you like to keep their databases, configuration files?')
-
-        if key != 'y':
-            scriptoption.append('all')
+    # If saferemove option overwritten?
+    if 'force' in options or 'safe' in options:
+        if 'force' in options:
             saferemove = False
+
+        if 'safe' in options:
+            saferemove = True
+    else:
+        # Ask for remove databases, cfg if saferemove TRUE
+        if saferemove:
+            key = lxtools.readkey('Would you like to keep their databases, configuration files?')
+
+            if key != 'y':
+                saferemove = False
+
+    if not saferemove:
+        scriptoption.append('all')
 
     print('Remove package "' + pkgname + '"...')
 
@@ -598,71 +905,102 @@ def remove(pkgname, options=list()):
     return True
 
 
-def update():
-    if not package.getIfUpdateRequired():
+# Removes a package
+def update(pkgname, options=list()):
+    if pkgname is None:
         return False
 
-    packagelist = []
+    # Update all packages, if available
+    if pkgname == '':
+        if not updatelist:
+            print('No package updates available.')
+            return True
+        else:
+            # Ask, if update
+            if 'force' not in options:
+                for itemname in updatelist:
+                    package = updatelist.get(itemname, {})
+                    print(
+                        ' ',
+                        package.get('fullname', itemname).ljust(30, ' '),
+                        'v' + package.get('local', '0.0.0').ljust(10, ' '),
+                        '=>',
+                        'v' + package.get('remote', '0.0.0').ljust(10, ' ')
+                    )
 
-    print('Following package(s) required a update:\n')
+                key = lxtools.readkey('\nWould you like to update this packages?')
 
-    # List packages
-    for packagedata in package.getPackagesInfoList():
-        prevpackagedata = packagedata.get('previous', None)
+                if key == 'n':
+                    return False
 
-        if prevpackagedata is None:
-            continue
+            pkgname = []
+            for itemname in updatelist:
+                pkgname.append(itemname)
 
-        info = {
-            'name': packagedata.get('name', '<unnamed>'),
-            'from_version': prevpackagedata.get('version', '?.?.?'),
-            'to_version': packagedata.get('version', '?.?.?')
-        }
+            return update(pkgname, options)
 
-        print(' ' + info.get('name').ljust(20, ' '),
-              'v' + info.get('from_version').ljust(10, ' '),
-              '=> v', info.get('to_version'))
+    # Update multiple
+    if isinstance(pkgname, list):
+        pkgcnt = 0
+        for name in pkgname:
+            print('Update package "' + name + '"...\n')
 
-        packagelist.append(info)
+            if update(name, options):
+                pkgcnt += 1
+            print('')
 
-    print('')
+        print(' {0} of {1} packages successfully updated'.format(str(pkgcnt), str(len(pkgname))))
+        return True
 
-    # Get if is Admin
+    # Update single package
+    if pkgname not in updatelist:
+        print('No update for ´' + pkgname + '´ available.')
+        return False
+
+    # Remove
+    if not remove(pkgname, ['safe']):
+        return False
+
+    # Update Package list
+    del localcatalog[pkgname]
+
+    # Install
+    if not install(pkgname, ['safe']):
+        return False
+
+    return True
+
+# Upgrade local catalog file
+def upgrade():
+    rootdir = lxtools.getBaboonStackDirectory()
+    prev_catalogfilename = os.path.join(rootdir, config.lxPreviousPackage)
+
+    # No Upgrade required
+    if not os.path.isfile(prev_catalogfilename):
+        return False
+
+    # Check if admin
     if not lxtools.getIfAdmin():
-        print(config.getMessage('REQUIREADMIN'))
+        print('Catalog Upgrade required!', config.getMessage('REQUIREADMIN'))
         return True
 
-    key = lxtools.readkey('Start package update?')
+    catalogdata = lxtools.loadjson(prev_catalogfilename, False)
+    pkgdata = catalogdata.get('packages', {})
 
-    # User abort operation
-    if key == 'n':
-        print('Abort!')
-        return True
+    for pkgname in pkgdata:
+        if getIfPackageInstalled(pkgdata[pkgname]):
+            pkgfilename = os.path.join(rootdir, pkgdata[pkgname].get('dirname'), config.getConfigKey('configfile'))
+            if not os.path.isfile(pkgfilename):
+                pkginfo = pkgdata[pkgname].copy()
 
-    # Perform update
-    iserror = False
-    for packagedata in packagelist:
-        packagename = packagedata.get('name')
+                # Add some informations
+                pkginfo['name'] = pkgname
+                pkginfo['bbsversion'] = catalogdata.get('version', '0.0.0')
 
-        # Remove
-        if not remove(packagename, ['force']):
-            iserror = True
-            break
+                if not lxtools.savejson(pkgfilename, pkginfo):
+                    print('Upgrade failure...')
+                    return False
 
-        # Update Package list
-        package.refresh()
-
-        # Install
-        if not install(packagename, ['force']):
-            iserror = True
-            break
-
-    # Error occured, abort!
-    if iserror:
-        return True
-
-    # All Updates taken, remove old package file
-    if not package.removePreviousPackageFile():
-        print('Error: Previous catalog file could not be deleted.')
-
+    os.remove(prev_catalogfilename)
+    print('Upgrade successfull...')
     return True
