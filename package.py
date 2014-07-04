@@ -31,11 +31,15 @@ version_numbers = '.0123456789'
 
 class BaboonStackPackage:
 
-    def __init__(self, packagedata={}):
+    def __init__(self, packagedata):
         self.__name = None
         self.__fullname = None
         self.__installed = False
-        self.__packagedata = packagedata.copy()
+
+        if not isinstance(packagedata, dict):
+            self.__packagedata = {}
+        else:
+            self.__packagedata = packagedata.copy()
 
         self.refresh()
 
@@ -302,7 +306,7 @@ def getLocalCatalog(scanfolders=True):
             packagefile = os.path.join(fullpath, 'package.bbs.conf')
 
             if os.path.isfile(packagefile):
-                pkgdata = BaboonStackPackage()
+                pkgdata = BaboonStackPackage({})
                 pkgdata.loadPackage(packagefile)
                 packagename = pkgdata.getPackageName()
 
@@ -348,10 +352,37 @@ def getAvailableUpdates(local, remote):
     return updatelist
 
 
+# Execute a Script Section Object
+def exec(cmd, cwd, showoutput=True):
+    if isinstance(cmd, str):
+        return lxtools.run(cmd, str, showoutput)
+
+    if isinstance(cmd, dict) and cmd.get('cmd', None) is not None:
+
+        # If user confirm defined, then ask him
+        if cmd.get('confirm') is True:
+            key = lxtools.readkey(
+                cmd.get('text', 'Do you want to execute "' + cmd.get('cmd') + '"?')
+            )
+
+            if key == 'y':
+                return runScript(cmd.get('cmd'), cwd, showoutput)
+
+            return True
+
+    # Someting goes wrong
+    return False
+
 # Run system specified script
 def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
         return
+
+    # Hide Script output
+    hide_script_output = ('hidden' in scriptoption)
+
+    if hide_script_output is True:
+        scriptoption.remove('hidden')
 
     scriptfile = config.lxConfig.get('scriptfile', None)
     packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
@@ -363,7 +394,8 @@ def runScript(pkginfo, scriptoption):
                 # Change working directory to script location
                 lxtools.run(
                     os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))),
-                    packagedirectory
+                    packagedirectory,
+                    not hide_script_output
                 )
             except BaseException as e:
                 print('ERROR while executing script!')
@@ -383,9 +415,9 @@ def runScript(pkginfo, scriptoption):
         # Now execute the script line or lines
         if isinstance(script, list):
             for item in script:
-                lxtools.run(item, packagedirectory)
-        elif isinstance(script, str):
-            lxtools.run(script, packagedirectory)
+                exec(item, packagedirectory, not hide_script_output)
+        elif isinstance(script, str) or isinstance(script, dict):
+            exec(script, packagedirectory, not hide_script_output)
 
     return
 
@@ -515,7 +547,7 @@ def install(pkgname, options=list()):
 
     # Ask
     if 'ask' in options:
-        key = lxtools.readkey('Really install "' + pkgname + '"...', 'Yn')
+        key = lxtools.readkey('Do you really want to install "' + pkgname + '"...', 'Yn')
 
         if key == 'n':
             return False
@@ -905,7 +937,7 @@ def remove(pkgname, options=list()):
     return True
 
 
-# Removes a package
+# Updates a package
 def update(pkgname, options=list()):
     if pkgname is None:
         return False

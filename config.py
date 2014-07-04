@@ -5,12 +5,12 @@
 # Author:      Thomas Scheibe
 #
 # Created:     05.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
+# Copyright:   (c) Litixsoft GmbH 2013
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 import sys
 
-lxVersion = '1.3.0'
+lxVersion = '1.4.0'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
 lxPreviousPackage = 'baboonstack.previous.package.conf'
@@ -44,6 +44,16 @@ lxInfo = {
                     'source': 'lib',
                     'target': '/usr/lib'
                 }
+            }
+        },
+        'mongo': {
+            'package': {
+                'x64': 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-{0}.tgz',
+                'x86': 'https://fastdl.mongodb.org/linux/mongodb-linux-i686-{0}.tgz'
+            },
+            'helper': {
+                'x64': 'http://packages.litixsoft.de/mongo-linux-x64.tar.gz',
+                'x86': 'http://packages.litixsoft.de/mongo-linux-x86.tar.gz'
             }
         },
         'messages': {
@@ -83,6 +93,15 @@ lxInfo = {
                 }
             }
         },
+        'mongo': {
+            'package': {
+                'x64': 'https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-{0}.tgz'
+            },
+            'helper': {
+                'x64': 'http://packages.litixsoft.de/mongo-darwin-x64.tar.gz'
+            }
+
+        },
         'messages': {
             'ADMINNAME': 'super user',
             'REQUIREADMIN': 'This operation required super user rights!'
@@ -102,6 +121,16 @@ lxInfo = {
                 'x64': 'x64/node-v{0}-x64.msi'
             },
             'links': {
+            }
+        },
+        'mongo': {
+            'package': {
+                'x64': 'https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-{0}.zip',
+                'x86': 'https://fastdl.mongodb.org/win32/mongodb-win32-i386-{0}.zip',
+            },
+            'helper': {
+                'x64': 'http://packages.litixsoft.de/mongo-windows-x64.zip',
+                'x86': 'http://packages.litixsoft.de/mongo-windows-x86.zip'
             }
         },
         'messages': {

@@ -160,7 +160,7 @@ def getRemoteNodeVersion(nodeversion, options):
 
     # Check Checksum
     if (localChecksum == remoteChecksum):
-        print('Checksum are correct...')
+        print('Checksum correct...')
     else:
         print('Checksum missmatch... Abort!')
         print('Filename  ' + remoteFilename)

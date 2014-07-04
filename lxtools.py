@@ -9,9 +9,12 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 import subprocess
+import tarfile
+import zipfile
 import platform
 import hashlib
 import urllib.request as UrlRequest
+import shutil
 import ctypes
 import json
 import sys
@@ -175,7 +178,7 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
 # FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_REPARSE_POINT
 def getIfSymbolicLink(lpFilename):
     if sys.platform == 'win32':
-        return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040) == 1040
+        return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) & 1040) == 1040
 
     if sys.platform.startswith('linux') or sys.platform == 'darwin':
         return os.path.islink(lpFilename)
@@ -191,8 +194,11 @@ def showProgress(amtDone):
 
 # Callback for urlretrieve (Downloadprogress)
 def reporthook(blocknum, blocksize, filesize):
-    if (blocknum != 0):
-        percent =  blocknum / (filesize / blocksize)
+    if filesize <= blocksize:
+        return showProgress(1)
+
+    if (blocknum > 0):
+        percent = blocknum / (filesize / blocksize)
     else:
         percent = 0
 
@@ -313,8 +319,14 @@ def readkey(prompt, keys='Yn'):
 
 
 # Execute a shell command and return True/False
-def run(command, cwd=None):
-    result = subprocess.call(command, shell=True, cwd=cwd)
+def run(command, cwd=None, showoutput=True):
+
+    if showoutput is True:
+        stdout = subprocess.STDOUT
+    else:
+        stdout = subprocess.DEVNULL
+
+    result = subprocess.call(command, shell=True, cwd=cwd, stdout=stdout)
     # result = os.system(command)
 
     if result != 0:
@@ -442,3 +454,47 @@ def chown(path, uid, gid):
             print('Unknow', itemname)
 
     return result
+
+# Extract archive file (source) to directory (target)
+# Zip and Tar Archives supported
+def doExtract(source, target):
+    # .zip - 2 Bytes - 50 4B - \x50\x4b
+    # .tgz - 2 Bytes - 1F 8B - \x1f\x8b
+    archivefile = open(source, 'rb')
+    ident = archivefile.read(2)
+    archivefile.close()
+
+    # ZIP File
+    if ident == b'\x50\x4b' and zipfile.is_zipfile(source):
+        zip = zipfile.ZipFile(source, 'r')
+        zip.extractall(target)
+        zip.close()
+
+        return True
+
+    # Tar File
+    if ident == b'\x1f\x8b':
+        tar = tarfile.open(source)
+        tar.extractall(target)
+        tar.close()
+
+        return True
+
+    # print(ident)
+
+    return False
+
+
+# Moves all elements IN a directory to another one
+def moveDirectory(src, tar):
+    if not os.path.isdir(src):
+        return False
+
+    if not os.path.isdir(tar):
+        os.makedirs(tar)
+
+    for name in os.listdir(src):
+        shutil.move(
+            os.path.join(src, name),
+            os.path.join(tar, name)
+        )

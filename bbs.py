@@ -16,6 +16,7 @@ import config
 import update
 import sys
 import nvm
+import mvm
 
 # Command Line
 args = lxtools.Arguments()
@@ -23,7 +24,7 @@ args = lxtools.Arguments()
 
 # Header, the only one
 def bbsHeader():
-    print('\nlxManager for BaboonStack - Litixsoft GmbH 2013\n')
+    print('\nlxManager for BaboonStack - Litixsoft GmbH 2014\n')
 
 
 # Prints the lxManager Version
@@ -46,8 +47,8 @@ def bbsHelp():
         print('    bbs service                       Service Module Controls for Node.JS')
 
     # Enable MONGO module only if MongoDB installed
-#    if lxtools.getIfMongoModuleEnabled():
-#        print('    bbs mongo                         Mongo Module Controls')
+    if lxtools.getIfMongoModuleEnabled():
+        print('    bbs mongo                         Mongo Module Controls')
 
     # Enable REDIS module only if RedisIO installed
 #    if lxtools.getIfRedisModuleEnabled():
@@ -147,6 +148,42 @@ def bbsNode():
 
     # No Command found, show Help
     bbsNodeHelp()
+
+# MongoDB Version Manager
+
+
+def bbsMongoHelp():
+    print('Usage:\n')
+    print('    bbs mongo install [version]      Install a specific version number')
+    print('    bbs mongo remove [version]       Removes a specific version number')
+    print('    bbs mongo use [version]          Install specified version as Service')
+    print('    bbs mongo ls                     List installed mongo versions')
+    print('    bbs mongo start [version] [args] Start Mongo')
+    print('    bbs mongo stop [version]         Stop Mongo\n')
+    print('Example:\n')
+    pass
+
+
+def bbsMongo():
+    if args.count() == 0:
+        bbsMongoHelp()
+        return
+
+    # Get First Command
+    command = args.get().lower()
+    options = args.getoptions()
+
+    # Download a specified Version from Node.JS remote Server and activated it locally
+    if command == 'install' and args.count() != 0:
+        return mvm.doInstall(args.get().lower(), options)
+
+    # Reset, de-register node.js
+    # if command == 'reset':
+        # print('Unregister Node.js...')
+        # return nvm.resetNode()
+
+    # No Command found, show Help
+    bbsMongoHelp()
 
 # Service Operations
 
@@ -251,6 +288,10 @@ def main():
     # Node.JS Module
     if moduleName == 'node' and lxtools.getIfNodeModuleEnabled():
         return bbsNode()
+
+    # Mongo Module
+    if moduleName == 'mongo' and lxtools.getIfMongoModuleEnabled():
+        return bbsMongo()
 
     # Service Module
     if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():
