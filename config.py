@@ -9,11 +9,13 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 import sys
+import os
 
 lxVersion = '1.4.0'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
 lxPreviousPackage = 'baboonstack.previous.package.conf'
+lxUserSettingPath = os.path.join(os.path.expanduser('~'), '.bbs')
 
 lxInfo = {
     'linux': {
@@ -54,6 +56,10 @@ lxInfo = {
             'helper': {
                 'x64': 'http://packages.litixsoft.de/mongo-linux-x64.tar.gz',
                 'x86': 'http://packages.litixsoft.de/mongo-linux-x86.tar.gz'
+            },
+            'binary': {
+                'mongod': 'bin/mongod',
+                'mongo': 'bin/mongo',
             }
         },
         'messages': {
@@ -99,8 +105,11 @@ lxInfo = {
             },
             'helper': {
                 'x64': 'http://packages.litixsoft.de/mongo-darwin-x64.tar.gz'
+            },
+            'binary': {
+                'mongod': 'bin/mongod',
+                'mongo': 'bin/mongo',
             }
-
         },
         'messages': {
             'ADMINNAME': 'super user',
@@ -131,6 +140,10 @@ lxInfo = {
             'helper': {
                 'x64': 'http://packages.litixsoft.de/mongo-windows-x64.zip',
                 'x86': 'http://packages.litixsoft.de/mongo-windows-x86.zip'
+            },
+            'binary': {
+                'mongod': 'bin\\mongod.exe',
+                'mongo': 'bin\\mongo.exe',
             }
         },
         'messages': {

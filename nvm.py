@@ -50,14 +50,14 @@ def cleanUp():
 
 # Returns if nodeversion the correct format
 def getIfNodeVersionFormat(nodeversion):
-    return regex.match('[0-9]+\.[0-9]+\.[0-9]+', nodeversion) != None
+    return regex.match('[0-9]+\.[0-9]+\.[0-9]+', nodeversion) is not None
 
 # Returns if nodeversion installed
 def getIfNodeVersionInstalled(nodeversion):
     return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
 # Returns the remote available Files with RegEx Filter
-def getRemoteList(url, filter = ''):
+def getRemoteList(url, filter=''):
     # Download from URL
     data = lxtools.getRemoteData(url)
 
@@ -89,7 +89,7 @@ def getRemoteChecksumList(url):
     return data.split('\n')
 
 # Returns the remote available Node Version Directories
-def getRemoteNodeVersionList(filter = ''):
+def getRemoteNodeVersionList(filter=''):
     versionList = getRemoteList("http://nodejs.org/dist/", filter)
     versionList.sort(key=StrictVersion) # Sort list FROM oldest Version TO newer Version
     return versionList

@@ -498,3 +498,103 @@ def moveDirectory(src, tar):
             os.path.join(src, name),
             os.path.join(tar, name)
         )
+
+
+def loadFileFromUserSettings(filename, showerrors=True, returntype=None):
+    if not os.path.exists(config.lxUserSettingPath):
+        return None
+
+    data = returntype
+    try:
+        filehandle = open(os.path.join(config.lxUserSettingPath, filename), 'r', encoding='utf8')
+
+        if isinstance(returntype, list):
+            tmpdata = filehandle.read()
+
+            if tmpdata:
+                data = tmpdata.split(',')
+        else:
+            data = filehandle.read()
+
+        filehandle.close()
+    except IOError:
+        if showerrors:
+            print('Error while read from ' + filename)
+
+    return data
+
+
+def saveFileToUserSettings(filename, data, showerrors=True):
+    if not os.path.exists(config.lxUserSettingPath):
+        os.mkdir(config.lxUserSettingPath)
+
+    try:
+        filehandle = open(os.path.join(config.lxUserSettingPath, filename), 'w', encoding='utf8')
+        if isinstance(data, list):
+            filehandle.write(','.join(data))
+        else:
+            filehandle.write(data)
+
+        filehandle.close()
+    except IOError:
+        if showerrors:
+            print('Error while write to ' + filename)
+
+
+def checkIfPidExists(pid):
+    if sys.platform == 'win32':
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        HANDLE = ctypes.c_void_p
+        DWORD = ctypes.c_ulong
+        LPDWORD = ctypes.POINTER(DWORD)
+
+        class ExitCodeProcess(ctypes.Structure):
+            _fields_ = [('hProcess', HANDLE),
+                        ('lpExitCode', LPDWORD)]
+
+        SYNCHRONIZE = 0x100000
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+
+        process = kernel32.OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+
+        if not process:
+            return False
+
+        ec = ExitCodeProcess()
+        out = kernel32.GetExitCodeProcess(process, ctypes.byref(ec))
+
+        if not out:
+            err = kernel32.GetLastError()
+            kernel32.CloseHandle(process)
+
+            if err == 5:
+                print('Access denied')
+
+            return False
+        elif bool(ec.lpExitCode):
+            # print ec.lpExitCode.contents
+            # There is an exist code, it quit
+            kernel32.CloseHandle(process)
+            return False
+
+        # No exit code, it's running.
+        kernel32.CloseHandle(process)
+
+        return True
+    else:
+        import errno
+
+        if pid < 0:
+            return False
+        try:
+            os.kill(pid, 0)
+        except OSError as e:
+            return e.errno == errno.EPERM
+        else:
+            return True
+
+def sendSignal(pid):
+    kernel32 = ctypes.windll.kernel32
+    return kernel32.GenerateConsoleCtrlEvent(0, int(pid))

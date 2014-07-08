@@ -104,9 +104,9 @@ def bbsNode():
         return nvm.setLocalNodeVersion(args.get().lower())
 
     # Switch to a local available Node.JS version; depreated
-    if command == 'switch' and args.count() != 0:
-        print('WARNING: Parameter "switch" is deprecated!')
-        return nvm.setLocalNodeVersion(args.get().lower())
+    # if command == 'switch' and args.count() != 0:
+    #     print('WARNING: Parameter "switch" is deprecated!')
+    #     return nvm.setLocalNodeVersion(args.get().lower())
 
     # Runs a specified Node.JS Version
     if command == 'run' and args.count() > 1:
@@ -158,7 +158,7 @@ def bbsMongoHelp():
     print('    bbs mongo remove [version]       Removes a specific version number')
     print('    bbs mongo use [version]          Install specified version as Service')
     print('    bbs mongo ls                     List installed mongo versions')
-    print('    bbs mongo start [version] [args] Start Mongo')
+    print('    bbs mongo start [version] [port] Start Mongo')
     print('    bbs mongo stop [version]         Stop Mongo\n')
     print('Example:\n')
     pass
@@ -173,9 +173,18 @@ def bbsMongo():
     command = args.get().lower()
     options = args.getoptions()
 
-    # Download a specified Version from Node.JS remote Server and activated it locally
+    # Download a specified Version from MongoDB remote Server and activated it locally
     if command == 'install' and args.count() != 0:
         return mvm.doInstall(args.get().lower(), options)
+
+    # Starts a specified mongo version in user space
+    if command == 'start' and args.count() != 0:
+        return mvm.doStart(args.get().lower(), args.get('27017').lower(), options)
+
+    # Stopps a specified mongo version thats run in user space
+    if command == 'stop' and args.count() != 0:
+        return mvm.doStop(args.get().lower(), options)
+
 
     # Reset, de-register node.js
     # if command == 'reset':
