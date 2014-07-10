@@ -200,7 +200,7 @@ def bbsMongo():
     # Reset, de-register node.js
     if command == 'reset':
         print('Unregister MongoDB...')
-        # return mvm.doReset()
+        return mvm.doReset()
 
     # No Command found, show Help
     bbsMongoHelp()
