@@ -314,7 +314,7 @@ def getIfNodeModuleEnabled():
 
 # Returns if Mongo installed, Checks path only
 def getIfMongoModuleEnabled():
-    mongoPath = os.path.join(getBaboonStackDirectory(), 'mongo')
+    mongoPath = os.path.join(getBaboonStackDirectory(), 'mongodb')
     return os.path.exists(mongoPath)
 
 

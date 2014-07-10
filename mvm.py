@@ -60,6 +60,9 @@ def getIfMongoVersionAvailable(mongoversion):
 # Returns the actual linked Version
 def getActiveMongoVersion():
     # Check if symbolic link
+    if not os.path.isdir(mongosymlink):
+        return ''
+
     if not lxtools.getIfSymbolicLink(mongosymlink):
         return False
 
@@ -74,7 +77,7 @@ def getActiveMongoVersion():
         # Splits the Seperator and Returns the last Pathname (nodeversion)
         return path.rsplit(os.sep).pop()
     except Exception as e:
-        print('ERROR: ', e)
+        print('ERROR:', e)
         return ''
 
 
