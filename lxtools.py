@@ -14,11 +14,15 @@ import zipfile
 import platform
 import hashlib
 import urllib.request as UrlRequest
+import signal
 import shutil
-import ctypes
 import json
 import sys
 import os
+
+if sys.platform == 'win32':
+    import ctypes
+    import ctypes.wintypes
 
 # Baboonstack modules
 import config
@@ -129,6 +133,37 @@ def rmDirectory(directory):
     except IOError as e:
         print("Remove Directory error. I/O error({0}): {1}".format(e.errno, e.strerror))
 
+
+def removeFilesFromList(basedir, filelist, saferemove=True):
+    dirlist = []
+
+    # Remove every file from directory and marks directories
+    for filename in filelist:
+        fullpath = os.path.join(basedir, filename)
+        if os.path.exists(fullpath):
+            if os.path.isdir(fullpath):
+                # Add dir to list, will be removed later
+                dirlist.append(fullpath)
+            else:
+                # Remove file
+                try:
+                    os.remove(fullpath)
+                except BaseException as e:
+                    print(e)
+
+    # Remove directory if empty
+    for directory in dirlist:
+        if len(os.listdir(directory)) == 0:
+            os.rmdir(directory)
+
+    # Remove base directory if exists and empty
+    if os.path.exists(basedir):
+        if len(os.listdir(basedir)) == 0:
+            os.rmdir(basedir)
+        else:
+            # Remove directory with all files if not safe remove
+            if not saferemove:
+                rmDirectory(basedir)
 
 # Returns the SHA1 Checksum of specified File
 def getSHAChecksum(filename):
@@ -470,7 +505,7 @@ def doExtract(source, target):
         zip.extractall(target)
         zip.close()
 
-        return True
+        return
 
     # Tar File
     if ident == b'\x1f\x8b':
@@ -485,19 +520,36 @@ def doExtract(source, target):
     return False
 
 
-# Moves all elements IN a directory to another one
+# Moves all elements IN a directory to another one and returns filelist
 def moveDirectory(src, tar):
+    filelist = []
+
     if not os.path.isdir(src):
-        return False
+        return filelist
 
     if not os.path.isdir(tar):
         os.makedirs(tar)
 
     for name in os.listdir(src):
-        shutil.move(
-            os.path.join(src, name),
-            os.path.join(tar, name)
-        )
+        if os.path.isdir(os.path.join(src, name)):
+            subdir = moveDirectory(os.path.join(src, name), os.path.join(tar, name))
+
+            # Add all files
+            for dirname in subdir:
+                filelist.append(os.path.join(name, dirname))
+
+            # Add foldername
+            filelist.append(name)
+            continue
+
+        if os.path.isfile(os.path.join(src, name)) and not os.path.isfile(os.path.join(tar, name)):
+            filelist.append(name)
+            shutil.move(
+                os.path.join(src, name),
+                os.path.join(tar, name)
+            )
+
+    return filelist
 
 
 def loadFileFromUserSettings(filename, showerrors=True, returntype=None):
@@ -541,60 +593,78 @@ def saveFileToUserSettings(filename, data, showerrors=True):
             print('Error while write to ' + filename)
 
 
-def checkIfPidExists(pid):
+def getActiveProcessFromPidList(pidlist):
+    pidActiveList = []
+
     if sys.platform == 'win32':
-        import ctypes
+        EnumProcesses = ctypes.windll.psapi.EnumProcesses
+        EnumProcesses.restype = ctypes.wintypes.BOOL
 
-        kernel32 = ctypes.windll.kernel32
-        HANDLE = ctypes.c_void_p
-        DWORD = ctypes.c_ulong
-        LPDWORD = ctypes.POINTER(DWORD)
+        OpenProcess = ctypes.windll.kernel32.OpenProcess
+        OpenProcess.restype = ctypes.wintypes.HANDLE
+        CloseHandle = ctypes.windll.kernel32.CloseHandle
 
-        class ExitCodeProcess(ctypes.Structure):
-            _fields_ = [('hProcess', HANDLE),
-                        ('lpExitCode', LPDWORD)]
+        PROCESS_TERMINATE = 0x0001
+        PROCESS_QUERY_INFORMATION = 0x0400
 
-        SYNCHRONIZE = 0x100000
-        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        processList = (ctypes.wintypes.DWORD * 4096)()
+        processListSize = ctypes.sizeof(processList)
+        sizeReturned = ctypes.wintypes.DWORD()
 
-        process = kernel32.OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, 0, pid)
+        if EnumProcesses(ctypes.byref(processList), processListSize, ctypes.byref(sizeReturned)):
+            for index in range(int(sizeReturned.value / ctypes.sizeof(ctypes.wintypes.DWORD))):
+                hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION, False, processList[index])
 
-        if not process:
-            return False
+                if hProcess:
+                    if str(processList[index]) in pidlist:
+                        pidActiveList.append(str(processList[index]))
 
-        ec = ExitCodeProcess()
-        out = kernel32.GetExitCodeProcess(process, ctypes.byref(ec))
-
-        if not out:
-            err = kernel32.GetLastError()
-            kernel32.CloseHandle(process)
-
-            if err == 5:
-                print('Access denied')
-
-            return False
-        elif bool(ec.lpExitCode):
-            # print ec.lpExitCode.contents
-            # There is an exist code, it quit
-            kernel32.CloseHandle(process)
-            return False
-
-        # No exit code, it's running.
-        kernel32.CloseHandle(process)
-
-        return True
+                    CloseHandle(hProcess)
+        else:
+            return None
     else:
         import errno
 
-        if pid < 0:
-            return False
+        for pid in pidlist:
+            try:
+                os.kill(int(pid), 0)
+            except OSError as e:
+                if e.errno == errno.EPERM:
+                    pidActiveList.append(pid)
+            else:
+                pidActiveList.append(pid)
+
+    return pidActiveList
+
+
+def killProcess(pid):
+    if sys.platform == 'win32':
+        OpenProcess = ctypes.windll.kernel32.OpenProcess
+        OpenProcess.restype = ctypes.wintypes.HANDLE
+
+        CloseHandle = ctypes.windll.kernel32.CloseHandle
+
+        TerminateProcess = ctypes.windll.kernel32.TerminateProcess
+        TerminateProcess.restype = ctypes.wintypes.BOOL
+
+        PROCESS_TERMINATE = 0x0001
+        PROCESS_QUERY_INFORMATION = 0x0400
+
+        hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION, False, pid)
+
+        if hProcess:
+            res = TerminateProcess(hProcess, -1)
+            CloseHandle(hProcess)
+
+            return res
+    else:
+        import errno
+
         try:
-            os.kill(pid, 0)
+            os.kill(int(pid), signal.CTRL_C_EVENT)
         except OSError as e:
             return e.errno == errno.EPERM
         else:
             return True
 
-def sendSignal(pid):
-    kernel32 = ctypes.windll.kernel32
-    return kernel32.GenerateConsoleCtrlEvent(0, int(pid))
+    return False

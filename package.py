@@ -366,7 +366,7 @@ def exec(cmd, cwd, showoutput=True):
             )
 
             if key == 'y':
-                return runScript(cmd.get('cmd'), cwd, showoutput)
+                return lxtools.run(cmd.get('cmd'), cwd, showoutput)
 
             return True
 
@@ -900,36 +900,9 @@ def remove(pkgname, options=list()):
 
     # Has files?
     if len(dir_filelist) != 0:
-        dirlist = []
-
         # Remove every file from directory and marks directories
         print('Remove files...')
-        for filename in dir_filelist:
-            fullpath = os.path.join(basedir, filename)
-            if os.path.exists(fullpath):
-                if os.path.isdir(fullpath):
-                    # Add dir to list, will be removed later
-                    dirlist.append(fullpath)
-                else:
-                    # Remove file
-                    try:
-                        os.remove(fullpath)
-                    except BaseException as e:
-                        print(e)
-
-        # Remove directory if empty
-        for directory in dirlist:
-            if len(os.listdir(directory)) == 0:
-                os.rmdir(directory)
-
-    # Remove base directory if exists and empty
-    if os.path.exists(basedir):
-        if len(os.listdir(basedir)) == 0:
-            os.rmdir(basedir)
-        else:
-            # Remove directory with all files if not safe remove
-            if not saferemove is True:
-                lxtools.rmDirectory(basedir)
+        lxtools.removeFilesFromList(basedir, dir_filelist, saferemove)
 
     # Done
     print('Done...')

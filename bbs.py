@@ -177,6 +177,10 @@ def bbsMongo():
     if command == 'install' and args.count() != 0:
         return mvm.doInstall(args.get().lower(), options)
 
+    # Removes a local and non-activated mongodb version
+    if command == 'remove' and args.count() != 0:
+        return mvm.doRemove(args.get().lower(), options)
+
     # Starts a specified mongo version in user space
     if command == 'start' and args.count() != 0:
         return mvm.doStart(args.get().lower(), args.get('27017').lower(), options)
@@ -185,11 +189,18 @@ def bbsMongo():
     if command == 'stop' and args.count() != 0:
         return mvm.doStop(args.get().lower(), options)
 
+    # Stopps a specified mongo version thats run in user space
+    if command == 'ls':
+        return mvm.doList()
+
+    # Stopps a specified mongo version thats run in user space
+    if command == 'use' and args.count() != 0:
+        return mvm.doChange(args.get().lower())
 
     # Reset, de-register node.js
-    # if command == 'reset':
-        # print('Unregister Node.js...')
-        # return nvm.resetNode()
+    if command == 'reset':
+        print('Unregister MongoDB...')
+        # return mvm.doReset()
 
     # No Command found, show Help
     bbsMongoHelp()

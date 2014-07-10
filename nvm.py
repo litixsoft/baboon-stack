@@ -230,7 +230,7 @@ def getRemoteNodeVersion(nodeversion, options):
         return True
 
 # Retrives local available Node Versions
-def getLocalNodeVersionList(filter = ''):
+def getLocalNodeVersionList(filter=''):
     srcNodeList = os.listdir(lxNodePath)
     tarNodeList = []
 
@@ -238,7 +238,7 @@ def getLocalNodeVersionList(filter = ''):
     for entry in srcNodeList:
         if getIfNodeVersionFormat(entry):
             # If filter, then MUST match
-            if filter != '' and regex.match(filter + '.*', entry) == None:
+            if filter and regex.match(filter + '.*', entry) is None:
                 continue
 
             tarNodeList.append(entry)

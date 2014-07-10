@@ -8,11 +8,10 @@
 # Copyright:   (c) Litixsoft GmbH 2014
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
-#from distutils.version import StrictVersion
+from distutils.version import StrictVersion
 import re as regex
 import subprocess
 import tempfile
-import signal
 import sys
 import os
 
@@ -77,6 +76,25 @@ def getActiveMongoVersion():
     except Exception as e:
         print('ERROR: ', e)
         return ''
+
+
+# Retrives local available Mongo Versions
+def getLocalMongoVersionList(filter=''):
+    srcMongoList = os.listdir(mongobasedir)
+    tarMongoList = []
+
+    # Filter the non confirm Versions :D
+    for entry in srcMongoList:
+        if getIfMongoVersionFormat(entry):
+            # If filter, then MUST match
+            if filter and regex.match(filter + '.*', entry) is None:
+                continue
+
+            tarMongoList.append(entry)
+
+    # Sort list FROM oldest Version TO newer Version
+    tarMongoList.sort(key=StrictVersion)
+    return tarMongoList
 
 
 def resetMongo():
@@ -201,22 +219,43 @@ def doInstall(version, options):
     print('Move files...')
 
     # Create target directory
-    os.makedirs(fullmongodir)
+    if not os.path.exists(fullmongodir):
+        os.makedirs(fullmongodir)
+
+    fileslist = []
 
     # Move helper files
-    lxtools.moveDirectory(hlppath, fullmongodir)
+    fileslist += lxtools.moveDirectory(hlppath, fullmongodir)
 
     # Move *all* directories to target directory
     dir_moved = False
     for name in os.listdir(pkgpath):
         if os.path.isdir(os.path.join(pkgpath, name)):
-            lxtools.moveDirectory(os.path.join(pkgpath, name), fullmongodir)
+            fileslist += lxtools.moveDirectory(os.path.join(pkgpath, name), fullmongodir)
             dir_moved = True
 
     if not dir_moved:
         print('Sorry, no files from binary archive was moved!')
         return
 
+    # Save filelist as files.lst
+    if len(fileslist) != 0:
+        lstname = os.path.join(fullmongodir, 'files.lst')
+
+        try:
+            fileslst = open(lstname, 'w')
+            fileslst.write('\n'.join(fileslist))
+            fileslst.close()
+        except BaseException as e:
+            print('Error while saving files.lst!')
+            print(e)
+
+    # Clen up
+    print('Clean up...')
+    lxtools.rmDirectory(pkgpath)
+    lxtools.rmDirectory(hlppath)
+
+    # Done
     print('Done...')
 
     # User want to not switch
@@ -232,25 +271,99 @@ def doInstall(version, options):
         doChange(version)
 
 
-def doRemove(version):
-    # activeVersion = getLocalMongoVersion()
-    #
-    # # Admin required
-    # if not lxtools.getIfAdmin():
-    #     print(config.getMessage('REQUIREADMIN'))
-    #     return
-    #
-    # # Version already active
-    # if activeVersion == version:
-    #     print('Version already active.')
-    #     return
-    #
-    # # If version locally available
-    # if not getIfMongoVersionInstalled(version):
-    #     print('Version NOT installed locally.')
-    #     return
+def doRemove(version, options):
+    activeVersion = getActiveMongoVersion()
 
+    # Admin required
+    if not lxtools.getIfAdmin():
+        print(config.getMessage('REQUIREADMIN'))
+        return
+
+    # Version already active
+    if activeVersion == version:
+        print('Currently activated version can not be removed.')
+        return
+
+    # If version locally available
+    if not getIfMongoVersionAvailable(version):
+        print('A non-installed version can not be removed. Since there is no magic.')
+        return
+
+    mongodir = os.path.join(mongobasedir, version)
+    lstname = os.path.join(mongodir, 'files.lst')
+
+    # Load files.lst, if exists
+    if os.path.exists(lstname):
+        dir_filelist = ['files.lst']
+        try:
+            fileslst = open(lstname, 'r')
+            for line in fileslst.readlines():
+                dir_filelist.append(line.rstrip('\n'))
+            fileslst.close()
+        except BaseException as e:
+            print('Error while saving filelist!')
+            print(e)
+    else:
+        dir_filelist = []
+
+    #
+    saferemove = None
+
+    if 'safe' in options:
+        saferemove = True
+
+    if 'force' in options:
+        saferemove = False
+
+    # If no safe or force options choosen, then ask user
+    if saferemove is None:
+        saferemove = (lxtools.readkey('Would you like to remove database/log files?', 'yN') == 'y')
+
+    # Has files?
+    if len(dir_filelist) != 0:
+        # Remove every file from directory and marks directories
+        print('Remove files...')
+        lxtools.removeFilesFromList(mongodir, dir_filelist, saferemove)
+
+    print('Removed...')
     pass
+
+
+def doList():
+    activeversion = getActiveMongoVersion()
+    versions = getLocalMongoVersionList()
+
+    print('Local available MongoDB Versions:\n')
+
+    # Prints sorted list
+    for version in versions:
+        if activeversion and activeversion == version:
+            print(' * {0}'.format(version))
+        else:
+            print('   {0}'.format(version))
+
+
+def doReset():
+    activeVersion = getActiveMongoVersion()
+
+    # Admin required
+    if not lxtools.getIfAdmin():
+        print(config.getMessage('REQUIREADMIN'))
+        return
+
+    # If folder exits but not an symlink, then abort
+    if activeVersion is False:
+        print('ERROR: Folder is not a symlink.')
+        return
+
+    # if version already set, then deactivate
+    if activeVersion != '':
+        print('Deactivate Mongo v' + activeVersion)
+        pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
+        package.runScript(pkginfo, ['remove', 'safe', 'hidden'])
+
+        if not resetMongo():
+            return
 
 
 def doChange(version):
@@ -276,17 +389,24 @@ def doChange(version):
         print('Version not available locally.')
         return
 
-    # Mongo dir
-    mongodir = os.path.join(mongobasedir, version)
+    # Check if selected version currently activ in pidlist
+    pidfile = 'mongo-' + version + '.pids'
+    pidlist = lxtools.loadFileFromUserSettings(pidfile, returntype=[])
+
+    if len(pidlist) != 0:
+        # Get a list with active pids from a list with pids
+        alive = lxtools.getActiveProcessFromPidList(pidlist)
+
+        if len(alive) != 0:
+            print('Version is in use and can not be registered as a service.')
+            return False
 
     # if version already set, then deactivate
     if activeVersion != '':
-        print('Deactivate Mongo v' + activeVersion)
-        pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
-        package.runScript(pkginfo, ['remove', 'safe', 'hidden'])
+        doReset()
 
-        if not resetMongo():
-            return
+    # Mongo dir
+    mongodir = os.path.join(mongobasedir, version)
 
     # Create Symlink
     print('Activate Mongo v' + version)
@@ -320,30 +440,37 @@ def doStart(version, port, options):
         '--port',
         port,
         '--dbpath',
-        os.path.join(mongodir, 'db')
+        os.path.join(mongodir, 'db'),
+        '--logpath',
+        os.path.join(mongodir, 'log', 'db.log')
     ]
 
-    print('Start Mongo v' + version + '...\n')
-    print('*** Please wait for 5 second(s) to validate success ***\n')
+    print('Start Mongo v' + version + '...')
+    print('*** Please wait for 5 second(s) to validate success ***')
+
+    if sys.platform == 'win32':
+        creationflags = 0
+    else:
+        creationflags = 0
 
     # Start Mongo process
     mongoprocess = subprocess.Popen(
         args,
         cwd=mongodir,
-        # stdout=subprocess.DEVNULL,
-        # stderr=subprocess.DEVNULL,
-        # creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=creationflags
     )
+
+    # # Update Output
+    # mongoprocess.stdout = subprocess.PIPE
+    # mongoprocess.stderr = subprocess.PIPE
 
     # Wait for response for 3 seconds, to validate success
     try:
         mongoprocess.communicate(timeout=3)
     except subprocess.TimeoutExpired:
         print('\nProcess successfully launched, PID #' + str(mongoprocess.pid))
-
-        # Update Output
-        mongoprocess.stdout=subprocess
-        mongoprocess.stderr=subprocess
 
         # Save pid to file
         if str(mongoprocess.pid) not in pidlist:
@@ -363,14 +490,10 @@ def doStop(version, options):
     pidfile = 'mongo-' + version + '.pids'
     pidlist = lxtools.loadFileFromUserSettings(pidfile, returntype=[])
 
-    # mongodir = os.path.join(mongobasedir, version)
-    # mongodaemon = os.path.join(mongodir, config.getConfigKey('mongo.binary.mongod'))
+    # Get a list with active pids from a list with pids
+    alive = lxtools.getActiveProcessFromPidList(pidlist)
 
-    alive = []
-    for pid in pidlist:
-        if lxtools.checkIfPidExists(int(pid)):
-            alive.append(pid)
-
+    # Send to all active processes exit signal
     if len(alive) != 0:
         if len(alive) > 1:
             if 'force' not in options:
@@ -383,12 +506,12 @@ def doStop(version, options):
         pidlist = alive
 
         for pid in alive:
-            print('Sending CTRL+C Event to #' + pid)
-            try:
-                os.kill(int(pid), signal.CTRL_C_EVENT)
-                pidlist.remove(pid)
-            except OSError as e:
-                print('\n***', e, '***\n')
+            if lxtools.killProcess(int(pid)):
+                print('Pid #' + pid + ' successfully killed')
+            else:
+                print('ERROR: Pid #' + pid + ' could not be killed')
+    else:
+        print('No active processes found...')
 
     # Save list
     lxtools.saveFileToUserSettings(pidfile, pidlist)
