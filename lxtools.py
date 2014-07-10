@@ -163,6 +163,7 @@ def removeFilesFromList(basedir, filelist, saferemove=True):
         else:
             # Remove directory with all files if not safe remove
             if not saferemove:
+                print('Remove ewewwewe')
                 rmDirectory(basedir)
 
 # Returns the SHA1 Checksum of specified File

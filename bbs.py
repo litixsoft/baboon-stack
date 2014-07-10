@@ -161,6 +161,12 @@ def bbsMongoHelp():
     print('    bbs mongo start [version] [port] Start Mongo')
     print('    bbs mongo stop [version]         Stop Mongo\n')
     print('Example:\n')
+    print('    bbs mongo install 2.4.10         Install 2.4.10 and switch')
+    print('    bbs mongo install 2.4.10 -ns     Install 2.4.10 and explicit dont switch')
+    print('    bbs mongo use 2.4.9              Switch to installed version 2.4.9')
+    print('    bbs mongo remove 2.4.10          Removes the specific version from System')
+    print('    bbs mongo start 2.6.2 27020      Start MongoDB 2.6.2 on port 27020')
+    print('    bbs mongo stop 2.6.2             Stops all MongoDB 2.6.2 Servers in Userspace\n')
     pass
 
 

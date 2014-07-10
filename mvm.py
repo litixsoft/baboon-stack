@@ -317,7 +317,9 @@ def doRemove(version, options):
 
     # If no safe or force options choosen, then ask user
     if saferemove is None:
-        saferemove = (lxtools.readkey('Would you like to remove database/log files?', 'yN') == 'y')
+        saferemove = (
+            lxtools.readkey('Would you like to remove *ALL* files? Includes database/log files/etc', 'yN') != 'y'
+        )
 
     # Has files?
     if len(dir_filelist) != 0:
@@ -426,7 +428,7 @@ def doStart(version, port, options):
         return
 
     pidfile = 'mongo-' + version + '.pids'
-    pidlist = lxtools.loadFileFromUserSettings(pidfile, returntype=[])
+    pidlist = lxtools.loadFileFromUserSettings(pidfile, False, returntype=[])
 
     mongodir = os.path.join(mongobasedir, version)
     mongodaemon = os.path.join(mongodir, config.getConfigKey('mongo.binary.mongod'))
