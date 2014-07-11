@@ -124,6 +124,8 @@ def resetMongo():
     return True
 
 
+# Performs a upgrade from Older version
+# Returns TRUE if Upgrade successfully performed, FALSE is Upgrade required but abortet and NONE no upgrade required
 def doUpgrade():
     if os.path.isdir(mongosymlink) and not lxtools.getIfSymbolicLink(mongosymlink):
         # Upgrade
@@ -132,7 +134,7 @@ def doUpgrade():
         # Check if admin
         if not lxtools.getIfAdmin():
             print(config.getMessage('REQUIREADMIN'))
-            return
+            return False
 
         # Load package file
         pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
@@ -159,6 +161,9 @@ def doUpgrade():
         package.runScript(pkginfo, ['install', 'hidden'])
 
         print('Done')
+        return True
+    else:
+        return None
 
 
 def doInstall(version, options):

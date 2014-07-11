@@ -314,8 +314,8 @@ def getIfNodeModuleEnabled():
 
 # Returns if Mongo installed, Checks path only
 def getIfMongoModuleEnabled():
-    mongoPath = os.path.join(getBaboonStackDirectory(), 'mongodb')
-    return os.path.exists(mongoPath)
+    bbsPath = getBaboonStackDirectory()
+    return os.path.exists(os.path.join(bbsPath, 'mongo')) or os.path.exists(os.path.join(bbsPath, 'mongodb'))
 
 
 # Returns if Redis installed, Checks path only
