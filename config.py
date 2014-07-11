@@ -60,6 +60,31 @@ lxInfo = {
             'binary': {
                 'mongod': 'bin/mongod',
                 'mongo': 'bin/mongo',
+            },
+            'links': {
+                'mongo': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'mongod': {
+                    'source': '/usr/bin',
+                    'target': '/usr/bin'
+                }
+            },
+            'patches': {
+                'lxscript.sh': {
+                    'sha1': '0f62a076df48a928f14b268270c90992ebb16405',
+                    'action': [
+                        {
+                            'line': 76,
+                            'action': 'remove'
+                        },
+                        {
+                            'line': 77,
+                            'action': 'remove'
+                        }
+                    ]
+                }
             }
         },
         'messages': {
@@ -109,6 +134,32 @@ lxInfo = {
             'binary': {
                 'mongod': 'bin/mongod',
                 'mongo': 'bin/mongo',
+            },
+            'links': {
+                'mongo': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'mongod': {
+                    'source': '/usr/bin',
+                    'target': '/usr/bin'
+                }
+
+            },
+            'patches': {
+                'lxscript.sh': {
+                    'sha1': '0f62a076df48a928f14b268270c90992ebb16405',
+                    'action': [
+                        {
+                            'line': 77,
+                            'action': 'remove'
+                        },
+                        {
+                            'line': 78,
+                            'action': 'remove'
+                        }
+                    ]
+                }
             }
         },
         'messages': {
@@ -216,10 +267,10 @@ def getConfigKey(key, defaultvalue=None, data=lxConfig):
             else:
                 return keydata[keyname]
         else:
-            if not defaultvalue:
-                raise Exception('No Key "' + keyname + '" in "' + key + '"...')
-            else:
-                return defaultvalue
+            # if not defaultvalue:
+            #     raise Exception('No Key "' + keyname + '" in "' + key + '"...')
+            # else:
+            return defaultvalue
 
     return keydata
 

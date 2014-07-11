@@ -19,6 +19,7 @@ import os
 import config
 import lxtools
 import package
+import patch
 
 # Global
 mongosymlink = os.path.join(lxtools.getBaboonStackDirectory(), 'mongo')
@@ -140,9 +141,22 @@ def doUpgrade():
         pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
         mongoversion = pkginfo.get('version', None)
 
+        # Execute Patches
+        patches = config.getConfigKey('mongo.patches', None)
+        patch.doPatch(mongosymlink, patches)
+
         # Stop Service/Daemon and de-register Service/Daemon, safe-remove
         print('Stop Service/Daemon...')
         package.runScript(pkginfo, ['remove', 'safe', 'hidden'])
+
+        # Check if *all* symbolic links removed, when not remove it
+        symlinks = config.getConfigKey('mongo.links', {})
+        if symlinks:
+            for names in symlinks:
+                target = symlinks[names]['target']
+
+                if os.path.exists(target) and lxtools.getIfSymbolicLink(target):
+                    os.remove(target)
 
         # Move Directory to mongodb/{version}/
         print('Move files...')
@@ -372,6 +386,15 @@ def doReset():
         pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
         package.runScript(pkginfo, ['remove', 'safe', 'hidden'])
 
+        # Check if *all* symbolic links removed, when not remove it
+        symlinks = config.getConfigKey('mongo.links', None)
+        if symlinks:
+            for names in symlinks:
+                target = symlinks[names]['target']
+
+                if os.path.exists(target) and lxtools.getIfSymbolicLink(target):
+                    os.remove(target)
+
         if not resetMongo():
             return
 
@@ -425,6 +448,17 @@ def doChange(version):
     # Start Daemon/Service
     pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
     package.runScript(pkginfo, ['install', 'hidden'])
+
+    # Check if *all* symbolic links successfully linked
+    symlinks = config.getConfigKey('mongo.links', None)
+
+    for names in symlinks:
+        source = os.path.join(mongosymlink, symlinks[names]['source'])
+        target = os.path.join(symlinks[names]['target'], names)
+
+        # Link
+        if not lxtools.setDirectoryLink(target, source):
+            raise Exception('Link creation failed!\n' + source + ' => ' + target)
 
     print('Done, nice!')
     pass
