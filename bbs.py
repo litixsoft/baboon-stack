@@ -171,7 +171,8 @@ def bbsMongoHelp():
 
 
 def bbsMongo():
-    mvm.doUpgrade()
+    if mvm.doUpgrade() is not None:
+        return
 
     if args.count() == 0:
         bbsMongoHelp()
