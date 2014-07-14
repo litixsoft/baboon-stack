@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
-# Name:        BaboonStack
-# Purpose:
+# Name:        bbs
+# Purpose:     Baboonstack Main Application
 #
 # Author:      Thomas Scheibe
 #
 # Created:     31.07.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     MIT
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 # Litixsoft Modules
 import package
@@ -154,19 +154,19 @@ def bbsNode():
 
 def bbsMongoHelp():
     print('Usage:\n')
-    print('    bbs mongo install [version]      Install a specific version number')
-    print('    bbs mongo remove [version]       Removes a specific version number')
-    print('    bbs mongo use [version]          Install specified version as Service')
-    print('    bbs mongo ls                     List installed mongo versions')
-    print('    bbs mongo start [version] [port] Start Mongo')
-    print('    bbs mongo stop [version]         Stop Mongo\n')
+    print('    bbs mongo install [version]                 Install a specific version number')
+    print('    bbs mongo remove [version]                  Removes a specific version number')
+    print('    bbs mongo use [version]                     Install specified version as Service')
+    print('    bbs mongo ls                                List installed mongo versions')
+    print('    bbs mongo start [version] [[port]] [[path]] Start Mongo')
+    print('    bbs mongo stop [version]                    Stop Mongo\n')
     print('Example:\n')
-    print('    bbs mongo install 2.4.10         Install 2.4.10 and switch')
-    print('    bbs mongo install 2.4.10 -ns     Install 2.4.10 and explicit dont switch')
-    print('    bbs mongo use 2.4.9              Switch to installed version 2.4.9')
-    print('    bbs mongo remove 2.4.10          Removes the specific version from System')
-    print('    bbs mongo start 2.6.2 27020      Start MongoDB 2.6.2 on port 27020')
-    print('    bbs mongo stop 2.6.2             Stops all MongoDB 2.6.2 Servers in Userspace\n')
+    print('    bbs mongo install 2.4.10                    Install 2.4.10 and switch')
+    print('    bbs mongo install 2.4.10 -ns                Install 2.4.10 and explicit dont switch')
+    print('    bbs mongo use 2.4.9                         Switch to installed version 2.4.9')
+    print('    bbs mongo remove 2.4.10                     Removes the specific version from System')
+    print('    bbs mongo start 2.6.2 27020                 Start MongoDB 2.6.2 on port 27020')
+    print('    bbs mongo stop 2.6.2                        Stops all MongoDB 2.6.2 Servers in Userspace\n')
     pass
 
 
@@ -192,7 +192,7 @@ def bbsMongo():
 
     # Starts a specified mongo version in user space
     if command == 'start' and args.count() != 0:
-        return mvm.doStart(args.get().lower(), args.get('27017').lower(), options)
+        return mvm.doStart(args.get().lower(), args.get('27017').lower(), args.get(None), options)
 
     # Stopps a specified mongo version thats run in user space
     if command == 'stop' and args.count() != 0:

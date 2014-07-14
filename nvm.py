@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        nvm
-# Purpose:
+# Purpose:     NodeJS Version Manager
 #
 # Author:      Thomas Scheibe
 #
 # Created:     01.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 from distutils.version import StrictVersion
 import re as regex

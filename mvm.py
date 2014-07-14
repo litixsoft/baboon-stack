@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        mvm
-# Purpose:
+# Purpose:     MongoDB Version Manager
 #
 # Author:      Thomas Scheibe
 #
 # Created:     30.06.2014
 # Copyright:   (c) Litixsoft GmbH 2014
-# Licence:     <your licence>
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 from distutils.version import StrictVersion
 import re as regex
@@ -464,10 +464,12 @@ def doChange(version):
     pass
 
 
-def doStart(version, port, options):
+def doStart(version, port, path, options):
     if not getIfMongoVersionAvailable(version):
         print('Version not available locally.')
         return
+
+    print('Start MongoDB Instance v' + version + '...')
 
     pidfile = 'mongo-' + version + '.pids'
     pidlist = lxtools.loadFileFromUserSettings(pidfile, False, returntype=[])
@@ -475,18 +477,38 @@ def doStart(version, port, options):
     mongodir = os.path.join(mongobasedir, version)
     mongodaemon = os.path.join(mongodir, config.getConfigKey('mongo.binary.mongod'))
 
+    # Check if binary exists
     if not os.path.isfile(mongodaemon):
         print('Mongo daemon binary not found.')
         return
+
+    # Check if alternate working directory choosen
+    if path is not None:
+        print('Use alternate DB/Log Folder:', path)
+        mongodatadir = path
+    else:
+        mongodatadir = mongodir
+
+    # Create db and log folder if not exists
+    try:
+        if not os.path.exists(os.path.join(mongodatadir, 'db')):
+            os.makedirs(os.path.join(mongodatadir, 'db'))
+
+        if not os.path.exists(os.path.join(mongodatadir, 'log')):
+            os.makedirs(os.path.join(mongodatadir, 'log'))
+    except IOError as e:
+        print('ERROR:', e)
+        print('Abort and exit!')
+        return False
 
     args = [
         mongodaemon,
         '--port',
         port,
         '--dbpath',
-        os.path.join(mongodir, 'db'),
+        os.path.join(mongodatadir, 'db'),
         '--logpath',
-        os.path.join(mongodir, 'log', 'db.log')
+        os.path.join(mongodatadir, 'log', 'db.log')
     ]
 
     print('Start Mongo v' + version + '...')

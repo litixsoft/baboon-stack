@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        service
-# Purpose:
+# Purpose:     Helper for Windows specified services
 #
 # Author:      Thomas Scheibe
 #
 # Created:     05.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import subprocess
 import os

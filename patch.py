@@ -1,4 +1,13 @@
-__author__ = 'thomas'
+#-------------------------------------------------------------------------------
+# Name:        patch
+# Purpose:     Simple ascii file patch utility
+#
+# Author:      Thomas Scheibe
+#
+# Created:     11.07.2014
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
+#-------------------------------------------------------------------------------
 import os
 import lxtools
 

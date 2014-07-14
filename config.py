@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
-# Name:        version
-# Purpose:
+# Name:        config
+# Purpose:     Configuration for Baboonstack for different Platforms
 #
 # Author:      Thomas Scheibe
 #
-# Created:     05.08.2013
-# Copyright:   (c) Litixsoft GmbH 2013
-# Licence:     <your licence>
+# Created:     05.08.2018
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import sys
 import os
@@ -240,7 +240,7 @@ lxOptions = {
     'all': {
         'short': '-all',
         'long': '--all'
-    }
+   }
 }
 
 # Returns Program Information for the current Operation System

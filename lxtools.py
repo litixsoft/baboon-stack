@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        lxtools
-# Purpose:
+# Purpose:     Helper library for baboonstack
 #
 # Author:      Thomas Scheibe
 #
 # Created:     02.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import subprocess
 import tarfile
@@ -554,7 +554,7 @@ def moveDirectory(src, tar):
 
 def loadFileFromUserSettings(filename, showerrors=True, returntype=None):
     if not os.path.exists(config.lxUserSettingPath):
-        return None
+        return []
 
     data = returntype
     try:
@@ -591,6 +591,10 @@ def saveFileToUserSettings(filename, data, showerrors=True):
     except IOError:
         if showerrors:
             print('Error while write to ' + filename)
+    else:
+        # Get UserId and GroupId from homedir and change it
+        homedir_stat = os.stat(os.path.expanduser('~'))
+        chown(config.lxUserSettingPath, homedir_stat.st_uid, homedir_stat.st_gid)
 
 
 def getActiveProcessFromPidList(pidlist):
@@ -661,7 +665,7 @@ def killProcess(pid):
         import errno
 
         try:
-            os.kill(int(pid), signal.CTRL_C_EVENT)
+            os.kill(int(pid), signal.SIGTERM)
         except OSError as e:
             return e.errno == errno.EPERM
         else:

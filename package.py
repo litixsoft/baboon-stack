@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        package
-# Purpose:
+# Purpose:     Package Manager for Baboonstack
 #
 # Author:      Thomas Scheibe
 #
 # Created:     04.12.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import tempfile
 import re as regex

@@ -1,5 +1,5 @@
 # BABOONSTACK
-a Suite with Node.JS, MongoDB, RedisIO and a system-wide Node Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
+a Suite with Node.JS, MongoDB, RedisIO. Includes a system-wide Node Version Manager and MongoDB Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
 
 * Web site: http://www.litixsoft.de/products-baboonstack.html
 * Unix Installer: http://www.litixsoft.de/products-baboonstack.html#installwindows
@@ -50,7 +50,7 @@ Copy all content from **build/** to your **/baboonstack/bbs** folder. Include th
 [Litixsoft GmbH](http://www.litixsoft.de)
 
 #License
-Copyright (C) 2013 Litixsoft GmbH <info@litixsoft.de>
+Copyright (C) 2014 Litixsoft GmbH <info@litixsoft.de>
 Licensed under the MIT license.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
