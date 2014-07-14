@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        buildChecksum
-# Purpose:
+# Purpose:     Builds Checksum of files in specified folder
 #
 # Author:      Thomas Scheibe
 #
 # Created:     08.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import lxtools
 import sys
