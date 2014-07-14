@@ -22,6 +22,7 @@ if sys.platform.startswith('linux') or sys.platform == 'darwin':
 import config
 import lxtools
 
+
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion():
     # Download Filelist
@@ -42,6 +43,7 @@ def getLatestRemoteVersion():
 
     # Returns the LAST entry
     return versionList.pop()
+
 
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
@@ -65,8 +67,10 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return ''
 
+
 def doPackagesUpdate():
     pass
+
 
 # Check for Update
 def doUpdate():
@@ -153,7 +157,7 @@ def doUpdate():
             if os.path.exists(config.lxPackage):
                 os.rename(
                     os.path.join(lxtools.getBaboonStackDirectory(), config.lxPackage),
-                    os.path.join(lxtools.getBaboonStackDirectory(), config.lxPrevPackage)
+                    os.path.join(lxtools.getBaboonStackDirectory(), config.lxPreviousPackage)
                 )
 
             # Execute Update script

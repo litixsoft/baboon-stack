@@ -165,6 +165,7 @@ def removeFilesFromList(basedir, filelist, saferemove=True):
             if not saferemove:
                 rmDirectory(basedir)
 
+
 # Returns the SHA1 Checksum of specified File
 def getSHAChecksum(filename):
     sha = hashlib.sha1()
@@ -489,6 +490,7 @@ def chown(path, uid, gid):
             print('Unknow', itemname)
 
     return result
+
 
 # Extract archive file (source) to directory (target)
 # Zip and Tar Archives supported
