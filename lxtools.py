@@ -613,7 +613,7 @@ def getActiveProcessFromPidList(pidlist):
         PROCESS_TERMINATE = 0x0001
         PROCESS_QUERY_INFORMATION = 0x0400
 
-        processList = (ctypes.wintypes.DWORD * 4096)()
+        processList = ctypes.ARRAY(ctypes.wintypes.DWORD, 4096)
         processListSize = ctypes.sizeof(processList)
         sizeReturned = ctypes.wintypes.DWORD()
 
