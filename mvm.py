@@ -414,12 +414,12 @@ def doChange(version):
 
     # Version already active
     if activeVersion == version:
-        print('Version already active.')
+        print('Version', version, 'already active.')
         return
 
     # If version locally available
     if not getIfMongoVersionAvailable(version):
-        print('Version not available locally.')
+        print('Version', version, 'not available locally.')
         return
 
     # Check if selected version currently activ in pidlist
