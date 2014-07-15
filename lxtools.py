@@ -358,12 +358,11 @@ def readkey(prompt, keys='Yn'):
 def run(command, cwd=None, showoutput=True):
 
     if showoutput is True:
-        stdout = subprocess.STDOUT
+        stdout = None
     else:
         stdout = subprocess.DEVNULL
 
     result = subprocess.call(command, shell=True, cwd=cwd, stdout=stdout)
-    # result = os.system(command)
 
     if result != 0:
         print('\nError while execute "' + command + '"...')

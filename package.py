@@ -355,12 +355,12 @@ def getAvailableUpdates(local, remote):
 # Execute a Script Section Object
 def exec(cmd, cwd, showoutput=True):
     if isinstance(cmd, str):
-        return lxtools.run(cmd, str, showoutput)
+        return lxtools.run(cmd, cwd, showoutput)
 
     if isinstance(cmd, dict) and cmd.get('cmd', None) is not None:
-
         # If user confirm defined, then ask him
         if cmd.get('confirm') is True:
+            print('\n')
             key = lxtools.readkey(
                 cmd.get('text', 'Do you want to execute "' + cmd.get('cmd') + '"?')
             )
@@ -975,6 +975,7 @@ def update(pkgname, options=list()):
         return False
 
     return True
+
 
 # Upgrade local catalog file
 def upgrade():
