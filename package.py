@@ -535,7 +535,7 @@ def install(pkgname, options=list()):
         lxtools.getOsArchitecture()
     )
 
-    # print('Source:', pkgdata.get('source', '<unknow>'))
+    print('Source:', pkgdata.get('source', '<unknow>'))
 
     # Get catalog info
     if pkgdata['source'] == 'catalog':
@@ -553,7 +553,7 @@ def install(pkgname, options=list()):
         if key == 'n':
             return False
 
-    # Download require
+    # If Download require
     if pkginfo.get('nodownload', False) is True:
         # No Download require, then create dir and exit
         basedir = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
