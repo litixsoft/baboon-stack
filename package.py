@@ -373,6 +373,7 @@ def exec(cmd, cwd, showoutput=True):
     # Someting goes wrong
     return False
 
+
 # Run system specified script
 def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
