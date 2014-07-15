@@ -519,7 +519,7 @@ def install(pkgname, options=list()):
         print('Unknow Package "' + pkgname + '"...')
         return False
 
-    pkginfo = {}
+    # pkginfo = {}
 
     # Collect pkginfo and if package already installed
     if pkgname in localcatalog:
@@ -538,8 +538,8 @@ def install(pkgname, options=list()):
     print('Source:', pkgdata.get('source', '<unknow>'))
 
     # Get catalog info
-    if pkgdata['source'] == 'catalog':
-        pkginfo = pkgdata.get('info', {})
+    # if pkgdata['source'] == 'catalog':
+    pkginfo = pkgdata.get('info', {})
 
     # Check if admin
     if not lxtools.getIfAdmin():
