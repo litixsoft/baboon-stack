@@ -71,11 +71,7 @@ def getActiveMongoVersion():
         # Read symbolic Link
         path = os.readlink(mongosymlink)
 
-        # Remove bin/node. Only for non win32 platforms
-        if sys.platform != 'win32':
-            path = path.rsplit(os.sep, 2)[0]
-
-        # Splits the Seperator and Returns the last Pathname (nodeversion)
+        # Splits the Seperator and Returns the last Pathname (mongoversion)
         return path.rsplit(os.sep).pop()
     except Exception as e:
         print('ERROR:', e)
@@ -370,6 +366,11 @@ def doList():
 def doReset():
     activeVersion = getActiveMongoVersion()
 
+    # if not a version activated, then abort
+    if activeVersion == '':
+        print('No currently activated MongoDB Version')
+        return
+
     # Admin required
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
@@ -380,23 +381,23 @@ def doReset():
         print('ERROR: Folder is not a symlink.')
         return
 
-    # if version already set, then deactivate
-    if activeVersion != '':
-        print('Deactivate Mongo v' + activeVersion)
-        pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
-        package.runScript(pkginfo, ['remove', 'safe', 'hidden'])
+    print('Deactivate MongoDB v' + activeVersion)
 
-        # Check if *all* symbolic links removed, when not remove it
-        symlinks = config.getConfigKey('mongo.links', None)
-        if symlinks:
-            for names in symlinks:
-                target = symlinks[names]['target']
+    # Run Script file
+    pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
+    package.runScript(pkginfo, ['remove', 'safe', 'hidden'])
 
-                if os.path.exists(target) and lxtools.getIfSymbolicLink(target):
-                    os.remove(target)
+    # Check if *all* symbolic links removed, when not remove it
+    symlinks = config.getConfigKey('mongo.links', None)
+    if symlinks:
+        for names in symlinks:
+            target = os.path.join(symlinks[names]['target'], names)
 
-        if not resetMongo():
-            return
+            if os.path.exists(target) and lxtools.getIfSymbolicLink(target):
+                os.remove(target)
+
+    if not resetMongo():
+        return
 
 
 def doChange(version):
@@ -445,22 +446,23 @@ def doChange(version):
     print('Activate Mongo v' + version)
     lxtools.setDirectoryLink(mongosymlink, mongodir)
 
-    # Start Daemon/Service
+    # Run Script file
     pkginfo = lxtools.loadjson(os.path.join(mongosymlink, config.getConfigKey('configfile')))
     package.runScript(pkginfo, ['install', 'hidden'])
 
     # Check if *all* symbolic links successfully linked
     symlinks = config.getConfigKey('mongo.links', None)
 
+    print('Create symlinks...')
     for names in symlinks:
-        source = os.path.join(mongosymlink, symlinks[names]['source'])
+        source = os.path.join(mongosymlink, symlinks[names]['source'], names)
         target = os.path.join(symlinks[names]['target'], names)
 
         # Link
         if not lxtools.setDirectoryLink(target, source):
             raise Exception('Link creation failed!\n' + source + ' => ' + target)
 
-    print('Done, nice!')
+    print('\nDone, nice!')
     pass
 
 

@@ -154,7 +154,7 @@ def getIfDependenciesInstalled(pkginfo):
 
     # Check if dirname exists
     if pkginfo.get('dirname') is None:
-        print('ERROR: No ´dirname´ in description file...')
+        print('ERROR: No "dirname" in description file...')
         return False
 
     # Check dependencies, if set
@@ -353,7 +353,7 @@ def getAvailableUpdates(local, remote):
 
 
 # Execute a Script Section Object
-def exec(cmd, cwd, showoutput=True):
+def execute(cmd, cwd, showoutput=True):
     if isinstance(cmd, str):
         return lxtools.run(cmd, cwd, showoutput)
 
@@ -416,9 +416,9 @@ def runScript(pkginfo, scriptoption):
         # Now execute the script line or lines
         if isinstance(script, list):
             for item in script:
-                exec(item, packagedirectory, not hide_script_output)
+                execute(item, packagedirectory, not hide_script_output)
         elif isinstance(script, str) or isinstance(script, dict):
-            exec(script, packagedirectory, not hide_script_output)
+            execute(script, packagedirectory, not hide_script_output)
 
     return
 
@@ -715,7 +715,7 @@ def install(pkgname, options=list()):
 
         # Has dirname
         if not dirname:
-            print('ERROR: No ´dirname´ in description file...')
+            print('ERROR: No "dirname" in description file...')
             return False
 
         # Some file and directories will be include or exclude for removing
@@ -960,7 +960,7 @@ def update(pkgname, options=list()):
 
     # Update single package
     if pkgname not in updatelist:
-        print('No update for ´' + pkgname + '´ available.')
+        print('No update for .:' + pkgname + ':. available.')
         return False
 
     # Remove

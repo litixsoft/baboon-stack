@@ -362,6 +362,7 @@ def run(command, cwd=None, showoutput=True):
     else:
         stdout = subprocess.DEVNULL
 
+    print('Execute Command...')
     result = subprocess.call(command, shell=True, cwd=cwd, stdout=stdout)
 
     if result != 0:
