@@ -231,8 +231,9 @@ lxOptions = {
     'all': {
         'short': '-all',
         'long': '--all'
-   }
+    }
 }
+
 
 # Returns Program Information for the current Operation System
 # Returns empty object, if no Information available
@@ -245,6 +246,7 @@ def getConfig():
 
 # Programconfiguration
 lxConfig = getConfig()
+
 
 # Helper
 def getConfigKey(key, defaultvalue=None, data=lxConfig):
@@ -264,6 +266,7 @@ def getConfigKey(key, defaultvalue=None, data=lxConfig):
             return defaultvalue
 
     return keydata
+
 
 # Returns system specified messages
 def getMessage(key):

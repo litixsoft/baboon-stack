@@ -36,6 +36,7 @@ class Arguments:
 
         # Remove the first Argument
         self.__args.pop(0)
+        self.__argslist = self.__args.copy()
 
         # Remove options
         optlist = []
@@ -92,6 +93,12 @@ class Arguments:
 
     def isoption(self, name):
         return name in self.__options
+
+    def args(self, start=0, count=None):
+        if start > 0:
+            return self.__argslist[start - 1:count]
+        else:
+            return self.__argslist
 
 
 # Returns if x86 or x64

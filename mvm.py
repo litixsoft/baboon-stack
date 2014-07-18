@@ -466,7 +466,7 @@ def doChange(version):
     pass
 
 
-def doStart(version, port, path, options):
+def doStart(version, params):
     if not getIfMongoVersionAvailable(version):
         print('Version not available locally.')
         return
@@ -484,12 +484,7 @@ def doStart(version, port, path, options):
         print('Mongo daemon binary not found.')
         return
 
-    # Check if alternate working directory choosen
-    if path is not None:
-        print('Use alternate DB/Log Folder:', path)
-        mongodatadir = path
-    else:
-        mongodatadir = mongodir
+    mongodatadir = mongodir
 
     # Create db and log folder if not exists
     try:
@@ -505,29 +500,49 @@ def doStart(version, port, path, options):
 
     args = [
         mongodaemon,
-        '--port',
-        port,
-        '--dbpath',
-        os.path.join(mongodatadir, 'db'),
-        '--logpath',
-        os.path.join(mongodatadir, 'log', 'db.log')
     ]
 
-    print('Start Mongo v' + version + '...')
+    defaultargs = {
+        '--port': '27017',
+        '--dbpath': os.path.join(mongodatadir, 'db')
+        # '--logpath': os.path.join(mongodatadir, 'log', 'db.log')
+    }
+
+    if not isinstance(params, list):
+        params = []
+
+    # Lower case parameters
+    plist = []
+    for i in range(0, len(params) - 1):
+        if params[i][0] == '-':
+            plist.append(params[i].lower())
+
+    # Merge
+    args.extend(params)
+
+    # Fill with default values
+    for argv in defaultargs:
+        if argv not in plist:
+            print(' Add parameter:', argv, defaultargs[argv])
+            args.append(argv)
+            args.append(defaultargs[argv])
+
+    print('Start MongoDB v' + version + '...')
+    # print('Mongod parameters:', str(' ').join(args[1:]))
     print('*** Please wait for 5 second(s) to validate success ***')
 
-    if sys.platform == 'win32':
-        creationflags = 0
-    else:
-        creationflags = 0
+    # if sys.platform == 'win32':
+    #     creationflags = 0
+    # else:
+    #     creationflags = 0
 
     # Start Mongo process
     mongoprocess = subprocess.Popen(
         args,
         cwd=mongodir,
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        creationflags=creationflags
+        stderr=subprocess.DEVNULL
+        # creationflags=creationflags
     )
 
     # # Update Output
