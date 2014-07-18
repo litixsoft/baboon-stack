@@ -613,11 +613,11 @@ def getActiveProcessFromPidList(pidlist):
         PROCESS_TERMINATE = 0x0001
         PROCESS_QUERY_INFORMATION = 0x0400
 
-        processList = ctypes.ARRAY(ctypes.wintypes.DWORD, 4096)
+        processList = (ctypes.wintypes.DWORD * 4096)()
         processListSize = ctypes.sizeof(processList)
         sizeReturned = ctypes.wintypes.DWORD()
 
-        if EnumProcesses(ctypes.byref(processList), processListSize, ctypes.byref(sizeReturned)):
+        if EnumProcesses(processList, processListSize, ctypes.byref(sizeReturned)):
             for index in range(int(sizeReturned.value / ctypes.sizeof(ctypes.wintypes.DWORD))):
                 hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION, False, processList[index])
 
