@@ -69,14 +69,18 @@ lxInfo = {
             },
             'patches': {
                 'lxscript.sh': {
-                    'sha1': '0f62a076df48a928f14b268270c90992ebb16405',
+                    'sha1': '98a838e7fe75f906d318771c0bd3275a23e14c2a',
                     'action': [
                         {
-                            'line': 76,
+                            'line': 83,
                             'action': 'remove'
                         },
                         {
-                            'line': 77,
+                            'line': 84,
+                            'action': 'remove'
+                        },
+                        {
+                            'line': 85,
                             'action': 'remove'
                         }
                     ]
