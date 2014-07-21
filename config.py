@@ -57,6 +57,10 @@ lxInfo = {
                 'x64': 'http://packages.litixsoft.de/mongo-linux-x64.tar.gz',
                 'x86': 'http://packages.litixsoft.de/mongo-linux-x86.tar.gz'
             },
+            'binary': {
+                'mongod': 'bin/mongod',
+                'mongo': 'bin/mongo',
+            },
             'links': {
                 'mongo': {
                     'source': 'bin',
@@ -130,6 +134,10 @@ lxInfo = {
             },
             'helper': {
                 'x64': 'http://packages.litixsoft.de/mongo-darwin-x64.tar.gz'
+            },
+            'binary': {
+                'mongod': 'bin/mongod',
+                'mongo': 'bin/mongo',
             },
             'links': {
                 'mongo': {
