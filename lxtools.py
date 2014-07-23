@@ -313,6 +313,44 @@ def getBaboonStackDirectory():
     return os.path.dirname(os.getcwd())
 
 
+# Extract Path and Command from String
+def getCwdAndCmd(arg):
+    a = os.path.split(arg)
+
+    arg_cwd = a[0]
+    arg_cmd = a[1]
+
+    while arg_cwd:
+        sep_start = arg_cwd.find('%')
+
+        if sep_start == -1:
+            break
+
+        sep_end = arg_cwd.find('%', sep_start + 1)
+
+        if sep_end == -1:
+            break
+
+        sep_keyname = arg_cwd[sep_start + 1:sep_end]
+        sep_value = None
+
+        if sep_keyname.lower() == 'lxpath':
+            sep_value = getBaboonStackDirectory()
+
+        if sep_keyname.lower() == 'bbs':
+            sep_value = os.path.join(getBaboonStackDirectory(), 'bbs')
+
+        if not sep_value:
+            sep_value = os.getenv(sep_keyname)
+
+        if not sep_value:
+            sep_value = ""
+
+        arg_cwd = arg_cwd.replace(arg_cwd[sep_start:sep_end + 1], sep_value)
+
+    return arg_cwd, arg_cmd
+
+
 # Returns if NODE.JS Module (NVM/SERVICE) enabled
 # Checks only if %LXPATH%\node exits
 def getIfNodeModuleEnabled():
@@ -362,7 +400,11 @@ def readkey(prompt, keys='Yn'):
 
 
 # Execute a shell command and return True/False
-def run(command, cwd=None, showoutput=True):
+def run(command, workdir=None, showoutput=True):
+    cwd, cmd = getCwdAndCmd(command)
+
+    if not cwd:
+        cwd = workdir
 
     if showoutput is True:
         stdout = None
@@ -370,7 +412,7 @@ def run(command, cwd=None, showoutput=True):
         stdout = subprocess.DEVNULL
 
     print('Execute Command...')
-    result = subprocess.call(command, shell=True, cwd=cwd, stdout=stdout)
+    result = subprocess.call(cmd, shell=True, cwd=cwd, stdout=stdout)
 
     if result != 0:
         print('\nError while execute "' + command + '"...')
