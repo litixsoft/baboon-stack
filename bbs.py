@@ -1,12 +1,13 @@
+#!/usr/bin/env python3
 #-------------------------------------------------------------------------------
-# Name:        BaboonStack
-# Purpose:
+# Name:        bbs
+# Purpose:     Baboonstack Main Application
 #
 # Author:      Thomas Scheibe
 #
 # Created:     31.07.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     MIT
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 # Litixsoft Modules
 import package
@@ -16,6 +17,7 @@ import config
 import update
 import sys
 import nvm
+import mvm
 
 # Command Line
 args = lxtools.Arguments()
@@ -23,7 +25,7 @@ args = lxtools.Arguments()
 
 # Header, the only one
 def bbsHeader():
-    print('\nlxManager for BaboonStack - Litixsoft GmbH 2013\n')
+    print('\nlxManager for BaboonStack - Litixsoft GmbH 2014\n')
 
 
 # Prints the lxManager Version
@@ -46,8 +48,8 @@ def bbsHelp():
         print('    bbs service                       Service Module Controls for Node.JS')
 
     # Enable MONGO module only if MongoDB installed
-#    if lxtools.getIfMongoModuleEnabled():
-#        print('    bbs mongo                         Mongo Module Controls')
+    if lxtools.getIfMongoModuleEnabled():
+        print('    bbs mongo                         Mongo Module Controls')
 
     # Enable REDIS module only if RedisIO installed
 #    if lxtools.getIfRedisModuleEnabled():
@@ -103,9 +105,9 @@ def bbsNode():
         return nvm.setLocalNodeVersion(args.get().lower())
 
     # Switch to a local available Node.JS version; depreated
-    if command == 'switch' and args.count() != 0:
-        print('WARNING: Parameter "switch" is deprecated!')
-        return nvm.setLocalNodeVersion(args.get().lower())
+    # if command == 'switch' and args.count() != 0:
+    #     print('WARNING: Parameter "switch" is deprecated!')
+    #     return nvm.setLocalNodeVersion(args.get().lower())
 
     # Runs a specified Node.JS Version
     if command == 'run' and args.count() > 1:
@@ -147,6 +149,72 @@ def bbsNode():
 
     # No Command found, show Help
     bbsNodeHelp()
+
+# MongoDB Version Manager
+
+
+def bbsMongoHelp():
+    print('Usage:\n')
+    print('    bbs mongo install [version]                 Install a specific version number')
+    print('    bbs mongo remove [version]                  Removes a specific version number')
+    print('    bbs mongo use [version]                     Install specified version as Service')
+    print('    bbs mongo ls                                List installed mongo versions')
+    print('    bbs mongo start [version] [[params]]        Start MongoDB Instance')
+    print('    bbs mongo stop [version]                    Stop MongoDB Instance\n')
+    print('Example:\n')
+    print('    bbs mongo install 2.4.10                    Install 2.4.10 and switch')
+    print('    bbs mongo install 2.4.10 -ns                Install 2.4.10 and explicit dont switch')
+    print('    bbs mongo use 2.4.10                        Switch to installed version 2.4.9')
+    print('    bbs mongo start 2.4.10 --port 27080         Start a specified MongoDB Instance with mongo parameters')
+    print('    bbs mongo stop 2.4.10                       Stops all MongoDB 2.4.10 Servers in Userspace')
+    print('    bbs mongo remove 2.4.10                     Removes the specific version from System\n')
+    print('Notes:\n')
+    print('    For all MongoDB Daemon arguments, please see the mongodb documentation.')
+    pass
+
+
+def bbsMongo():
+    if mvm.doUpgrade() is not None:
+        return
+
+    if args.count() == 0:
+        bbsMongoHelp()
+        return
+
+    # Get First Command
+    command = args.get().lower()
+    options = args.getoptions()
+
+    # Download a specified Version from MongoDB remote Server and activated it locally
+    if command == 'install' and args.count() != 0:
+        return mvm.doInstall(args.get().lower(), options)
+
+    # Removes a local and non-activated mongodb version
+    if command == 'remove' and args.count() != 0:
+        return mvm.doRemove(args.get().lower(), options)
+
+    # Starts a specified mongo version in user space
+    if command == 'start' and args.count() != 0:
+        return mvm.doStart(args.get().lower(), args.args(4))
+
+    # Stopps a specified mongo version thats run in user space
+    if command == 'stop' and args.count() != 0:
+        return mvm.doStop(args.get().lower(), options)
+
+    # Stopps a specified mongo version thats run in user space
+    if command == 'ls':
+        return mvm.doList()
+
+    # Stopps a specified mongo version thats run in user space
+    if command == 'use' and args.count() != 0:
+        return mvm.doChange(args.get().lower())
+
+    # Reset, de-register node.js
+    if command == 'reset':
+        return mvm.doReset()
+
+    # No Command found, show Help
+    bbsMongoHelp()
 
 # Service Operations
 
@@ -251,6 +319,10 @@ def main():
     # Node.JS Module
     if moduleName == 'node' and lxtools.getIfNodeModuleEnabled():
         return bbsNode()
+
+    # Mongo Module
+    if moduleName == 'mongo' and lxtools.getIfMongoModuleEnabled():
+        return bbsMongo()
 
     # Service Module
     if moduleName == 'service' and lxtools.getIfNodeModuleEnabled():

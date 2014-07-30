@@ -24,7 +24,7 @@ case "$LXOS" in
     LXCURRPATH="$( dirname "$(readlink -f $0)" )"
     LXHOMEPATH="$( cd "$LXCURRPATH" ; cd .. ; pwd )"
     LXBINPATH="/bin"
-    LXLIBPATH="/lib"
+    LXLIBPATH="/usr/lib"
   ;;
 
   darwin )
@@ -80,6 +80,16 @@ if [ -h "$LXBINPATH/node" ]; then
   rm -f "$LXBINPATH/node"
 fi
 
+# Create /usr/lib/node_modules if not exist
+if [ ! -d "$LXLIBPATH/node_modules" ]; then
+  mkdir "$LXLIBPATH/node_modules"
+fi
+
+# Check if /usr/lib/node_modules/npm exists, then remove
+if [ -d "$LXLIBPATH/node_modules/npm" ]; then
+  rm -rf "$LXLIBPATH/node_modules/npm"
+fi
+
 # Link bbs
 if [ ! -h "$LXBINPATH/bbs" ]; then
   echo "Create ´bbs´ symlink..."
@@ -97,5 +107,4 @@ if [ -f "$LXHOMEPATH/bbs/$LXCATALOG" ]; then
 fi
 
 # Done
-echo "!!! Enter ´bbs package´ for package updates !!!"
-echo "Done..."
+echo -e "\033[32mSUCCESS: Enter ´bbs´ for package updates.\033[0m"

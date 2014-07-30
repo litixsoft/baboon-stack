@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        update
-# Purpose:
+# Purpose:     Baboonstack Self Update Manager
 #
 # Author:      Thomas Scheibe
 #
 # Created:     05.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import tempfile
 import re as regex
@@ -21,6 +21,7 @@ if sys.platform.startswith('linux') or sys.platform == 'darwin':
 # lxManager Modules
 import config
 import lxtools
+
 
 # Returns the LATEST available Version on Server
 def getLatestRemoteVersion():
@@ -42,6 +43,7 @@ def getLatestRemoteVersion():
 
     # Returns the LAST entry
     return versionList.pop()
+
 
 # Returns Checksum for specified file from Remote Checksumlist
 def getRemoteChecksum(filename):
@@ -65,8 +67,10 @@ def getRemoteChecksum(filename):
     # No checksum for this file, return empty string
     return ''
 
+
 def doPackagesUpdate():
     pass
+
 
 # Check for Update
 def doUpdate():
@@ -118,7 +122,7 @@ def doUpdate():
 
         # Check Checksum
         if (localChecksum == remoteChecksum):
-            print('Checksum are correct...')
+            print('Checksum correct...')
         else:
             print('Checksum missmatch... Abort!')
             print('Filename  ' + versionRemote)
@@ -153,7 +157,7 @@ def doUpdate():
             if os.path.exists(config.lxPackage):
                 os.rename(
                     os.path.join(lxtools.getBaboonStackDirectory(), config.lxPackage),
-                    os.path.join(lxtools.getBaboonStackDirectory(), config.lxPrevPackage)
+                    os.path.join(lxtools.getBaboonStackDirectory(), config.lxPreviousPackage)
                 )
 
             # Execute Update script
