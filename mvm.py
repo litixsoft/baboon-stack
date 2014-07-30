@@ -453,14 +453,15 @@ def doChange(version):
     # Check if *all* symbolic links successfully linked
     symlinks = config.getConfigKey('mongo.links', None)
 
-    print('Create symlinks...')
-    for names in symlinks:
-        source = os.path.join(mongosymlink, symlinks[names]['source'], names)
-        target = os.path.join(symlinks[names]['target'], names)
+    if symlinks is not None:
+        print('Create symlinks...')
+        for names in symlinks:
+            source = os.path.join(mongosymlink, symlinks[names]['source'], names)
+            target = os.path.join(symlinks[names]['target'], names)
 
-        # Link
-        if not lxtools.setDirectoryLink(target, source):
-            raise Exception('Link creation failed!\n' + source + ' => ' + target)
+            # Link
+            if not lxtools.setDirectoryLink(target, source):
+                raise Exception('Link creation failed!\n' + source + ' => ' + target)
 
     print('\nDone, nice!')
     pass
