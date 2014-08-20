@@ -11,7 +11,7 @@
 import sys
 import os
 
-lxVersion = '1.4.0'
+lxVersion = '1.4.1'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
 lxPreviousPackage = 'baboonstack.previous.package.conf'
