@@ -99,7 +99,7 @@ def getRemoteNodeVersion(nodeversion, options):
     # Check if admin
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # Check if version available on remote server
     print('Retrieve available version...')
@@ -123,7 +123,7 @@ def getRemoteNodeVersion(nodeversion, options):
     # Check if already installed
     if os.path.exists(targetDirectory):
         print('Version already installed.')
-        return
+        return False
 
     # Get the Os specified Node Remote Package
     remoteFilename = config.lxConfig['node']['package'][lxtools.getOsArchitecture()].format(nodeversion)
@@ -166,7 +166,7 @@ def getRemoteNodeVersion(nodeversion, options):
         print('Filename  ' + remoteFilename)
         print('Remote SHA' + remoteChecksum)
         print('Local  SHA' + localChecksum)
-        return
+        return False
 
     # Default temp Directory
     moveNodeDir = tempNodeDir
@@ -316,7 +316,7 @@ def setLocalNodeVersion(nodeversion):
     # No Version found
     if len(versionList) == 0:
         print('Sorry, no existing Node version {0} found locally.'.format(nodeversion))
-        return
+        return False
 
     # Get the last element from list
     nodeversion = versionList.pop()
@@ -445,7 +445,7 @@ def rmLocalNodeVersion(nodeversion):
     # Check if admin
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # Check if syntax correct
     if not getIfNodeVersionFormat(nodeversion):
@@ -482,7 +482,7 @@ def runSpecifiedNodeVersion(nodeversion, app, arg=''):
     # No Version found
     if len(versionList) == 0:
         print('Sorry, no existing Node version {0} found locally.'.format(nodeversion))
-        return
+        return False
 
     # Get the last element from list
     nodeversion = versionList.pop()

@@ -300,7 +300,7 @@ def bbsPackage(command):
 
     # Show Help
     bbsHelp()
-    return False
+    return
 
 
 # Update Operations
@@ -346,9 +346,9 @@ if __name__ == '__main__':
         bbsHeader()
 
     # Execute main() and catch all Exceptions
-    exitNormally = False
+    returncode = None
     try:
-        exitNormally = main()
+        returncode = main()
     except KeyboardInterrupt:
         print('Abort! Bye!')
     except Exception as e:
@@ -358,5 +358,14 @@ if __name__ == '__main__':
     if args.isoption('noheader') is False:
         print('')
 
-    if not exitNormally:
-        sys.exit(1)
+    if returncode is None:
+        sys.exit(0)
+
+    if isinstance(returncode, int):
+        sys.exit(returncode)
+
+    if isinstance(returncode, bool):
+        if returncode:
+            sys.exit(0)
+        else:
+            sys.exit(1)

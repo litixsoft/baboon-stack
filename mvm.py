@@ -182,17 +182,17 @@ def doInstall(version, options):
     # Check if correct version
     if not getIfMongoVersionFormat(version):
         print('The specified string is not a correct mongo version format.')
-        return
+        return False
 
     # Check if already installed
     if getIfMongoVersionAvailable(version):
         print('Version already installed, Abort!')
-        return
+        return False
 
     # Check if admin
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     fullmongodir = os.path.join(mongobasedir, version)
 
@@ -254,7 +254,7 @@ def doInstall(version, options):
 
     if not dir_moved:
         print('Sorry, no files from binary archive was moved!')
-        return
+        return False
 
     # Save filelist as files.lst
     if len(fileslist) != 0:
@@ -295,17 +295,17 @@ def doRemove(version, options):
     # Admin required
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # Version already active
     if activeVersion == version:
         print('Currently activated version can not be removed.')
-        return
+        return False
 
     # If version locally available
     if not getIfMongoVersionAvailable(version):
         print('A non-installed version can not be removed. Since there is no magic.')
-        return
+        return False
 
     mongodir = os.path.join(mongobasedir, version)
     lstname = os.path.join(mongodir, 'files.lst')
@@ -369,17 +369,17 @@ def doReset():
     # if not a version activated, then abort
     if activeVersion == '':
         print('No currently activated MongoDB Version')
-        return
+        return False
 
     # Admin required
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # If folder exits but not an symlink, then abort
     if activeVersion is False:
         print('ERROR: Folder is not a symlink.')
-        return
+        return False
 
     print('Deactivate MongoDB v' + activeVersion)
 
@@ -397,7 +397,7 @@ def doReset():
                 os.remove(target)
 
     if not resetMongo():
-        return
+        return False
 
 
 def doChange(version):
@@ -406,22 +406,22 @@ def doChange(version):
     # Admin required
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # If folder exits but not an symlink, then abort
     if activeVersion is False:
         print('ERROR: Folder is not a symlink.')
-        return
+        return False
 
     # Version already active
     if activeVersion == version:
         print('Version', version, 'already active.')
-        return
+        return False
 
     # If version locally available
     if not getIfMongoVersionAvailable(version):
         print('Version', version, 'not available locally.')
-        return
+        return False
 
     # Check if selected version currently activ in pidlist
     pidfile = 'mongo-' + version + '.pids'
@@ -470,7 +470,7 @@ def doChange(version):
 def doStart(version, params):
     if not getIfMongoVersionAvailable(version):
         print('Version not available locally.')
-        return
+        return False
 
     print('Start MongoDB Instance v' + version + '...')
 
@@ -483,7 +483,7 @@ def doStart(version, params):
     # Check if binary exists
     if not os.path.isfile(mongodaemon):
         print('Mongo daemon binary not found.')
-        return
+        return False
 
     mongodatadir = mongodir
 
@@ -562,6 +562,7 @@ def doStart(version, params):
             lxtools.saveFileToUserSettings(pidfile, pidlist)
     else:
         print('\nProcess exits, Mongo returns', mongoprocess.returncode)
+        return mongoprocess.returncode
 
     pass
 
@@ -569,7 +570,7 @@ def doStart(version, params):
 def doStop(version, options):
     if not getIfMongoVersionAvailable(version):
         print('Version not available locally.')
-        return
+        return False
 
     pidfile = 'mongo-' + version + '.pids'
     pidlist = lxtools.loadFileFromUserSettings(pidfile, returntype=[])
