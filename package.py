@@ -323,10 +323,11 @@ def getLocalCatalog(scanfolders=True):
                     continue
 
                 # if package infos already set, then merge data
-                if packagename in catalog and isinstance(catalog[packagename], BaboonStackPackage):
-                    catalog[packagename].loadPackage(packagefile)
-                else:
-                    catalog[packagename] = pkgdata
+                # if packagename in catalog and isinstance(catalog[packagename], BaboonStackPackage):
+                #     catalog[packagename].loadPackage(packagefile)
+                # else:
+                #     catalog[packagename] = pkgdata
+                catalog[packagename] = pkgdata
 
     return catalog
 
