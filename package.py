@@ -66,12 +66,16 @@ class BaboonStackPackage:
             'dependencies': self.__packagedata.get('dependencies', False)
         }
 
-    def loadPackage(self, filename):
+    def loadPackage(self, filename, mergedata=False):
         if os.path.isfile(filename):
             tmppkgdata = lxtools.loadjson(filename)
 
-            # Merge data
-            self.merge(tmppkgdata)
+            # Merge data or overwrite all
+            if mergedata:
+                self.merge(tmppkgdata)
+            else:
+                self.__packagedata = tmppkgdata
+                self.refresh()
 
     def merge(self, pkgdata):
         # Merge data
@@ -323,11 +327,10 @@ def getLocalCatalog(scanfolders=True):
                     continue
 
                 # if package infos already set, then merge data
-                # if packagename in catalog and isinstance(catalog[packagename], BaboonStackPackage):
-                #     catalog[packagename].loadPackage(packagefile)
-                # else:
-                #     catalog[packagename] = pkgdata
-                catalog[packagename] = pkgdata
+                if packagename in catalog and isinstance(catalog[packagename], BaboonStackPackage):
+                    catalog[packagename].loadPackage(packagefile, True)
+                else:
+                    catalog[packagename] = pkgdata
 
     return catalog
 
