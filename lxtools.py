@@ -401,10 +401,16 @@ def readkey(prompt, keys='Yn'):
 
 # Execute a shell command and return True/False
 def run(command, workdir=None, showoutput=True):
-    cwd, cmd = getCwdAndCmd(command)
+    # Unix required as command cwd AND cmd
+    # Windows accepts cmd and cwd seperatly
+    if sys.platform == 'win32':
+        cwd, cmd = getCwdAndCmd(command)
 
-    if not cwd:
+        if not cwd:
+            cwd = workdir
+    else:
         cwd = workdir
+        cmd = command
 
     if showoutput is True:
         stdout = None
