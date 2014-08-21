@@ -46,8 +46,8 @@ class BaboonStackPackage:
     def getIfInstalled(self):
         return self.__installed
 
-    def getVersion(self):
-        return self.__packagedata.get('version', '0.0.0')
+    def getVersion(self, defaultvalue='?.?.?'):
+        return self.__packagedata.get('version', defaultvalue)
 
     def getPackageName(self):
         return self.__name
@@ -67,9 +67,18 @@ class BaboonStackPackage:
         }
 
     def loadPackage(self, filename):
-            if os.path.isfile(filename):
-                self.__packagedata = lxtools.loadjson(filename)
-                self.refresh()
+        if os.path.isfile(filename):
+            tmppkgdata = lxtools.loadjson(filename)
+
+            # Merge data
+            self.merge(tmppkgdata)
+
+    def merge(self, pkgdata):
+        # Merge data
+        for keyname in pkgdata:
+            self.__packagedata[keyname] = pkgdata[keyname]
+
+        self.refresh()
 
     def refresh(self):
         rootdir = lxtools.getBaboonStackDirectory()
@@ -313,7 +322,11 @@ def getLocalCatalog(scanfolders=True):
                 if packagename is None or not pkgdata.getIfInstalled():
                     continue
 
-                catalog[packagename] = pkgdata
+                # if package infos already set, then merge data
+                if packagename in catalog and isinstance(catalog[packagename], BaboonStackPackage):
+                    catalog[packagename].loadPackage(packagefile)
+                else:
+                    catalog[packagename] = pkgdata
 
     return catalog
 
@@ -339,8 +352,12 @@ def getAvailableUpdates(local, remote):
 
     for packagename in local:
         if local[packagename].getIfInstalled() and packagename in remote:
-            localversion = local[packagename].getVersion()
+            localversion = local[packagename].getVersion(None)
             remoteversion = getLastVersion(remote[packagename])
+
+            # No fixed locally version. For MongoDB and Node
+            if localversion is None:
+                continue
 
             if StrictVersion(localversion) < StrictVersion(remoteversion):
                 updatelist[packagename] = {

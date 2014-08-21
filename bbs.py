@@ -269,6 +269,7 @@ def bbsPackage(command):
 
     # Do nothing, only for perform package upgrade
     if command == 'package':
+        print('Success...')
         return True
 
     # Use local catalog for installation/updates
