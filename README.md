@@ -1,9 +1,9 @@
 # BABOONSTACK
 a Suite with Node.JS, MongoDB, RedisIO and a system-wide Node Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
 
-* Web site: http://www.litixsoft.de/products-baboonstack.html
-* Unix Installer: http://www.litixsoft.de/products-baboonstack.html#installwindows
-* Windows Installer: http://www.litixsoft.de/products-baboonstack.html#installunix
+* Web site: http://www.litixsoft.de/baboonstack
+* Unix Installer: http://www.litixsoft.de/baboonstack#installwindows
+* Windows Installer: http://www.litixsoft.de/baboonstack#installunix
 
 #Install
 Download the build releases for windows, macos or linux based operation systems, or just build your own baboonstack manager client (see Build).
