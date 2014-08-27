@@ -10,9 +10,9 @@ Download the build releases for windows, macos or linux based operation systems,
 
 ##System requirements
 
-* Windows Visa/Seven/8
+* Windows Visa/7/8
 * Linux
-* MacOs X
+* MacOS X
 
 #Build Baboon Manager
 ##Requirements:
@@ -45,6 +45,35 @@ On Unix systems
 	./make.sh
 
 Copy all content from **build/** to your **/baboonstack/bbs** folder. Include the files from **packages/[version]/[os]/**
+
+# Versionhistory
+
+######v1.4.1
+* Bug fixes
+
+######v1.4.0
+* MongoDB version Manager
+* Bug fixes
+
+######v1.3.0
+* Advanced package management options
+
+######v1.2.0
+* MongoDB upgraded to 2.4.9
+* Integrated Package Manager
+
+######v1.1.2
+* Signed installer
+* Deselection of program components during installation
+
+######v1.1.1
+* Fix for incorrect handling of invalid Node.JS version formats
+
+######v1.1.0
+* New lxManager with the same features of the Unix version
+
+######v1.0.0
+* First Release
 
 # Author
 [Litixsoft GmbH](http://www.litixsoft.de)
