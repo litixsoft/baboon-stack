@@ -1,19 +1,21 @@
 #-------------------------------------------------------------------------------
-# Name:        version
-# Purpose:
+# Name:        config
+# Purpose:     Configuration for Baboonstack for different Platforms
 #
 # Author:      Thomas Scheibe
 #
-# Created:     05.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Created:     05.08.2018
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import sys
+import os
 
-lxVersion = '1.3.0'
+lxVersion = '1.4.1'
 lxServer = 'http://packages.litixsoft.de'
 lxPackage = 'baboonstack.package.conf'
 lxPreviousPackage = 'baboonstack.previous.package.conf'
+lxUserSettingPath = os.path.join(os.path.expanduser('~'), '.bbs')
 
 lxInfo = {
     'linux': {
@@ -43,6 +45,49 @@ lxInfo = {
                 'node_modules': {
                     'source': 'lib',
                     'target': '/usr/lib'
+                }
+            }
+        },
+        'mongo': {
+            'package': {
+                'x64': 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-{0}.tgz',
+                'x86': 'https://fastdl.mongodb.org/linux/mongodb-linux-i686-{0}.tgz'
+            },
+            'helper': {
+                'x64': 'http://packages.litixsoft.de/mongo-linux-x64.tar.gz',
+                'x86': 'http://packages.litixsoft.de/mongo-linux-x86.tar.gz'
+            },
+            'binary': {
+                'mongod': 'bin/mongod',
+                'mongo': 'bin/mongo',
+            },
+            'links': {
+                'mongo': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'mongod': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                }
+            },
+            'patches': {
+                'lxscript.sh': {
+                    'sha1': '98a838e7fe75f906d318771c0bd3275a23e14c2a',
+                    'action': [
+                        {
+                            'line': 83,
+                            'action': 'remove'
+                        },
+                        {
+                            'line': 84,
+                            'action': 'remove'
+                        },
+                        {
+                            'line': 85,
+                            'action': 'remove'
+                        }
+                    ]
                 }
             }
         },
@@ -83,6 +128,43 @@ lxInfo = {
                 }
             }
         },
+        'mongo': {
+            'package': {
+                'x64': 'https://fastdl.mongodb.org/osx/mongodb-osx-x86_64-{0}.tgz'
+            },
+            'helper': {
+                'x64': 'http://packages.litixsoft.de/mongo-darwin-x64.tar.gz'
+            },
+            'binary': {
+                'mongod': 'bin/mongod',
+                'mongo': 'bin/mongo',
+            },
+            'links': {
+                'mongo': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                },
+                'mongod': {
+                    'source': 'bin',
+                    'target': '/usr/bin'
+                }
+            },
+            'patches': {
+                'lxscript.sh': {
+                    'sha1': '0f62a076df48a928f14b268270c90992ebb16405',
+                    'action': [
+                        {
+                            'line': 77,
+                            'action': 'remove'
+                        },
+                        {
+                            'line': 78,
+                            'action': 'remove'
+                        }
+                    ]
+                }
+            }
+        },
         'messages': {
             'ADMINNAME': 'super user',
             'REQUIREADMIN': 'This operation required super user rights!'
@@ -102,6 +184,20 @@ lxInfo = {
                 'x64': 'x64/node-v{0}-x64.msi'
             },
             'links': {
+            }
+        },
+        'mongo': {
+            'package': {
+                'x64': 'https://fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-{0}.zip',
+                'x86': 'https://fastdl.mongodb.org/win32/mongodb-win32-i386-{0}.zip',
+            },
+            'helper': {
+                'x64': 'http://packages.litixsoft.de/mongo-windows-x64.zip',
+                'x86': 'http://packages.litixsoft.de/mongo-windows-x86.zip'
+            },
+            'binary': {
+                'mongod': 'bin\\mongod.exe',
+                'mongo': 'bin\\mongo.exe',
             }
         },
         'messages': {
@@ -150,6 +246,7 @@ lxOptions = {
     }
 }
 
+
 # Returns Program Information for the current Operation System
 # Returns empty object, if no Information available
 def getConfig():
@@ -161,6 +258,7 @@ def getConfig():
 
 # Programconfiguration
 lxConfig = getConfig()
+
 
 # Helper
 def getConfigKey(key, defaultvalue=None, data=lxConfig):
@@ -174,12 +272,13 @@ def getConfigKey(key, defaultvalue=None, data=lxConfig):
             else:
                 return keydata[keyname]
         else:
-            if not defaultvalue:
-                raise Exception('No Key "' + keyname + '" in "' + key + '"...')
-            else:
-                return defaultvalue
+            # if not defaultvalue:
+            #     raise Exception('No Key "' + keyname + '" in "' + key + '"...')
+            # else:
+            return defaultvalue
 
     return keydata
+
 
 # Returns system specified messages
 def getMessage(key):

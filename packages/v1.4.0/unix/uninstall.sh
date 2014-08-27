@@ -18,8 +18,7 @@ function request {
 LXHOMEPATH="$(pwd)"
 LXBINPATH="/usr/bin"
 LXLIBPATH="/usr/lib"
-LXMODE=""
-
+LXMODE="--safe"
 
 # Make sure only root can run our script
 if [[ $EUID -ne 0 ]]; then
@@ -31,35 +30,11 @@ fi
 echo "HINT: All installed packages are also removed!"
 
 if ( request "Remove Databases, Configuration files, etc?" ) then
-  LXMODE="all"
+  LXMODE="--force"
 fi
 
-# Execute every lxscript.sh
-files=`find "$LXHOMEPATH" -maxdepth 2 -type f -name "lxscript.sh"`
-for scriptfile in $files; do
-  if [ -x "$scriptfile" ]; then
-    if [ $(head -n 1 "$scriptfile") = "#!/bin/bash" ]; then
-      bash "$scriptfile" remove $bsmode
-    else
-      sh "$scriptfile" remove $bsmode
-    fi
-  fi
-done
-
-# Remove Node.JS
-if [ -d "$LXHOMEPATH/node" ]; then
-  # Remove Symlink
-  echo "Remove Node.JS"
-  rm "$LXBINPATH/node"
-  rm "$LXBINPATH/npm"
-
-  # Remove symbolic link for npm
-  if [ -h "$LXLIBPATH/node_modules/npm" ]; then
-    rm "$LXLIBPATH/node_modules/npm"
-  fi
-
-  rm -rf "$LXHOMEPATH/node"
-fi
+# Remove *ALL* packages
+bbs remove --all $LXMODE
 
 # Remove lxManager
 if [ -d "$LXHOMEPATH/bbs" ]; then
@@ -69,7 +44,7 @@ if [ -d "$LXHOMEPATH/bbs" ]; then
   rm -rf "$LXHOMEPATH/bbs"
 fi
 
-if [ "$LXMODE" = "all" ]; then
+if [ "$LXMODE" = "--force" ]; then
   echo "Remove $LXHOMEPATH"
   rm -rf "$LXHOMEPATH"
 fi

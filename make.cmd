@@ -7,6 +7,6 @@ mkdir "%CD%\build"
 )
 
 echo Build...
-cxfreeze bbs.py --target-dir "%CD%\build" --icon "%CD%\ressources\baboonstack.ico" --compress
+cxfreeze bbs.py --compress --target-dir "%CD%\build" --icon "%CD%\ressources\baboonstack.ico"
 echo Done...
 echo.

@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        package
-# Purpose:
+# Purpose:     Package Manager for Baboonstack
 #
 # Author:      Thomas Scheibe
 #
 # Created:     04.12.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import tempfile
 import re as regex
@@ -31,19 +31,23 @@ version_numbers = '.0123456789'
 
 class BaboonStackPackage:
 
-    def __init__(self, packagedata={}):
+    def __init__(self, packagedata):
         self.__name = None
         self.__fullname = None
         self.__installed = False
-        self.__packagedata = packagedata.copy()
+
+        if not isinstance(packagedata, dict):
+            self.__packagedata = {}
+        else:
+            self.__packagedata = packagedata.copy()
 
         self.refresh()
 
     def getIfInstalled(self):
         return self.__installed
 
-    def getVersion(self):
-        return self.__packagedata.get('version', '0.0.0')
+    def getVersion(self, defaultvalue='?.?.?'):
+        return self.__packagedata.get('version', defaultvalue)
 
     def getPackageName(self):
         return self.__name
@@ -62,10 +66,23 @@ class BaboonStackPackage:
             'dependencies': self.__packagedata.get('dependencies', False)
         }
 
-    def loadPackage(self, filename):
-            if os.path.isfile(filename):
-                self.__packagedata = lxtools.loadjson(filename)
+    def loadPackage(self, filename, mergedata=False):
+        if os.path.isfile(filename):
+            tmppkgdata = lxtools.loadjson(filename)
+
+            # Merge data or overwrite all
+            if mergedata:
+                self.merge(tmppkgdata)
+            else:
+                self.__packagedata = tmppkgdata
                 self.refresh()
+
+    def merge(self, pkgdata):
+        # Merge data
+        for keyname in pkgdata:
+            self.__packagedata[keyname] = pkgdata[keyname]
+
+        self.refresh()
 
     def refresh(self):
         rootdir = lxtools.getBaboonStackDirectory()
@@ -150,7 +167,7 @@ def getIfDependenciesInstalled(pkginfo):
 
     # Check if dirname exists
     if pkginfo.get('dirname') is None:
-        print('ERROR: No ´dirname´ in description file...')
+        print('ERROR: No "dirname" in description file...')
         return False
 
     # Check dependencies, if set
@@ -302,14 +319,18 @@ def getLocalCatalog(scanfolders=True):
             packagefile = os.path.join(fullpath, 'package.bbs.conf')
 
             if os.path.isfile(packagefile):
-                pkgdata = BaboonStackPackage()
+                pkgdata = BaboonStackPackage({})
                 pkgdata.loadPackage(packagefile)
                 packagename = pkgdata.getPackageName()
 
                 if packagename is None or not pkgdata.getIfInstalled():
                     continue
 
-                catalog[packagename] = pkgdata
+                # if package infos already set, then merge data
+                if packagename in catalog and isinstance(catalog[packagename], BaboonStackPackage):
+                    catalog[packagename].loadPackage(packagefile, True)
+                else:
+                    catalog[packagename] = pkgdata
 
     return catalog
 
@@ -335,8 +356,12 @@ def getAvailableUpdates(local, remote):
 
     for packagename in local:
         if local[packagename].getIfInstalled() and packagename in remote:
-            localversion = local[packagename].getVersion()
+            localversion = local[packagename].getVersion(None)
             remoteversion = getLastVersion(remote[packagename])
+
+            # No fixed locally version. For MongoDB and Node
+            if localversion is None:
+                continue
 
             if StrictVersion(localversion) < StrictVersion(remoteversion):
                 updatelist[packagename] = {
@@ -348,10 +373,38 @@ def getAvailableUpdates(local, remote):
     return updatelist
 
 
+# Execute a Script Section Object
+def execute(cmd, cwd, showoutput=True):
+    if isinstance(cmd, str):
+        return lxtools.run(cmd, cwd, showoutput)
+
+    if isinstance(cmd, dict) and cmd.get('cmd', None) is not None:
+        # If user confirm defined, then ask him
+        if cmd.get('confirm') is True:
+            print('\n')
+            key = lxtools.readkey(
+                cmd.get('text', 'Do you want to execute "' + cmd.get('cmd') + '"?')
+            )
+
+            if key == 'y':
+                return lxtools.run(cmd.get('cmd'), cwd, showoutput)
+
+            return True
+
+    # Someting goes wrong
+    return False
+
+
 # Run system specified script
 def runScript(pkginfo, scriptoption):
     if not isinstance(scriptoption, list):
         return
+
+    # Hide Script output
+    hide_script_output = ('hidden' in scriptoption)
+
+    if hide_script_output is True:
+        scriptoption.remove('hidden')
 
     scriptfile = config.lxConfig.get('scriptfile', None)
     packagedirectory = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
@@ -363,7 +416,8 @@ def runScript(pkginfo, scriptoption):
                 # Change working directory to script location
                 lxtools.run(
                     os.path.join(packagedirectory, '{0} {1}'.format(scriptfile, ' '.join(scriptoption))),
-                    packagedirectory
+                    packagedirectory,
+                    not hide_script_output
                 )
             except BaseException as e:
                 print('ERROR while executing script!')
@@ -383,9 +437,9 @@ def runScript(pkginfo, scriptoption):
         # Now execute the script line or lines
         if isinstance(script, list):
             for item in script:
-                lxtools.run(item, packagedirectory)
-        elif isinstance(script, str):
-            lxtools.run(script, packagedirectory)
+                execute(item, packagedirectory, not hide_script_output)
+        elif isinstance(script, str) or isinstance(script, dict):
+            execute(script, packagedirectory, not hide_script_output)
 
     return
 
@@ -486,7 +540,7 @@ def install(pkgname, options=list()):
         print('Unknow Package "' + pkgname + '"...')
         return False
 
-    pkginfo = {}
+    # pkginfo = {}
 
     # Collect pkginfo and if package already installed
     if pkgname in localcatalog:
@@ -502,11 +556,11 @@ def install(pkgname, options=list()):
         lxtools.getOsArchitecture()
     )
 
-    # print('Source:', pkgdata.get('source', '<unknow>'))
+    print('Source:', pkgdata.get('source', '<unknow>'))
 
     # Get catalog info
-    if pkgdata['source'] == 'catalog':
-        pkginfo = pkgdata.get('info', {})
+    # if pkgdata['source'] == 'catalog':
+    pkginfo = pkgdata.get('info', {})
 
     # Check if admin
     if not lxtools.getIfAdmin():
@@ -515,12 +569,12 @@ def install(pkgname, options=list()):
 
     # Ask
     if 'ask' in options:
-        key = lxtools.readkey('Really install "' + pkgname + '"...', 'Yn')
+        key = lxtools.readkey('Do you really want to install "' + pkgname + '"...', 'Yn')
 
         if key == 'n':
             return False
 
-    # Download require
+    # If Download require
     if pkginfo.get('nodownload', False) is True:
         # No Download require, then create dir and exit
         basedir = os.path.join(lxtools.getBaboonStackDirectory(), pkginfo.get('dirname'))
@@ -682,7 +736,7 @@ def install(pkgname, options=list()):
 
         # Has dirname
         if not dirname:
-            print('ERROR: No ´dirname´ in description file...')
+            print('ERROR: No "dirname" in description file...')
             return False
 
         # Some file and directories will be include or exclude for removing
@@ -868,36 +922,9 @@ def remove(pkgname, options=list()):
 
     # Has files?
     if len(dir_filelist) != 0:
-        dirlist = []
-
         # Remove every file from directory and marks directories
         print('Remove files...')
-        for filename in dir_filelist:
-            fullpath = os.path.join(basedir, filename)
-            if os.path.exists(fullpath):
-                if os.path.isdir(fullpath):
-                    # Add dir to list, will be removed later
-                    dirlist.append(fullpath)
-                else:
-                    # Remove file
-                    try:
-                        os.remove(fullpath)
-                    except BaseException as e:
-                        print(e)
-
-        # Remove directory if empty
-        for directory in dirlist:
-            if len(os.listdir(directory)) == 0:
-                os.rmdir(directory)
-
-    # Remove base directory if exists and empty
-    if os.path.exists(basedir):
-        if len(os.listdir(basedir)) == 0:
-            os.rmdir(basedir)
-        else:
-            # Remove directory with all files if not safe remove
-            if not saferemove is True:
-                lxtools.rmDirectory(basedir)
+        lxtools.removeFilesFromList(basedir, dir_filelist, saferemove)
 
     # Done
     print('Done...')
@@ -905,7 +932,7 @@ def remove(pkgname, options=list()):
     return True
 
 
-# Removes a package
+# Updates a package
 def update(pkgname, options=list()):
     if pkgname is None:
         return False
@@ -954,7 +981,7 @@ def update(pkgname, options=list()):
 
     # Update single package
     if pkgname not in updatelist:
-        print('No update for ´' + pkgname + '´ available.')
+        print('No update for .:' + pkgname + ':. available.')
         return False
 
     # Remove
@@ -969,6 +996,7 @@ def update(pkgname, options=list()):
         return False
 
     return True
+
 
 # Upgrade local catalog file
 def upgrade():

@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # Name:        nvm
-# Purpose:
+# Purpose:     NodeJS Version Manager
 #
 # Author:      Thomas Scheibe
 #
 # Created:     01.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 from distutils.version import StrictVersion
 import re as regex
@@ -50,14 +50,14 @@ def cleanUp():
 
 # Returns if nodeversion the correct format
 def getIfNodeVersionFormat(nodeversion):
-    return regex.match('[0-9]+\.[0-9]+\.[0-9]+', nodeversion) != None
+    return regex.match('[0-9]+\.[0-9]+\.[0-9]+', nodeversion) is not None
 
 # Returns if nodeversion installed
 def getIfNodeVersionInstalled(nodeversion):
     return os.path.exists(os.path.join(lxNodePath, nodeversion))
 
 # Returns the remote available Files with RegEx Filter
-def getRemoteList(url, filter = ''):
+def getRemoteList(url, filter=''):
     # Download from URL
     data = lxtools.getRemoteData(url)
 
@@ -89,7 +89,7 @@ def getRemoteChecksumList(url):
     return data.split('\n')
 
 # Returns the remote available Node Version Directories
-def getRemoteNodeVersionList(filter = ''):
+def getRemoteNodeVersionList(filter=''):
     versionList = getRemoteList("http://nodejs.org/dist/", filter)
     versionList.sort(key=StrictVersion) # Sort list FROM oldest Version TO newer Version
     return versionList
@@ -99,7 +99,7 @@ def getRemoteNodeVersion(nodeversion, options):
     # Check if admin
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # Check if version available on remote server
     print('Retrieve available version...')
@@ -123,7 +123,7 @@ def getRemoteNodeVersion(nodeversion, options):
     # Check if already installed
     if os.path.exists(targetDirectory):
         print('Version already installed.')
-        return
+        return False
 
     # Get the Os specified Node Remote Package
     remoteFilename = config.lxConfig['node']['package'][lxtools.getOsArchitecture()].format(nodeversion)
@@ -160,13 +160,13 @@ def getRemoteNodeVersion(nodeversion, options):
 
     # Check Checksum
     if (localChecksum == remoteChecksum):
-        print('Checksum are correct...')
+        print('Checksum correct...')
     else:
         print('Checksum missmatch... Abort!')
         print('Filename  ' + remoteFilename)
         print('Remote SHA' + remoteChecksum)
         print('Local  SHA' + localChecksum)
-        return
+        return False
 
     # Default temp Directory
     moveNodeDir = tempNodeDir
@@ -230,7 +230,7 @@ def getRemoteNodeVersion(nodeversion, options):
         return True
 
 # Retrives local available Node Versions
-def getLocalNodeVersionList(filter = ''):
+def getLocalNodeVersionList(filter=''):
     srcNodeList = os.listdir(lxNodePath)
     tarNodeList = []
 
@@ -238,7 +238,7 @@ def getLocalNodeVersionList(filter = ''):
     for entry in srcNodeList:
         if getIfNodeVersionFormat(entry):
             # If filter, then MUST match
-            if filter != '' and regex.match(filter + '.*', entry) == None:
+            if filter and regex.match(filter + '.*', entry) is None:
                 continue
 
             tarNodeList.append(entry)
@@ -316,7 +316,7 @@ def setLocalNodeVersion(nodeversion):
     # No Version found
     if len(versionList) == 0:
         print('Sorry, no existing Node version {0} found locally.'.format(nodeversion))
-        return
+        return False
 
     # Get the last element from list
     nodeversion = versionList.pop()
@@ -445,7 +445,7 @@ def rmLocalNodeVersion(nodeversion):
     # Check if admin
     if not lxtools.getIfAdmin():
         print(config.getMessage('REQUIREADMIN'))
-        return
+        return False
 
     # Check if syntax correct
     if not getIfNodeVersionFormat(nodeversion):
@@ -482,7 +482,7 @@ def runSpecifiedNodeVersion(nodeversion, app, arg=''):
     # No Version found
     if len(versionList) == 0:
         print('Sorry, no existing Node version {0} found locally.'.format(nodeversion))
-        return
+        return False
 
     # Get the last element from list
     nodeversion = versionList.pop()

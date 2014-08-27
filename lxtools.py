@@ -1,21 +1,28 @@
 #-------------------------------------------------------------------------------
 # Name:        lxtools
-# Purpose:
+# Purpose:     Helper library for baboonstack
 #
 # Author:      Thomas Scheibe
 #
 # Created:     02.08.2013
-# Copyright:   (c) Thomas Scheibe 2013
-# Licence:     <your licence>
+# Copyright:   (c) Litixsoft GmbH 2014
+# Licence:     Licensed under the MIT license.
 #-------------------------------------------------------------------------------
 import subprocess
+import tarfile
+import zipfile
 import platform
 import hashlib
 import urllib.request as UrlRequest
-import ctypes
+import signal
+import shutil
 import json
 import sys
 import os
+
+if sys.platform == 'win32':
+    import ctypes
+    import ctypes.wintypes
 
 # Baboonstack modules
 import config
@@ -29,6 +36,7 @@ class Arguments:
 
         # Remove the first Argument
         self.__args.pop(0)
+        self.__argslist = self.__args.copy()
 
         # Remove options
         optlist = []
@@ -86,6 +94,12 @@ class Arguments:
     def isoption(self, name):
         return name in self.__options
 
+    def args(self, start=0, count=None):
+        if start > 0:
+            return self.__argslist[start - 1:count]
+        else:
+            return self.__argslist
+
 
 # Returns if x86 or x64
 def getOsArchitecture():
@@ -125,6 +139,38 @@ def rmDirectory(directory):
         os.rmdir(directory)
     except IOError as e:
         print("Remove Directory error. I/O error({0}): {1}".format(e.errno, e.strerror))
+
+
+def removeFilesFromList(basedir, filelist, saferemove=True):
+    dirlist = []
+
+    # Remove every file from directory and marks directories
+    for filename in filelist:
+        fullpath = os.path.join(basedir, filename)
+        if os.path.exists(fullpath):
+            if os.path.isdir(fullpath):
+                # Add dir to list, will be removed later
+                dirlist.append(fullpath)
+            else:
+                # Remove file
+                try:
+                    os.remove(fullpath)
+                except BaseException as e:
+                    print(e)
+
+    # Remove directory if empty
+    for directory in dirlist:
+        if len(os.listdir(directory)) == 0:
+            os.rmdir(directory)
+
+    # Remove base directory if exists and empty
+    if os.path.exists(basedir):
+        if len(os.listdir(basedir)) == 0:
+            os.rmdir(basedir)
+        else:
+            # Remove directory with all files if not safe remove
+            if not saferemove:
+                rmDirectory(basedir)
 
 
 # Returns the SHA1 Checksum of specified File
@@ -175,7 +221,7 @@ def setDirectoryLink(lpSymlinkName, lpTargetName):
 # FILE_ATTRIBUTE_DIRECTORY or FILE_ATTRIBUTE_REPARSE_POINT
 def getIfSymbolicLink(lpFilename):
     if sys.platform == 'win32':
-        return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) | 1040) == 1040
+        return (ctypes.windll.kernel32.GetFileAttributesW(lpFilename) & 1040) == 1040
 
     if sys.platform.startswith('linux') or sys.platform == 'darwin':
         return os.path.islink(lpFilename)
@@ -191,8 +237,11 @@ def showProgress(amtDone):
 
 # Callback for urlretrieve (Downloadprogress)
 def reporthook(blocknum, blocksize, filesize):
-    if (blocknum != 0):
-        percent =  blocknum / (filesize / blocksize)
+    if filesize <= blocksize:
+        return showProgress(1)
+
+    if (blocknum > 0):
+        percent = blocknum / (filesize / blocksize)
     else:
         percent = 0
 
@@ -264,6 +313,44 @@ def getBaboonStackDirectory():
     return os.path.dirname(os.getcwd())
 
 
+# Extract Path and Command from String
+def getCwdAndCmd(arg):
+    a = os.path.split(arg)
+
+    arg_cwd = a[0]
+    arg_cmd = a[1]
+
+    while arg_cwd:
+        sep_start = arg_cwd.find('%')
+
+        if sep_start == -1:
+            break
+
+        sep_end = arg_cwd.find('%', sep_start + 1)
+
+        if sep_end == -1:
+            break
+
+        sep_keyname = arg_cwd[sep_start + 1:sep_end]
+        sep_value = None
+
+        if sep_keyname.lower() == 'lxpath':
+            sep_value = getBaboonStackDirectory()
+
+        if sep_keyname.lower() == 'bbs':
+            sep_value = os.path.join(getBaboonStackDirectory(), 'bbs')
+
+        if not sep_value:
+            sep_value = os.getenv(sep_keyname)
+
+        if not sep_value:
+            sep_value = ""
+
+        arg_cwd = arg_cwd.replace(arg_cwd[sep_start:sep_end + 1], sep_value)
+
+    return arg_cwd, arg_cmd
+
+
 # Returns if NODE.JS Module (NVM/SERVICE) enabled
 # Checks only if %LXPATH%\node exits
 def getIfNodeModuleEnabled():
@@ -273,8 +360,8 @@ def getIfNodeModuleEnabled():
 
 # Returns if Mongo installed, Checks path only
 def getIfMongoModuleEnabled():
-    mongoPath = os.path.join(getBaboonStackDirectory(), 'mongo')
-    return os.path.exists(mongoPath)
+    bbsPath = getBaboonStackDirectory()
+    return os.path.exists(os.path.join(bbsPath, 'mongo')) or os.path.exists(os.path.join(bbsPath, 'mongodb'))
 
 
 # Returns if Redis installed, Checks path only
@@ -313,9 +400,25 @@ def readkey(prompt, keys='Yn'):
 
 
 # Execute a shell command and return True/False
-def run(command, cwd=None):
-    result = subprocess.call(command, shell=True, cwd=cwd)
-    # result = os.system(command)
+def run(command, workdir=None, showoutput=True):
+    # Unix required as command cwd AND cmd
+    # Windows accepts cmd and cwd seperatly
+    if sys.platform == 'win32':
+        cwd, cmd = getCwdAndCmd(command)
+
+        if not cwd:
+            cwd = workdir
+    else:
+        cwd = workdir
+        cmd = command
+
+    if showoutput is True:
+        stdout = None
+    else:
+        stdout = subprocess.DEVNULL
+
+    print('Execute Command...')
+    result = subprocess.call(cmd, shell=True, cwd=cwd, stdout=stdout)
 
     if result != 0:
         print('\nError while execute "' + command + '"...')
@@ -442,3 +545,187 @@ def chown(path, uid, gid):
             print('Unknow', itemname)
 
     return result
+
+
+# Extract archive file (source) to directory (target)
+# Zip and Tar Archives supported
+def doExtract(source, target):
+    # .zip - 2 Bytes - 50 4B - \x50\x4b
+    # .tgz - 2 Bytes - 1F 8B - \x1f\x8b
+    archivefile = open(source, 'rb')
+    ident = archivefile.read(2)
+    archivefile.close()
+
+    # ZIP File
+    if ident == b'\x50\x4b' and zipfile.is_zipfile(source):
+        zip = zipfile.ZipFile(source, 'r')
+        zip.extractall(target)
+        zip.close()
+
+        return
+
+    # Tar File
+    if ident == b'\x1f\x8b':
+        tar = tarfile.open(source)
+        tar.extractall(target)
+        tar.close()
+
+        return True
+
+    # print(ident)
+
+    return False
+
+
+# Moves all elements IN a directory to another one and returns filelist
+def moveDirectory(src, tar):
+    filelist = []
+
+    if not os.path.isdir(src):
+        return filelist
+
+    if not os.path.isdir(tar):
+        os.makedirs(tar)
+
+    for name in os.listdir(src):
+        if os.path.isdir(os.path.join(src, name)):
+            subdir = moveDirectory(os.path.join(src, name), os.path.join(tar, name))
+
+            # Add all files
+            for dirname in subdir:
+                filelist.append(os.path.join(name, dirname))
+
+            # Add foldername
+            filelist.append(name)
+            continue
+
+        if os.path.isfile(os.path.join(src, name)) and not os.path.isfile(os.path.join(tar, name)):
+            filelist.append(name)
+            shutil.move(
+                os.path.join(src, name),
+                os.path.join(tar, name)
+            )
+
+    return filelist
+
+
+def loadFileFromUserSettings(filename, showerrors=True, returntype=None):
+    if not os.path.exists(config.lxUserSettingPath):
+        return []
+
+    data = returntype
+    try:
+        filehandle = open(os.path.join(config.lxUserSettingPath, filename), 'r', encoding='utf8')
+
+        if isinstance(returntype, list):
+            tmpdata = filehandle.read()
+
+            if tmpdata:
+                data = tmpdata.split(',')
+        else:
+            data = filehandle.read()
+
+        filehandle.close()
+    except IOError:
+        if showerrors:
+            print('Error while read from ' + filename)
+
+    return data
+
+
+def saveFileToUserSettings(filename, data, showerrors=True):
+    if not os.path.exists(config.lxUserSettingPath):
+        os.mkdir(config.lxUserSettingPath)
+
+    try:
+        filehandle = open(os.path.join(config.lxUserSettingPath, filename), 'w', encoding='utf8')
+        if isinstance(data, list):
+            filehandle.write(','.join(data))
+        else:
+            filehandle.write(data)
+
+        filehandle.close()
+    except IOError:
+        if showerrors:
+            print('Error while write to ' + filename)
+    else:
+        # Get UserId and GroupId from homedir and change it
+        homedir_stat = os.stat(os.path.expanduser('~'))
+        chown(config.lxUserSettingPath, homedir_stat.st_uid, homedir_stat.st_gid)
+
+
+def getActiveProcessFromPidList(pidlist):
+    pidActiveList = []
+
+    if sys.platform == 'win32':
+        EnumProcesses = ctypes.windll.psapi.EnumProcesses
+        EnumProcesses.restype = ctypes.wintypes.BOOL
+
+        OpenProcess = ctypes.windll.kernel32.OpenProcess
+        OpenProcess.restype = ctypes.wintypes.HANDLE
+        CloseHandle = ctypes.windll.kernel32.CloseHandle
+
+        PROCESS_TERMINATE = 0x0001
+        PROCESS_QUERY_INFORMATION = 0x0400
+
+        processList = (ctypes.wintypes.DWORD * 4096)()
+        processListSize = ctypes.sizeof(processList)
+        sizeReturned = ctypes.wintypes.DWORD()
+
+        if EnumProcesses(processList, processListSize, ctypes.byref(sizeReturned)):
+            for index in range(int(sizeReturned.value / ctypes.sizeof(ctypes.wintypes.DWORD))):
+                hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION, False, processList[index])
+
+                if hProcess:
+                    if str(processList[index]) in pidlist:
+                        pidActiveList.append(str(processList[index]))
+
+                    CloseHandle(hProcess)
+        else:
+            return None
+    else:
+        import errno
+
+        for pid in pidlist:
+            try:
+                os.kill(int(pid), 0)
+            except OSError as e:
+                if e.errno == errno.EPERM:
+                    pidActiveList.append(pid)
+            else:
+                pidActiveList.append(pid)
+
+    return pidActiveList
+
+
+def killProcess(pid):
+    if sys.platform == 'win32':
+        OpenProcess = ctypes.windll.kernel32.OpenProcess
+        OpenProcess.restype = ctypes.wintypes.HANDLE
+
+        CloseHandle = ctypes.windll.kernel32.CloseHandle
+
+        TerminateProcess = ctypes.windll.kernel32.TerminateProcess
+        TerminateProcess.restype = ctypes.wintypes.BOOL
+
+        PROCESS_TERMINATE = 0x0001
+        PROCESS_QUERY_INFORMATION = 0x0400
+
+        hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION, False, pid)
+
+        if hProcess:
+            res = TerminateProcess(hProcess, -1)
+            CloseHandle(hProcess)
+
+            return res
+    else:
+        import errno
+
+        try:
+            os.kill(int(pid), signal.SIGTERM)
+        except OSError as e:
+            return e.errno == errno.EPERM
+        else:
+            return True
+
+    return False
