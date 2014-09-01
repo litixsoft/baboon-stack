@@ -2,8 +2,8 @@
 a Suite with Node.JS, MongoDB, RedisIO. Includes a system-wide Node Version Manager and MongoDB Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
 
 * Web site: http://www.litixsoft.de/baboonstack
-* Unix Installer: http://www.litixsoft.de/baboonstack#installwindows
-* Windows Installer: http://www.litixsoft.de/baboonstack#installunix
+* Unix Installer: http://www.litixsoft.de/english/baboonstack/#pg-131-4
+* Windows Installer: http://www.litixsoft.de/english/baboonstack/#pg-131-4
 
 #Install
 Download the build releases for windows, macos or linux based operation systems, or just build your own baboonstack manager client (see Build).
