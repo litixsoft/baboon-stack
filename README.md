@@ -1,3 +1,6 @@
+    Project is deprecated. No continue development, no bugfixing anymore.
+---
+
 # BABOONSTACK
 a Suite with Node.JS, MongoDB, RedisIO. Includes a system-wide Node Version Manager and MongoDB Version Manager for Linux, MacOS and Windows based 32-bit and 64-bit Operation Systems.
 
